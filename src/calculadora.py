@@ -1,13 +1,13 @@
-import operaciones
+from src import operaciones
 
 def calcular(operacion, a, b):
-    if operacion == 'suma':
+    if operacion == '+':
         return operaciones.suma(a, b)
-    elif operacion == 'resta':
+    elif operacion == '-':
         return operaciones.resta(a, b)
-    elif operacion == 'multiplicacion':
+    elif operacion == '*':
         return operaciones.multiplicacion(a, b)
-    elif operacion == 'division':
+    elif operacion == '/':
         return operaciones.division(a, b)
     else:
         return ("operación no válida")
