@@ -13,6 +13,8 @@ Parámetros:
     # macOS/Linux → usar "../../static"
     # Windows     → usar r"..\..\static" (doble barra invertida o raw string)
 """
+
+
 def create_app(env="development", static_folder="../../static"):
     app = Flask(__name__, static_folder=static_folder)
 
