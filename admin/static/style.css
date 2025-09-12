@@ -1,0 +1,91 @@
+/* ====== Base ====== */
+body {
+  font-family: Quicksand, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+  color: #333;
+
+  /* que el footer quede al fondo */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor de ancho */
+.container {
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ====== Header (ovalado y flotante) ====== */
+header {
+  background-color: #008859;
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem 2rem;
+
+  border-radius: 50px;         /* forma ovalada */
+  width: 80%;
+  max-width: 1200px;
+  margin: 1rem auto;           /* centrado */
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  position: sticky;            /* flotante */
+  top: 1rem;
+  z-index: 1000;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Navegación ====== */
+nav {
+  background-color: #eaeaea;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto 1rem auto;
+}
+
+/* ====== Contenido principal ====== */
+main {
+  flex: 1;                     /* empuja el footer hacia abajo */
+  padding: 2rem;
+
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+
+  background-color: #FEF8E6;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.1);
+}
+
+/* ====== Footer (recto al fondo) ====== */
+footer {
+  background-color: #008859;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+
+  width: 100%;
+  margin: 0;
+  border-radius: 0;            /* recto */
+  /* no position: fixed; así queda al fondo sin superponerse */
+}
+
+/* ====== Responsive tweaks ====== */
+@media (max-width: 768px) {
+  header, nav, main {
+    width: 92%;
+  }
+
+  header { border-radius: 32px; }
+  main { padding: 1.25rem; }
+}
