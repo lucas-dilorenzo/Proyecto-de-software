@@ -84,7 +84,7 @@ cd calculadora
 
 2. Ejecutar la aplicación:
 ```bash
-python main.py
+python app.py
 ```
 
 3. Seguir las instrucciones en pantalla para realizar cálculos.
