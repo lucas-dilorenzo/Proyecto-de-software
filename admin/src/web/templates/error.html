@@ -1,0 +1,12 @@
+{% extends "layout.html" %}
+
+{% block title %}Error {{ error.code }}{% endblock %}
+
+{% block header %}
+<h1>Error {{ error.code }} {{ error.message }}</h1>
+{% endblock %}
+
+{% block content %}
+    <p>{{ error.description }}</p>
+    <a href="{{ url_for('home') }}">Volver al inicio</a>
+{% endblock %}
