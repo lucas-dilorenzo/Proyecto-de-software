@@ -1,19 +1,36 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>{% block title %}Página{% endblock %}</title>
+    {% block head %}
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title> {% block title %} App Grupo 37 {% endblock %} </title>
+        <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% endblock %}
 </head>
+
 <body>
-	<header>
-		<h1>{% block header %}Mi Sitio{% endblock %}</h1>
-	</header>
-	<main>
-		{% block content %}{% endblock %}
-	</main>
-	<footer>
-		<p>&copy; 2025 Mi Sitio</p>
-	</footer>
+    <header>
+        {% block header %}
+            <h1>Aplicación Grupo 37</h1>
+        {% endblock %}
+    </header>
+    <nav>
+        {% block nav %}
+            <!-- nav content-->
+        {% endblock %}
+    </nav>
+    <main>
+        {% block content %}
+            <!-- content content-->
+        {% endblock %}
+    </main>
+    <footer>
+        {% block footer %}
+            <p>Grupo 37 - Desarrollo Web en Entorno Servidor</p>
+        {% endblock %}
+    </footer>
 </body>
+
 </html>

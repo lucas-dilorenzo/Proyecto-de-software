@@ -1,8 +1,25 @@
-from flask import Flask, abort
+from flask import Flask
+from flask import abort
+from flask import render_template
+
 from .handlers import error
 
-def create_app():
-    app = Flask(__name__)
+"""
+Crea la aplicación Flask.
+
+Parámetros:
+- env: str → entorno de ejecución (development, production, etc.)
+- static_folder: str → ruta a la carpeta de archivos estáticos.
+
+    ⚠️ IMPORTANTE:
+    Cambiar la ruta relativa dependiendo el SO que uses para probar la app localmente.
+    # macOS/Linux → usar "../../static"
+    # Windows     → usar r"..\..\static" (doble barra invertida o raw string)
+"""
+
+
+def create_app(env="development", static_folder="../../static"):
+    app = Flask(__name__, static_folder=static_folder)
 
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
@@ -10,7 +27,7 @@ def create_app():
 
     @app.route('/')
     def home():
-        return "¡Hola mundo!"
+        return render_template('home.html')
     
     @app.route('/private')
     def private():
