@@ -13,12 +13,16 @@
 <body>
     <header>
         {% block header %}
-            <h1>Aplicación Grupo 37</h1>
+            <h1>Aplicación</h1>
+            <a href="/"> logo
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="">
+            </a>
+            <button> menú </button>
         {% endblock %}
     </header>
     <nav>
         {% block nav %}
-            <!-- nav content-->
+        <!-- nav content-->
         {% endblock %}
     </nav>
     <main>
