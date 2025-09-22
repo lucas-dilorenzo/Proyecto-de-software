@@ -23,7 +23,7 @@ class DevelopmentConfig(Config):
     DB_HOST = environ.get("DB_HOST", "localhost")
     DB_USER = environ.get("DB_USER", "postgres")
     DB_PASS = environ.get("DB_PASS", "12345")
-    DB_NAME = environ.get("DB_NAME", "grupo08")
+    DB_NAME = environ.get("DB_NAME", "grupo37")
     DB_PORT = environ.get("DB_port", "5432")
     DB_SCHEME = environ.get("DB_SCHEME", "postgresql")
     SQLALCHEMY_ENGINES = {
