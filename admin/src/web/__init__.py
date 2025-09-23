@@ -1,7 +1,7 @@
 from flask import Flask
 from flask import abort
 from flask import render_template
-
+from src.core import database
 from .handlers import error
 
 """
@@ -36,5 +36,10 @@ def create_app(env="development", static_folder="../../static"):
     @app.route('/error')
     def trigger_error():
         abort(500)
+
+    # Register commands
+    @app.cli.command("reset-db")
+    def reset_db():
+        database.reset_db()
 
     return app
