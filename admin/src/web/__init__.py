@@ -4,6 +4,7 @@ from flask import render_template
 from src.core import database
 from .handlers import error
 from .config import config
+from src.web import seeds
 
 """
 Crea la aplicación Flask.
@@ -48,5 +49,9 @@ def create_app(env="development", static_folder="../../static"):
     @app.cli.command("reset-db")
     def reset_db():
         database.reset_db()
+
+    @app.cli.command("seed-db")
+    def seed_db():
+        seeds.run()
 
     return app

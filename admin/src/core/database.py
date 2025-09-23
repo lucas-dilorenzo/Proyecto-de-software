@@ -11,7 +11,7 @@ def init_app(app):
 
 
 def reset_db():
-    from src.core.models.site import Site  # noqa: F401
+    from src.core.historicalSites.site import Site  # noqa: F401
 
     print("Resetting database...")
     Base.metadata.drop_all(bind=db.engine)

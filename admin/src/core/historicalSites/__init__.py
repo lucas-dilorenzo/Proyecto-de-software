@@ -2,6 +2,13 @@ from src.core.historicalSites.site import Site  # noqa: F401
 from src.core.database import db
 
 
+def create_site(**kwargs):
+    site = Site(**kwargs)
+    db.session.add(site)
+    db.session.commit()
+    return site
+
+
 def list_all():
     return db.session.query(Site).all()
 
