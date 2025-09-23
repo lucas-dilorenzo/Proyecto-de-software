@@ -1,0 +1,100 @@
+{% extends "layout.html" %}
+{% block title %}Usuarios - Admin{% endblock %}
+
+{% block content %}
+<h1 class="mb-3">Usuarios</h1>
+<div class="mb-2">
+    <a class="btn btn-success" href="{{ url_for('users.new_user') }}">+ Nuevo usuario</a>
+</div>
+<form method="GET" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Email</label>
+        <input name="email" value="{{ email }}" class="form-control" placeholder="buscar por email">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Activo</label>
+        <select name="activo" class="form-select">
+            <option value="">(todos)</option>
+            <option value="SI" {{ 'selected' if activo=='SI' }}>SI</option>
+            <option value="NO" {{ 'selected' if activo=='NO' }}>NO</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Rol</label>
+        <select name="rol" class="form-select">
+            <option value="">(todos)</option>
+            {% for r in roles %}
+            <option value="{{ r }}" {{ 'selected' if rol==r }}>{{ r }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Orden</label>
+        <select name="order" class="form-select">
+            <option value="desc" {{ 'selected' if order=='desc' }}>Fecha ↓</option>
+            <option value="asc" {{ 'selected' if order=='asc' }}>Fecha ↑</option>
+        </select>
+    </div>
+    <div class="col-md-1 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Rol</th>
+                <th>Activo</th>
+                <th>Creado</th>
+                <th style="width:160px;">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.nombre }}</td>
+                <td>{{ u.apellido }}</td>
+                <td>{{ u.rol.value }}</td>
+                <td>{{ 'SI' if u.activo else 'NO' }}</td>
+                <td>{{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else '' }}</td>
+                <td>
+                    <a class="btn btn-sm btn-outline-secondary"
+                        href="{{ url_for('users.edit_user', uid=u.id) }}">Editar</a>
+
+                    <form method="POST" action="{{ url_for('users.delete_user', uid=u.id) }}" class="d-inline"
+                        onsubmit="return confirm('¿Eliminar este usuario?');">
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="8" class="text-center text-muted py-4">Sin resultados</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% set last_page = (total // per_page) + (1 if total % per_page > 0 else 0) %}
+<nav aria-label="Paginación">
+    <ul class="pagination">
+        <li class="page-item {{ 'disabled' if page<=1 }}">
+            <a class="page-link" href="?{{ qs(page=page-1 if page>1 else 1) }}">Anterior</a>
+        </li>
+        <li class="page-item disabled"><span class="page-link">Página {{ page }} de {{ last_page or 1 }}</span></li>
+        <li class="page-item {{ 'disabled' if page>=last_page }}">
+            <a class="page-link" href="?{{ qs(page=page+1 if page<last_page else last_page) }}">Siguiente</a>
+        </li>
+    </ul>
+</nav>
+
+<p class="text-muted">Total: {{ total }} usuarios — Mostrando hasta {{ per_page }} por página.</p>
+{% endblock %}

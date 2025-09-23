@@ -68,7 +68,7 @@ Esto te dará el comando específico para activar el entorno virtual en tu siste
 
 3. Ejecutar la aplicación:
 ```bash
-python main.py
+python app.py
 ```
 
 4. Abrir tu navegador y visitar: `http://127.0.0.1:5000`
@@ -84,7 +84,7 @@ cd calculadora
 
 2. Ejecutar la aplicación:
 ```bash
-python app.py
+python main.py
 ```
 
 3. Seguir las instrucciones en pantalla para realizar cálculos.
