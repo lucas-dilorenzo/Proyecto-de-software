@@ -73,7 +73,7 @@ Copiamos y pegamos esa linea completa y nos levantara el entrono virtual.
 
 3. Levantar la aplicación (modo desarrollo):
 ```bash
-poetry run flask --app web:create_app run --debug
+poetry run flask run --debug
 ```
 
 4. Abrir en el navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
