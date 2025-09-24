@@ -5,6 +5,8 @@ from src.core import database
 from .handlers import error
 from .config import config
 from src.web import seeds
+from .controllers.tags_controller import tags_bp
+
 
 """
 Crea la aplicación Flask.
@@ -29,6 +31,9 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(404, error.not_found)
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.generic)
+
+    # Register blueprints
+    app.register_blueprint(tags_bp)
 
     @app.route("/")
     def home():
