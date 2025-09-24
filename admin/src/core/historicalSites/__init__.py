@@ -120,3 +120,24 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
             .paginate(page, per_page, error_out=False)
         )
     return sites
+
+
+def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
+    """
+    Retrieves a paginated list of historical sites from the database.
+    Args:
+        page (int): The page number to retrieve (default is 1).
+        per_page (int): The number of sites to display per page (default is 25).
+        order (str): The order in which to sort the sites by id ('asc' for ascending(default), 'desc' for descending; default is 'asc').
+    Returns:
+        sites: A query containing the paginated list of sites and pagination metadata.
+    """
+    if order == "desc":
+        sites = Site.query.order_by(Site.id.desc()).paginate(
+            page, per_page, error_out=False
+        )
+    else:
+        sites = Site.query.order_by(Site.id.asc()).paginate(
+            page, per_page, error_out=False
+        )
+    return sites
