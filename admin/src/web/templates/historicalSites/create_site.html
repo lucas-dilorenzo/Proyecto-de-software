@@ -1,5 +1,126 @@
-{% extends "layout.html" %} {% block title %}Create Historical Site{% endblock
-%} {% block body %}
+{% extends "layout.html" %} {% block head %}
+<!-- Cargar Leaflet CSS primero -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- CSS Override QUIRÚRGICO - Solo neutralizar conflictos específicos -->
+<style>
+  /* ==========================================
+     SOLUCIÓN QUIRÚRGICA: SOLO EL MAPA
+     ========================================== */
+
+  /* 1. SOLO neutralizar los conflictos específicos de Leaflet */
+
+  /* Prevenir que Leaflet afecte los Bootstrap Icons */
+  .bi::before {
+    font-family: "bootstrap-icons" !important;
+  }
+
+  /* 2. Contenedor del mapa - AISLAMIENTO TOTAL */
+  .leaflet-map-section {
+    /* Crear contexto completamente aislado */
+    contain: layout style paint;
+    isolation: isolate;
+    position: relative;
+    margin-top: 15px;
+    /* Resetear cualquier herencia problemática SOLO aquí */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+  }
+
+  .map-instructions {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    border-left: 4px solid #1976d2;
+    /* Volver a la fuente del proyecto SOLO para las instrucciones */
+    font-family: Quicksand, sans-serif;
+  }
+
+  .map-container {
+    position: relative;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+  }
+
+  #map {
+    height: 350px;
+    width: 100%;
+    display: block;
+    /* Importante: asegurar que el mapa no interfiera con el z-index del layout */
+    position: relative;
+    z-index: 1;
+  }
+
+  /* 3. Estilos SOLO para elementos dentro del contenedor del mapa */
+  .leaflet-map-section .leaflet-container {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      sans-serif;
+    font-size: 12px;
+  }
+
+  .leaflet-map-section .leaflet-control {
+    font-family: inherit;
+  }
+
+  .leaflet-map-section .leaflet-popup-content {
+    font-family: inherit;
+  }
+
+  /* 4. Prevenir que los elementos del mapa escapen y afecten el layout */
+  .leaflet-map-section * {
+    /* SOLO aplicar box-sizing dentro del contenedor del mapa */
+    box-sizing: border-box;
+  }
+
+  /* 5. Estilos para el formulario - NO usar !important */
+  .form-actions {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #dee2e6;
+  }
+
+  /* 6. Asegurar que Leaflet no interfiera con elementos específicos de Bootstrap */
+
+  /* Botones del formulario - preservar estilos Bootstrap */
+  .form-actions .btn {
+    font-family: inherit;
+  }
+
+  /* Inputs del formulario */
+  .form-control {
+    font-family: inherit;
+  }
+
+  /* Labels */
+  .form-label {
+    font-family: inherit;
+  }
+
+  /* 7. Z-index management para evitar conflictos con sidebar */
+  .leaflet-map-section {
+    /* Asegurar que el mapa esté por debajo del sidebar */
+    z-index: auto;
+  }
+
+  .map-container {
+    z-index: 1;
+  }
+
+  /* Prevenir que controles de Leaflet interfieran con el sidebar */
+  .leaflet-control-container {
+    z-index: 2;
+  }
+</style>
+{% endblock %} {% block title %}Create Historical Site{% endblock %} {% block
+body %}
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
@@ -81,6 +202,19 @@
                     required
                     placeholder="Enter coordinates or location details"
                   />
+                  <!-- Inputs ocultos para guardar coordenadas -->
+                  <input type="hidden" id="lat" name="lat" />
+                  <input type="hidden" id="lng" name="lng" />
+
+                  <div class="leaflet-map-section">
+                    <div class="map-instructions">
+                      <i class="bi bi-info-circle me-1"></i>Click on the map to
+                      select the exact location
+                    </div>
+                    <div class="map-container">
+                      <div id="map"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -182,7 +316,7 @@
             <!-- Botones de acción -->
             <div class="row">
               <div class="col-12">
-                <div class="d-flex gap-2 justify-content-end">
+                <div class="form-actions d-flex gap-2 justify-content-end">
                   <a
                     href="{{ url_for('sites.list_sites') }}"
                     class="btn btn-outline-secondary"
@@ -201,4 +335,44 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Esperar a que el DOM esté completamente cargado
+  document.addEventListener("DOMContentLoaded", function () {
+    // Inicializar mapa con un pequeño retraso para evitar conflictos de CSS
+    setTimeout(function () {
+      var map = L.map("map").setView([-34.6037, -58.3816], 13); // Buenos Aires de ejemplo
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap contributors",
+      }).addTo(map);
+
+      var marker;
+
+      // Evento click en mapa
+      map.on("click", function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (marker) {
+          map.removeLayer(marker);
+        }
+        marker = L.marker([lat, lng]).addTo(map);
+
+        // Guardar valores en los inputs ocultos
+        document.getElementById("lat").value = lat;
+        document.getElementById("lng").value = lng;
+
+        // Opcional: actualizar el campo de ubicación con las coordenadas
+        document.getElementById("location").value =
+          lat.toFixed(6) + ", " + lng.toFixed(6);
+      });
+
+      // Forzar redimensionamiento del mapa después de la inicialización
+      setTimeout(function () {
+        map.invalidateSize();
+      }, 100);
+    }, 100);
+  });
+</script>
 {% endblock %}
