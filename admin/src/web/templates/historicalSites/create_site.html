@@ -30,13 +30,13 @@
     margin-top: 10px;
   }
 </style>
-{% endblock %} {% block title %}Create Historical Site{% endblock %} {% block
+{% endblock %} {% block title %}Crear Sitio Histórico{% endblock %} {% block
 body %}
 <div class="container-fluid">
   <div class="row">
     <div class="col-12">
       <h1 class="mb-4 text-primary">
-        <i class="bi bi-plus-circle me-2"></i>Create New Historical Site
+        <i class="bi bi-plus-circle me-2"></i>Crear Nuevo Sitio Histórico
       </h1>
 
       <div class="card shadow-sm">
@@ -47,7 +47,7 @@ body %}
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="name" class="form-label">
-                    <i class="bi bi-building me-1"></i>Name
+                    <i class="bi bi-building me-1"></i>Nombre
                   </label>
                   <input
                     type="text"
@@ -55,13 +55,13 @@ body %}
                     id="name"
                     name="name"
                     required
-                    placeholder="Enter the site name"
+                    placeholder="Ingrese el nombre del sitio"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="description_short" class="form-label">
-                    <i class="bi bi-card-text me-1"></i>Short Description
+                    <i class="bi bi-card-text me-1"></i>Descripción Corta
                   </label>
                   <input
                     type="text"
@@ -69,13 +69,13 @@ body %}
                     id="description_short"
                     name="description_short"
                     required
-                    placeholder="Brief description of the site"
+                    placeholder="Descripción breve del sitio"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="city" class="form-label">
-                    <i class="bi bi-geo-alt me-1"></i>City
+                    <i class="bi bi-geo-alt me-1"></i>Ciudad
                   </label>
                   <input
                     type="text"
@@ -83,13 +83,13 @@ body %}
                     id="city"
                     name="city"
                     required
-                    placeholder="Enter the city"
+                    placeholder="Ingrese la ciudad"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="province" class="form-label">
-                    <i class="bi bi-map me-1"></i>Province
+                    <i class="bi bi-map me-1"></i>Provincia
                   </label>
                   <input
                     type="text"
@@ -97,13 +97,13 @@ body %}
                     id="province"
                     name="province"
                     required
-                    placeholder="Enter the province"
+                    placeholder="Ingrese la provincia"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="location" class="form-label">
-                    <i class="bi bi-pin-map me-1"></i>Geographical Location
+                    <i class="bi bi-pin-map me-1"></i>Ubicación Geográfica
                   </label>
                   <input
                     type="text"
@@ -111,8 +111,10 @@ body %}
                     id="location"
                     name="location"
                     required
-                    placeholder="Enter coordinates or location details"
+                    placeholder="Ingrese coordenadas o detalles de ubicación"
+                    hidden
                   />
+                  <br />
                   <!-- MAPA -->
                   <!-- Inputs ocultos para guardar coordenadas -->
                   <input type="hidden" id="lat" name="lat" />
@@ -129,7 +131,8 @@ body %}
               <div class="col-md-6">
                 <div class="mb-3">
                   <label for="conservation_status" class="form-label">
-                    <i class="bi bi-shield-check me-1"></i>Conservation Status
+                    <i class="bi bi-shield-check me-1"></i>Estado de
+                    Conservación
                   </label>
                   <input
                     type="text"
@@ -137,13 +140,13 @@ body %}
                     id="conservation_status"
                     name="conservation_status"
                     required
-                    placeholder="Current conservation status"
+                    placeholder="Estado actual de conservación"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="year_declared" class="form-label">
-                    <i class="bi bi-calendar-event me-1"></i>Year Declared
+                    <i class="bi bi-calendar-event me-1"></i>Año de Declaración
                   </label>
                   <input
                     type="number"
@@ -153,13 +156,13 @@ body %}
                     required
                     min="1800"
                     max="2024"
-                    placeholder="Year when it was declared"
+                    placeholder="Año en que fue declarado"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="category" class="form-label">
-                    <i class="bi bi-tags me-1"></i>Category
+                    <i class="bi bi-tags me-1"></i>Categoría
                   </label>
                   <input
                     type="text"
@@ -167,13 +170,13 @@ body %}
                     id="category"
                     name="category"
                     required
-                    placeholder="Site category"
+                    placeholder="Categoría del sitio"
                   />
                 </div>
 
                 <div class="mb-3">
                   <label for="registration_date" class="form-label">
-                    <i class="bi bi-calendar3 me-1"></i>Registration Date
+                    <i class="bi bi-calendar3 me-1"></i>Fecha de Registro
                   </label>
                   <input
                     type="date"
@@ -194,7 +197,8 @@ body %}
                       value="true"
                     />
                     <label class="form-check-label" for="visibility">
-                      <i class="bi bi-eye me-1"></i>Make site visible to public
+                      <i class="bi bi-eye me-1"></i>Hacer sitio visible al
+                      público
                     </label>
                   </div>
                 </div>
@@ -206,7 +210,7 @@ body %}
               <div class="col-12">
                 <div class="mb-4">
                   <label for="description" class="form-label">
-                    <i class="bi bi-journal-text me-1"></i>Detailed Description
+                    <i class="bi bi-journal-text me-1"></i>Descripción Detallada
                   </label>
                   <textarea
                     class="form-control"
@@ -214,7 +218,7 @@ body %}
                     name="description"
                     required
                     rows="4"
-                    placeholder="Provide a detailed description of the historical site..."
+                    placeholder="Proporcione una descripción detallada del sitio histórico..."
                   ></textarea>
                 </div>
               </div>
@@ -228,10 +232,10 @@ body %}
                     href="{{ url_for('sites.list_sites') }}"
                     class="btn btn-outline-secondary"
                   >
-                    <i class="bi bi-arrow-left me-1"></i>Cancel
+                    <i class="bi bi-arrow-left me-1"></i>Cancelar
                   </a>
                   <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-1"></i>Create Site
+                    <i class="bi bi-plus-circle me-1"></i>Crear Sitio
                   </button>
                 </div>
               </div>
