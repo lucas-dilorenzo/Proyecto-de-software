@@ -1,28 +1,61 @@
 /* ====== Base ====== */
-/* body {
+body {
   font-family: Quicksand, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f9f9f9;
-  color: #333; */
+  color: #333;
 
   /* que el footer quede al fondo */
-  /* min-height: 100vh;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-} */
+}
+
+/* Contenedor de ancho */
+.container {
+  width: 80%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ====== Header (ovalado y flotante) ====== */
+header {
+  background-color: #006488;
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem 2rem;
+
+  border-radius: 0px;         /* forma ovalada */
+  width: 100%;
+  max-width: 1200px;
+  margin: 1rem auto;           /* centrado */
+  box-shadow: 0 4px 12px rgba(0,0,0,.2);
+  position: sticky;            /* flotante */
+  top: 1rem;
+  z-index: 1000;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* ====== Navegación ====== */
+nav {
+  background-color: #eaeaea;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 1rem auto;
+}
 
 /* ====== Contenido principal ====== */
- #content {
-    background-color: #f9f9f9;
-    margin-top: 60px; /* respeta el header */
-    margin-left: 250px; /* respeta el sidebar */
-    padding: 1rem;
-    transition: margin-left 0.3s;
-    min-height: calc(100vh - 60px);
-  }
-/* main {
-  flex: 1;                      empuja el footer hacia abajo 
+main {
+  flex: 1;                     /* empuja el footer hacia abajo */
   padding: 2rem;
 
   width: 100%;
@@ -32,10 +65,10 @@
   background-color: #FEF8E6;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,.1);
-} */
+}
 
 /* ====== Footer (recto al fondo) ====== */
-/* footer {
+footer {
   background-color: #008859;
   color: #fff;
   text-align: center;
@@ -43,152 +76,71 @@
 
   width: 100%;
   margin: 0;
-  border-radius: 0;           
-} */
+  border-radius: 0;            /* recto */
+  /* no position: fixed; así queda al fondo sin superponerse */
+}
 
 /* ====== Responsive tweaks ====== */
-  #header {
-    position: fixed;     /* lo fijás arriba */
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 60px;
-    background-color: #004c82; /* mismo color que el navbar */
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    /*z-index: 1030;      /*  asegura que quede sobre el contenido */
+@media (max-width: 768px) {
+  header, nav, main {
+    width: 92%;
   }
 
-  #perfil-btn {
-    background-color: #004c82;  
-    border: 1px solid white;   
-    color: white;               
-  }
-
-  #perfil-btn:hover {
-    background-color: #004c82;  
-    color: white;
-    border-color: white;
-  }
-
-  /* Sidebar debajo del header */
-  #sidebar {
-    position: fixed;
-    /* top: 60px; respeta el header */
-    left: 0;
-    height: calc(100vh - 60px);
-    width: 250px;
-    color: #333 !important; 
-    background-color: white;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    /* padding-top: 1rem; */
-    transition: all 0.3s;
-    z-index: 1000;
-  }
-
-  /* Sidebar colapsado */
-  #sidebar.collapsed {
-    width: 80px;
-  }
-
-  .logo-navbar {
-    height: 90%; /* Ajusta la altura al 100% del contenedor (navbar) */
-    max-height: 45px; /* Asegúrate de que no exceda la altura del navbar */
-    width: auto; /* Mantén la proporción del logo */
-    object-fit: contain; /* Asegura que el logo se ajuste sin deformarse */
-  }
-
-  #sidebar .nav-link {
-    color: #404142 !important; 
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;
-  }
-
-  #sidebar.collapsed .nav-link span {
-    display: none;
-  }
-
-  #sidebar.collapsed ~ #content {
-    margin-left: 80px;
-  }
-
-  /* #toggle-btn {
-    background-color: white !important;  fondo azul 
-    color: #404142  !important;                texto e icono blanco 
-    border: 1px solid #404142  !important;     borde blanco 
-  } */
-
-  #toggle-btn {
-    border: none;
-    background-color: transparent !important;
-    padding-left: 2%;
-  }
-
-  #sidebar.collapsed ~ #toggle-btn .bi-arrow-left {
-    transform: rotate(180deg);
-  }
-
-  #sidebar.collapsed ~ #toggle-btn .expand-icon {
-    display: none;
-  }
-
-  #sidebar.collapsed ~ #toggle-btn .collapse-icon {
-    display: inline-block !important; /* Asegura que el ícono se muestre */
-  }
-
-  #sidebar.collapsed ~ #toggle-btn .expand-icon {
-    display: none;
-  }
-
-  #sidebar.collapsed ~ #toggle-btn .collapse-icon {
-    display: inline-block;
-  }
-
-  .profile-info {
-    padding: 1rem;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    #sidebar {
-      position: relative;
-      width: 100%;
-      height: auto;
-      top: 0;
-    }
-
-    #sidebar.collapsed {
-      width: 100%;
-    }
-
-    #content {
-      margin-left: 0 !important;
-    }
-  }
-
-  .separator-line {
-    background-color: #e0e0e0;
-    height: 1px;
-    border: none;
-    margin: 0;
-  }
-
-  #sidebar ul.nav {
-  padding: 0; /* Elimina el padding de la lista */
-  margin: 0;
+  header { border-radius: 32px; }
+  main { padding: 1.25rem; }
 }
 
-#sidebar .nav-item {
-  padding: 0; /* Elimina el padding de los ítems de la lista */
-}
 
-#sidebar .nav-link {
-  /* ... tus estilos de color y display ... */
-  padding: 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
-}
+/* <!-- Custom styles for sidebar --> */
+      .sidebar {
+        min-height: 100vh;
+        background-color: #212529 !important;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, .1);
+      }
 
-/* Estilos específicos para el botón de cerrar sesión */
-.signout-button a {
-  color: #333 !important; /* Asegura que el texto y el ícono sean visibles */
-}
+      .sidebar .nav-link {
+        font-weight: 500;
+        color: rgba(255, 255, 255, .75);
+        border-radius: 0.375rem;
+        margin: 0.125rem 0.5rem;
+        padding: 0.625rem 0.75rem;
+        transition: all 0.15s ease-in-out;
+      }
+
+      .sidebar .nav-link:hover {
+        color: #fff;
+        background-color: rgba(255, 255, 255, .1);
+      }
+
+      .sidebar .nav-link.active {
+        color: #fff;
+        background-color: #0d6efd;
+      }
+
+      .sidebar .nav-link svg {
+        margin-right: 0.5rem !important;
+      }
+
+      body {
+        background-color: #f8f9fa;
+      }
+
+      .main-content {
+        min-height: 100vh;
+        background-color: white;
+        border-radius: 0.5rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+      }
+
+      @media (max-width: 767.98px) {
+        .sidebar {
+          min-height: auto;
+        }
+        
+        .main-content {
+          margin-top: 0;
+          border-radius: 0;
+        }
+      }
