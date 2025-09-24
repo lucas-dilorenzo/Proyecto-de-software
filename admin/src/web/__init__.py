@@ -31,7 +31,7 @@ def create_app(env="development", static_folder="../../static"):
     app.register_error_handler(401, error.unauthorized)
     app.register_error_handler(500, error.generic)
 
-    app.register_blueprint(sites.historicalSites_bp)
+    app.register_blueprint(sites.historical_sites_bp)
 
     @app.route("/")
     def home():
