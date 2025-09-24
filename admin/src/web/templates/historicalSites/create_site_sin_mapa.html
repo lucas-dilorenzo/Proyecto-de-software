@@ -1,0 +1,204 @@
+{% extends "layout.html" %} {% block title %}Create Historical Site{% endblock
+%} {% block body %}
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <h1 class="mb-4 text-primary">
+        <i class="bi bi-plus-circle me-2"></i>Create New Historical Site
+      </h1>
+
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <form method="POST" action="{{ url_for('sites.create_site') }}">
+            <div class="row">
+              <!-- Primera columna -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="name" class="form-label">
+                    <i class="bi bi-building me-1"></i>Name
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="name"
+                    name="name"
+                    required
+                    placeholder="Enter the site name"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="description_short" class="form-label">
+                    <i class="bi bi-card-text me-1"></i>Short Description
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="description_short"
+                    name="description_short"
+                    required
+                    placeholder="Brief description of the site"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="city" class="form-label">
+                    <i class="bi bi-geo-alt me-1"></i>City
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="city"
+                    name="city"
+                    required
+                    placeholder="Enter the city"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="province" class="form-label">
+                    <i class="bi bi-map me-1"></i>Province
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="province"
+                    name="province"
+                    required
+                    placeholder="Enter the province"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="location" class="form-label">
+                    <i class="bi bi-pin-map me-1"></i>Geographical Location
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="location"
+                    name="location"
+                    required
+                    placeholder="Enter coordinates or location details"
+                  />
+                </div>
+              </div>
+
+              <!-- Segunda columna -->
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="conservation_status" class="form-label">
+                    <i class="bi bi-shield-check me-1"></i>Conservation Status
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="conservation_status"
+                    name="conservation_status"
+                    required
+                    placeholder="Current conservation status"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="year_declared" class="form-label">
+                    <i class="bi bi-calendar-event me-1"></i>Year Declared
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="year_declared"
+                    name="year_declared"
+                    required
+                    min="1800"
+                    max="2024"
+                    placeholder="Year when it was declared"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="category" class="form-label">
+                    <i class="bi bi-tags me-1"></i>Category
+                  </label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="category"
+                    name="category"
+                    required
+                    placeholder="Site category"
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <label for="registration_date" class="form-label">
+                    <i class="bi bi-calendar3 me-1"></i>Registration Date
+                  </label>
+                  <input
+                    type="date"
+                    class="form-control"
+                    id="registration_date"
+                    name="registration_date"
+                    required
+                  />
+                </div>
+
+                <div class="mb-3">
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="visibility"
+                      name="visibility"
+                      value="true"
+                    />
+                    <label class="form-check-label" for="visibility">
+                      <i class="bi bi-eye me-1"></i>Make site visible to public
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Descripción detallada en toda la fila -->
+            <div class="row">
+              <div class="col-12">
+                <div class="mb-4">
+                  <label for="description" class="form-label">
+                    <i class="bi bi-journal-text me-1"></i>Detailed Description
+                  </label>
+                  <textarea
+                    class="form-control"
+                    id="description"
+                    name="description"
+                    required
+                    rows="4"
+                    placeholder="Provide a detailed description of the historical site..."
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="row">
+              <div class="col-12">
+                <div class="d-flex gap-2 justify-content-end">
+                  <a
+                    href="{{ url_for('sites.list_sites') }}"
+                    class="btn btn-outline-secondary"
+                  >
+                    <i class="bi bi-arrow-left me-1"></i>Cancel
+                  </a>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>Create Site
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
