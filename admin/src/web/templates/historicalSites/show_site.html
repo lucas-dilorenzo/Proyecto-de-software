@@ -1,0 +1,17 @@
+{% extends "layout.html" %} {% block title %} Sitios Historicos - App37 {%
+endblock %} {% block titulo_body %}
+<h1>{{ site.name }}</h1>
+{% endblock %} {% block body %}
+
+<h2>Descripcion</h2>
+<p>{{ site.description }}</p>
+
+<h2>Ubicacion</h2>
+<p>{{ site.location }}</p>
+
+<h2>Año de Declaración</h2>
+<p>{{ site.year_declared }}</p>
+<a class="btn btn-primary" href="{{ url_for('sites.list_sites') }}">
+  Volver a la lista
+</a>
+{% endblock %}

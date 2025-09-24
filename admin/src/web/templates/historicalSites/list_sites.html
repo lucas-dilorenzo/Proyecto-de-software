@@ -1,0 +1,67 @@
+{% extends "layout.html" %} {% block title %} Sitios Historicos - App37 {%
+endblock %} {% block titulo_body %}
+<h1>Sitios Historicos</h1>
+{% endblock%} {% block body %}
+
+<h2>Lista de Sitios Historicos</h2>
+<p>Estos son los sitios historicos registrados en el sistema</p>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Descripcion</th>
+      <th>Ubicacion</th>
+      <th>Año de Declaración</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for site in sites %}
+    <tr>
+      <td>{{ site.id }}</td>
+      <td>{{ site.name }}</td>
+      <td>{{ site.description }}</td>
+      <td>{{ site.location }}</td>
+      <td>{{ site.year_declared }}</td>
+      <td>
+        <div class="dropdown">
+          <button
+            class="btn btn-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            Acciones
+          </button>
+          <ul class="dropdown-menu">
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('sites.show_site', site_id=site.id) }}"
+                >Ver</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('sites.edit_site', site_id=site.id) }}"
+                >Editar</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item"
+                href="{{ url_for('sites.delete_site', site_id=site.id) }}"
+                >Eliminar</a
+              >
+            </li>
+          </ul>
+        </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
