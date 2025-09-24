@@ -34,6 +34,7 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_ENGINES = {
         "default": f"{DB_SCHEME}://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
     }
+    SQLALCHEMY_DATABASE_URI = SQLALCHEMY_ENGINES["default"]
     # TEMPLATES_AUTO_RELOAD = True
 
 
