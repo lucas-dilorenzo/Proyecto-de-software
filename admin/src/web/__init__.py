@@ -1,5 +1,6 @@
 # imports habituales de Flask (usados por la factory y las rutas DEV)
 from flask import Flask, render_template, abort, session, redirect, url_for, flash
+from web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
 from .config import config as config_map
@@ -18,8 +19,11 @@ from core.users import User, UserRole
 
 # Utilidades
 from sqlalchemy import select
+from flask_session import Session
+from flask_wtf.csrf import CSRFProtect
 
 from web.controllers.users import users_bp
+from web.controllers.auth.authenticate import auth_bp
 
 """
     Crea la aplicación Flask.
@@ -47,6 +51,15 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     #     with app.app_context():
     #         Base.metadata.create_all(bind=db.engine)
 
+    # Protección CSRF
+    csrf = CSRFProtect(app)
+    app.config["WTF_CSRF_TIME_LIMIT"] = None
+    app.config["WTF_CSRF_ENABLED"] = False
+
+    # Server Side session
+    app.config["SESSION_TYPE"] = "filesystem"
+    Session(app)
+
     # -------------------------
     # Rutas base
     # -------------------------
@@ -64,11 +77,16 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     # register blueprints
     app.register_blueprint(users_bp)
+    app.register_blueprint(auth_bp)
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)
     app.register_error_handler(401, error_handlers.unauthorized)
     app.register_error_handler(500, error_handlers.generic)
+
+    # Funciones que se exportan al contexto de Jinja2
+    # Esta primera funcion me va a ayudar a identificar la sesion de un usuario
+    app.jinja_env.globals.update(is_authenticated=authenticate.authenticated)
 
     # -------------------------
     # Comandos CLI
