@@ -1,5 +1,6 @@
-from src.core.database import db
-from src.core import historicalSites
+from core.database import db
+from core import historicalSites
+from core.historicalSites.site import Site  # Esta es la correcta
 from datetime import date
 
 

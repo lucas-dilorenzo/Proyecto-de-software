@@ -13,9 +13,9 @@ from core.database import db, Base
 
 # seeds: puede que exista en web.seeds; importamos de forma segura (no rompe si falta)
 try:
-    # preferimos la variante sin 'src.' (Opción B)
-    from web import seeds
-except Exception:
+    from web import seeds  # Importar el módulo correctamente
+except Exception as e:
+    print(f"Error importando seeds: {e}")
     seeds = None
 
 # Modelos: tratamos de importar desde core.models; si la estructura cambió a core.users, lo intentamos también.
@@ -130,11 +130,15 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.cli.command("seed-db")
     def seed_db():
         """Ejecuta seeds generales si el módulo existe."""
-        if not seeds:
-            print("No hay módulo 'seeds' disponible.")
-            return
-        seeds.run()
-        print("Seeds ejecutados.")
+        try:
+            # Importar directamente aquí
+            from web import seeds
+
+            with app.app_context():
+                seeds.run()
+            print("Seeds ejecutados.")
+        except Exception as e:
+            print(f"Error en seed-db: {e}")
 
     # -------------------------
     # Rutas DEV utilitarias
