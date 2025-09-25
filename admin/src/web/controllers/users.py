@@ -4,7 +4,11 @@ from werkzeug.security import generate_password_hash
 from web.auth import admin_required
 from web.validators.users import validate_user_payload
 from core.database import db
-from core.models import User, UserRole
+
+try:
+    from core.models import User, UserRole
+except ImportError:
+    from core.users import User, UserRole
 
 users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
 
@@ -14,193 +18,197 @@ def _clamp_per_page(val) -> int:
         n = int(val)
     except Exception:
         n = 25
-    return max(1, min(n, 25))  # máx 25
+    return max(1, min(n, 50))
 
 
 @users_bp.get("/")
 @admin_required
 def list_users():
     email = (request.args.get("email") or "").strip()
-    activo = (request.args.get("activo") or "").strip().upper()  # "SI" | "NO" | ""
+    activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""
     rol = (request.args.get("rol") or "").strip()
-    order = (request.args.get("order") or "desc").lower()  # "asc"|"desc"
-    page = max(1, int(request.args.get("page", 1)))
-    per_page = _clamp_per_page(request.args.get("per_page", 25))
+    order = (request.args.get("order") or "desc").lower()
+    page = max(1, int(request.args.get("page") or 1))
+    per_page = _clamp_per_page(request.args.get("per_page") or 25)
 
-    q = select(User)
+    stmt = select(User)
     if email:
-        q = q.where(func.lower(User.email).like(f"%{email.lower()}%"))
+        stmt = stmt.where(User.email.ilike(f"%{email}%"))
     if activo in ("SI", "NO"):
-        q = q.where(User.activo == (activo == "SI"))
-    if rol in (r.value for r in UserRole):
-        q = q.where(User.rol == UserRole(rol))
+        stmt = stmt.where(User.activo.is_(activo == "SI"))
+    if rol:
+        role_enum = next((r for r in UserRole if r.value == rol), None)
+        if role_enum:
+            stmt = stmt.where(User.rol == role_enum)
 
     if order == "asc":
-        q = q.order_by(asc(User.created_at), User.id)
+        stmt = stmt.order_by(asc(User.created_at))
     else:
-        q = q.order_by(desc(User.created_at), desc(User.id))
+        order = "desc"
+        stmt = stmt.order_by(desc(User.created_at))
 
-    total = db.session.execute(
-        select(func.count()).select_from(q.subquery())
-    ).scalar_one()
-    items = (
-        db.session.execute(q.limit(per_page).offset((page - 1) * per_page))
-        .scalars()
-        .all()
-    )
+    total = db.session.scalar(select(func.count()).select_from(stmt.subquery()))
+    offset = (page - 1) * per_page
+    users = db.session.execute(stmt.limit(per_page).offset(offset)).scalars().all()
+
+    roles = [r.value for r in UserRole]
+
+    from urllib.parse import urlencode
 
     def qs(**overrides):
-        base = request.args.to_dict()
+        base = dict(
+            email=email,
+            activo=activo,
+            rol=rol,
+            order=order,
+            page=page,
+            per_page=per_page,
+        )
         base.update({k: v for k, v in overrides.items() if v is not None})
-        return "&".join(f"{k}={v}" for k, v in base.items() if v not in ("", None))
+        clean = {k: v for k, v in base.items() if v not in ("", None)}
+        return urlencode(clean)
 
     return render_template(
         "users/list.html",
-        users=items,
-        total=total,
-        page=page,
-        per_page=per_page,
+        users=users,
         email=email,
         activo=activo,
         rol=rol,
         order=order,
-        roles=[r.value for r in UserRole],
+        page=page,
+        per_page=per_page,
+        total=total,
+        roles=roles,
         qs=qs,
     )
 
 
-# --------- CREATE ----------
 @users_bp.get("/new")
 @admin_required
 def new_user():
-    # valores por defecto
-    form = {
-        "email": "",
-        "nombre": "",
-        "apellido": "",
-        "password": "",
-        "activo": "SI",
-        "rol": "Usuario público",
-    }
-    return render_template("users/form.html", form=form, errors={}, mode="create")
+    return render_template(
+        "users/form.html",
+        user=None,
+        form={},  # Agregar esto
+        errors={},  # Agregar esto
+        roles=[r.value for r in UserRole],
+        mode="create",
+        action=url_for("users.create_user"),
+    )
 
 
+# Cambiamos @users_bp.post("/new") a @users_bp.post("/")
 @users_bp.post("/new")
 @admin_required
 def create_user():
-    form = {
-        "email": (request.form.get("email") or "").strip(),
-        "nombre": (request.form.get("nombre") or "").strip(),
-        "apellido": (request.form.get("apellido") or "").strip(),
-        "password": request.form.get("password") or "",
-        "activo": (request.form.get("activo") or "").strip().upper(),
-        "rol": (request.form.get("rol") or "").strip(),
-    }
-    ok, errors = validate_user_payload(form, is_update=False)
-    if ok:
-        # unicidad de email
-        exists = db.session.execute(
-            select(User).where(func.lower(User.email) == form["email"].lower())
-        ).scalar_one_or_none()
-        if exists:
-            errors["email"] = "Ya existe un usuario con ese email."
-
-    if not ok or errors:
-        return (
-            render_template("users/form.html", form=form, errors=errors, mode="create"),
-            400,
+    data, errors = validate_user_payload(request.form)
+    if errors:
+        # En lugar de redireccionar, renderizamos directamente con los datos originales
+        return render_template(
+            "users/form.html",
+            user=None,
+            form=request.form,  # Mantenemos los datos ingresados
+            errors=errors,  # Mostramos los errores
+            roles=[r.value for r in UserRole],
+            mode="create",
+            action=url_for("users.create_user"),
         )
 
-    u = User(
-        email=form["email"],
-        nombre=form["nombre"],
-        apellido=form["apellido"],
-        password_hash=generate_password_hash(form["password"]),
-        activo=(form["activo"] == "SI"),
-        rol=UserRole(form["rol"]),
+    # Verificar email único
+    exists = db.session.execute(
+        select(User).where(User.email == data["email"])
+    ).scalar_one_or_none()
+
+    if exists:
+        # También mantenemos los datos para este error
+        flash("El email ya está registrado.", "warning")
+        return render_template(
+            "users/form.html",
+            user=None,
+            form=request.form,
+            errors={"email": "Este email ya está registrado"},
+            roles=[r.value for r in UserRole],
+            mode="create",
+            action=url_for("users.create_user"),
+        )
+
+    role_enum = next((r for r in UserRole if r.value == data["rol"]), UserRole.PUBLIC)
+    activo_flag = bool(request.form.get("activo")) or data.get("activo", True)
+
+    user = User(
+        email=data["email"],
+        nombre=data["nombre"],
+        apellido=data["apellido"],
+        password_hash=generate_password_hash(data["password"]),
+        activo=activo_flag,
+        rol=role_enum,
     )
-    db.session.add(u)
+    db.session.add(user)
     db.session.commit()
-    flash("Usuario creado correctamente.", "success")
+    flash("Usuario creado.", "success")
     return redirect(url_for("users.list_users"))
 
 
-# --------- UPDATE ----------
 @users_bp.get("/<int:uid>/edit")
 @admin_required
 def edit_user(uid: int):
-    u = db.session.get(User, uid)
-    if not u:
+    user = db.session.get(User, uid)
+    if not user:
         abort(404)
-    form = {
-        "email": u.email,
-        "nombre": u.nombre,
-        "apellido": u.apellido,
-        "password": "",  # vacío (opcional actualizar)
-        "activo": "SI" if u.activo else "NO",
-        "rol": u.rol.value,
-    }
     return render_template(
-        "users/form.html", form=form, errors={}, mode="edit", uid=uid
+        "users/form.html",
+        user=user,
+        roles=[r.value for r in UserRole],
+        mode="edit",
+        action=url_for("users.update_user", uid=uid),
     )
 
 
 @users_bp.post("/<int:uid>/edit")
 @admin_required
 def update_user(uid: int):
-    u = db.session.get(User, uid)
-    if not u:
+    user = db.session.get(User, uid)
+    if not user:
         abort(404)
 
-    form = {
-        "email": (request.form.get("email") or "").strip(),
-        "nombre": (request.form.get("nombre") or "").strip(),
-        "apellido": (request.form.get("apellido") or "").strip(),
-        "password": request.form.get("password") or "",  # si viene vacío, no cambia
-        "activo": (request.form.get("activo") or "").strip().upper(),
-        "rol": (request.form.get("rol") or "").strip(),
-    }
+    data, errors = validate_user_payload(request.form, editing=True)
+    if errors:
+        for e in errors:
+            flash(e, "danger")
+        return redirect(url_for("users.edit_user", uid=uid))
 
-    ok, errors = validate_user_payload(form, is_update=True)
-    if ok:
-        # unicidad de email (excluyendo el propio registro)
-        exists = db.session.execute(
-            select(User).where(
-                func.lower(User.email) == form["email"].lower(), User.id != uid
-            )
+    if data.get("email") and data["email"] != user.email:
+        dup = db.session.execute(
+            select(User).where(User.email == data["email"])
         ).scalar_one_or_none()
-        if exists:
-            errors["email"] = "Ya existe otro usuario con ese email."
+        if dup:
+            flash("El email ya está en uso.", "warning")
+            return redirect(url_for("users.edit_user", uid=uid))
 
-    if not ok or errors:
-        return (
-            render_template(
-                "users/form.html", form=form, errors=errors, mode="edit", uid=uid
-            ),
-            400,
-        )
-
-    u.email = form["email"]
-    u.nombre = form["nombre"]
-    u.apellido = form["apellido"]
-    if form["password"]:
-        u.password_hash = generate_password_hash(form["password"])
-    u.activo = form["activo"] == "SI"
-    u.rol = UserRole(form["rol"])
+    if data.get("email"):
+        user.email = data["email"]
+    user.nombre = data["nombre"]
+    user.apellido = data["apellido"]
+    if data.get("password"):
+        user.password_hash = generate_password_hash(data["password"])
+    if request.form.get("activo") is not None:
+        user.activo = bool(request.form.get("activo"))
+    if data.get("rol"):
+        role_enum = next((r for r in UserRole if r.value == data["rol"]), user.rol)
+        user.rol = role_enum
 
     db.session.commit()
     flash("Usuario actualizado.", "success")
     return redirect(url_for("users.list_users"))
 
 
-# --------- DELETE ----------
 @users_bp.post("/<int:uid>/delete")
 @admin_required
 def delete_user(uid: int):
-    u = db.session.get(User, uid)
-    if not u:
+    user = db.session.get(User, uid)
+    if not user:
         abort(404)
-    db.session.delete(u)
+    db.session.delete(user)
     db.session.commit()
-    flash("Usuario eliminado.", "success")
+    flash("Usuario eliminado.", "info")
     return redirect(url_for("users.list_users"))

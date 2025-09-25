@@ -145,6 +145,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     @app.get("/_dev/routes")
     def routes():
-        return "<br>".join(sorted(str(r) for r in app.url_map.iter_rules()))
+        def safe(rule):
+            return rule.rule.replace("<", "&lt;").replace(">", "&gt;")
+
+        return "<br>".join(sorted(safe(r) for r in app.url_map.iter_rules()))
 
     return app

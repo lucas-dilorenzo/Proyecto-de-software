@@ -1,17 +1,21 @@
 import re
-from typing import Dict, Tuple
+from typing import Dict, Tuple, Any
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def validate_user_payload(
-    data: Dict, is_update: bool = False
-) -> Tuple[bool, Dict[str, str]]:
+    data: Dict, editing: bool = False
+) -> Tuple[Dict[str, Any], Dict[str, str]]:
     """
     data esperado:
       email, nombre, apellido, password(opcional en update), activo("SI"/"NO"), rol(...)
+
+    Returns:
+      (cleaned_data, errors)
     """
     errors: Dict[str, str] = {}
+    cleaned_data: Dict[str, Any] = {}
 
     email = (data.get("email") or "").strip()
     nombre = (data.get("nombre") or "").strip()
@@ -24,20 +28,32 @@ def validate_user_payload(
         errors["email"] = "El email es requerido."
     elif not EMAIL_RE.match(email):
         errors["email"] = "Formato de email inválido."
+    else:
+        cleaned_data["email"] = email
 
     if not nombre:
         errors["nombre"] = "El nombre es requerido."
+    else:
+        cleaned_data["nombre"] = nombre
 
     if not apellido:
         errors["apellido"] = "El apellido es requerido."
+    else:
+        cleaned_data["apellido"] = apellido
 
-    if not is_update and not password:
+    if not editing and not password:
         errors["password"] = "La contraseña es requerida."
+    elif password:  # Solo incluir password si se proporciona (importante en edición)
+        cleaned_data["password"] = password
 
     if activo not in ("SI", "NO"):
         errors["activo"] = "Debe ser SI o NO."
+    else:
+        cleaned_data["activo"] = activo == "SI"  # Convertir a booleano
 
     if rol not in ("Usuario público", "Editor", "Administrador"):
         errors["rol"] = "Rol inválido."
+    else:
+        cleaned_data["rol"] = rol
 
-    return (len(errors) == 0), errors
+    return cleaned_data, errors
