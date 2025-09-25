@@ -9,7 +9,8 @@ from .handlers import error as error_handlers
 
 # DB/core - Opción B: import desde el paquete instalado en src/
 from core import database
-from core.database import db
+# from core.database import db
+from src.core.database import db
 
 from src.web import seeds  # Importar el módulo correctamente
 
@@ -20,6 +21,7 @@ from core.users import User, UserRole
 from sqlalchemy import select
 
 from web.controllers.users import users_bp
+from web.controllers.tags_controller import tags_bp
 
 """
     Crea la aplicación Flask.
@@ -44,6 +46,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     # Register blueprints
     app.register_blueprint(tags_bp)
+    app.register_blueprint(users_bp)
 
     @app.route("/")
     def home():
@@ -56,9 +59,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.get("/error")
     def trigger_error():
         abort(500)
-
-    # register blueprints
-    app.register_blueprint(users_bp)
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)

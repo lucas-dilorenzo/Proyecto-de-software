@@ -1,7 +1,8 @@
 from select import select
-from core.database import db
+# from core.database import db
+from src.core.database import db
 from core import historicalSites
-from core.historicalSites.site import Site  # Esta es la correcta
+from src.core.historicalSites.site import Site
 from datetime import date
 from core.users.user import User, UserRole
 from werkzeug.security import generate_password_hash

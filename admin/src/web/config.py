@@ -1,6 +1,6 @@
 from os import environ
-from core.database import db
-
+# from core.database import db
+from src.core.database import db
 
 class Config(object):
     """Base configuration."""

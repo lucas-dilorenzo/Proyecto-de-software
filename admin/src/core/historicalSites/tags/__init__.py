@@ -5,5 +5,5 @@ from src.core.database import db
 # Retorna todos los tags con nombre ascendente
 def get_all_tags():
     session = db.session
-    query = session.query(Tag).order_by(Tag.name.asc()).all()
+    query = Tag.query.order_by(Tag.name.asc()).all()
     return query

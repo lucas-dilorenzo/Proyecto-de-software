@@ -8,7 +8,8 @@ from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
 from web.auth import admin_required
 from web.validators.users import validate_user_payload
-from core.database import db
+# from core.database import db
+from src.core.database import db
 from core.users import User, UserRole
 
 # Define el blueprint para las rutas de usuarios bajo /admin/users
