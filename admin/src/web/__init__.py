@@ -7,21 +7,19 @@ from .config import config as config_map
 # handlers de error (mantener compatibilidad con development)
 from .handlers import error as error_handlers
 
-# DB/core - Opción B: import desde el paquete instalado en src/
-from core import database
-# from core.database import db
-from src.core.database import db
+# DB/core - Importar desde src/core
+from src.core import database
 
 from src.web import seeds  # Importar el módulo correctamente
 
 # Modelos
-from core.users import User, UserRole
+from src.core.users import User, UserRole
 
 # Utilidades
 from sqlalchemy import select
 
-from web.controllers.users import users_bp
-from web.controllers.tags_controller import tags_bp
+from src.web.controllers.users import users_bp
+from src.web.controllers.tags_controller import tags_bp
 
 """
     Crea la aplicación Flask.

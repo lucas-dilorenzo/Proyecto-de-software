@@ -6,11 +6,12 @@ Incluye rutas protegidas para listar, crear, editar y eliminar usuarios.
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
-from web.auth import admin_required
-from web.validators.users import validate_user_payload
+from src.web.auth import admin_required
+from src.web.validators.users import validate_user_payload
+
 # from core.database import db
 from src.core.database import db
-from core.users import User, UserRole
+from src.core.users import User, UserRole
 
 # Define el blueprint para las rutas de usuarios bajo /admin/users
 users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
