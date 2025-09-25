@@ -11,8 +11,8 @@ def init_app(app):
 
 
 def reset_db():
-    from src.core.historicalSites.site import Site  # noqa: F401
-    from core.historicalSites.tags.tag import Tag  # noqa: F401
+    # from src.core.historicalSites.site import Site  # noqa: F401
+    # from src.core.users.user import User  # noqa: F401
 
     print("Resetting database...")
     db.drop_all()

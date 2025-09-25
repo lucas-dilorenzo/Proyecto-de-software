@@ -1,1 +1,0 @@
-"Borrar una vez que se cargue un archivo"

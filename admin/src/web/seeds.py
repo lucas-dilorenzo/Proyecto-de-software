@@ -1,6 +1,10 @@
-from src.core.database import db
-from src.core import historicalSites
+from select import select
+from core.database import db
+from core import historicalSites
+from core.historicalSites.site import Site  # Esta es la correcta
 from datetime import date
+from core.users.user import User, UserRole
+from werkzeug.security import generate_password_hash
 
 
 def run():
@@ -134,3 +138,22 @@ def run():
             print(f"El tag ya existe: {tag_data['name']}")
 
     print("Database seeding complete.")
+
+
+def users():
+    """Crea un usuario administrador por defecto si no existe."""
+    exists = User.query.filter_by(email="admin@example.com").first()
+    if not exists:
+        admin = User(
+            email="admin@example.com",
+            nombre="Admin",
+            apellido="Local",
+            password_hash=generate_password_hash("admin123"),
+            activo=True,
+            rol=UserRole.ADMIN,
+        )
+        db.session.add(admin)
+        db.session.commit()
+        print("Admin creado: admin@example.com / admin123")
+    else:
+        print("El admin ya existe.")
