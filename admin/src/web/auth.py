@@ -15,6 +15,7 @@ def admin_required(fn):
     Permite el acceso solo si el usuario tiene rol de Administrador.
     Si no, muestra un mensaje y retorna error 401.
     """
+
     @wraps(fn)
     def wrapper(*args, **kwargs):
         # Verifica el rol en la sesión

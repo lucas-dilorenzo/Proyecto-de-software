@@ -1,9 +1,9 @@
 {#
-  Template para listar, filtrar y administrar usuarios.
-  - Muestra un botón para crear un nuevo usuario.
-  - Permite filtrar usuarios por email, estado, rol y orden.
-  - Muestra la tabla de usuarios con acciones de editar y eliminar.
-  - Incluye paginación y muestra el total de usuarios.
+Template para listar, filtrar y administrar usuarios.
+- Muestra un botón para crear un nuevo usuario.
+- Permite filtrar usuarios por email, estado, rol y orden.
+- Muestra la tabla de usuarios con acciones de editar y eliminar.
+- Incluye paginación y muestra el total de usuarios.
 #}
 
 {% extends "layout.html" %}
@@ -114,11 +114,10 @@
         <li class="page-item disabled">
             <span class="page-link">Página {{ page }} / {{ last_page or 1 }}</span>
         </li>
-        {% if page < last_page %}
-        <li class="page-item">
+        {% if page < last_page %} <li class="page-item">
             <a class="page-link" href="?{{ qs(page=page+1) }}">Siguiente &raquo;</a>
-        </li>
-        {% endif %}
+            </li>
+            {% endif %}
     </ul>
 </nav>
 

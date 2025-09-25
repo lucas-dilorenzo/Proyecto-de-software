@@ -1,8 +1,8 @@
-{# 
-  Template para crear o editar un usuario.
-  - Si 'is_edit' es True, el formulario es de edición, si no, es de alta.
-  - Muestra errores de validación y mantiene los datos ingresados si hay errores.
-  - Los campos se llenan con datos del usuario (si existe) o con los datos del formulario (si hubo error).
+{#
+Template para crear o editar un usuario.
+- Si 'is_edit' es True, el formulario es de edición, si no, es de alta.
+- Muestra errores de validación y mantiene los datos ingresados si hay errores.
+- Los campos se llenan con datos del usuario (si existe) o con los datos del formulario (si hubo error).
 #}
 
 {% extends "layout.html" %}
@@ -21,7 +21,7 @@
             value="{{ user.email if user else (form.get('email') if form else '') }}" required>
         {# Muestra mensaje de error si el email es inválido #}
         {% if errors and errors.get('email') %}
-            <div class="invalid-feedback">{{ errors['email'] }}</div>
+        <div class="invalid-feedback">{{ errors['email'] }}</div>
         {% endif %}
     </div>
 
@@ -31,7 +31,7 @@
         <input name="nombre" class="form-control {% if errors and errors.get('nombre') %}is-invalid{% endif %}"
             value="{{ user.nombre if user else (form.get('nombre') if form else '') }}" required>
         {% if errors and errors.get('nombre') %}
-            <div class="invalid-feedback">{{ errors['nombre'] }}</div>
+        <div class="invalid-feedback">{{ errors['nombre'] }}</div>
         {% endif %}
     </div>
 
@@ -41,7 +41,7 @@
         <input name="apellido" class="form-control {% if errors and errors.get('apellido') %}is-invalid{% endif %}"
             value="{{ user.apellido if user else (form.get('apellido') if form else '') }}" required>
         {% if errors and errors.get('apellido') %}
-            <div class="invalid-feedback">{{ errors['apellido'] }}</div>
+        <div class="invalid-feedback">{{ errors['apellido'] }}</div>
         {% endif %}
     </div>
 
@@ -50,25 +50,28 @@
         <label class="form-label">
             Contraseña
             {% if is_edit %}
-                <small class="text-muted">(dejar vacía para no cambiar)</small>
+            <small class="text-muted">(dejar vacía para no cambiar)</small>
             {% endif %}
         </label>
         <input name="password" type="password"
             class="form-control {% if errors and errors.get('password') %}is-invalid{% endif %}" value="">
         {% if errors and errors.get('password') %}
-            <div class="invalid-feedback">{{ errors['password'] }}</div>
+        <div class="invalid-feedback">{{ errors['password'] }}</div>
         {% endif %}
     </div>
 
     {# Campo Activo (SI/NO) #}
     <div class="col-md-3">
         <label class="form-label">Activo</label>
-        <select name="activo" class="form-select {% if errors and errors.get('activo') %}is-invalid{% endif %}" required>
-            <option value="SI" {{ 'selected' if (form and form.get('activo')=='SI' ) or (user and user.activo) }}>SI</option>
-            <option value="NO" {{ 'selected' if (form and form.get('activo')=='NO' ) or (user and not user.activo) }}>NO</option>
+        <select name="activo" class="form-select {% if errors and errors.get('activo') %}is-invalid{% endif %}"
+            required>
+            <option value="SI" {{ 'selected' if (form and form.get('activo')=='SI' ) or (user and user.activo) }}>SI
+            </option>
+            <option value="NO" {{ 'selected' if (form and form.get('activo')=='NO' ) or (user and not user.activo) }}>NO
+            </option>
         </select>
         {% if errors and errors.get('activo') %}
-            <div class="invalid-feedback">{{ errors['activo'] }}</div>
+        <div class="invalid-feedback">{{ errors['activo'] }}</div>
         {% endif %}
     </div>
 
@@ -77,11 +80,12 @@
         <label class="form-label">Rol</label>
         <select name="rol" class="form-select {% if errors and errors.get('rol') %}is-invalid{% endif %}" required>
             {% for rol in roles %}
-                <option value="{{ rol }}" {{ 'selected' if (form and form.get('rol')==rol) or (user and user.rol.value==rol) }}>{{ rol }}</option>
+            <option value="{{ rol }}" {{ 'selected' if (form and form.get('rol')==rol) or (user and user.rol.value==rol)
+                }}>{{ rol }}</option>
             {% endfor %}
         </select>
         {% if errors and errors.get('rol') %}
-            <div class="invalid-feedback">{{ errors['rol'] }}</div>
+        <div class="invalid-feedback">{{ errors['rol'] }}</div>
         {% endif %}
     </div>
 
