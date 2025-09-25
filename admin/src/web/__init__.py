@@ -43,9 +43,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     database.init_app(app)
 
     # En desarrollo, creamos las tablas si no existen
-    if env == "development":
-        with app.app_context():
-            Base.metadata.create_all(bind=db.engine)
+    # if env == "development":
+    #     with app.app_context():
+    #         Base.metadata.create_all(bind=db.engine)
 
     # -------------------------
     # Rutas base
@@ -61,19 +61,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.get("/error")
     def trigger_error():
         abort(500)
-
-    # -----------------------------------
-    # Ruta auxiliar de DEV: login Admin
-    # -----------------------------------
-    @app.get("/_dev/login_as_admin")
-    def login_as_admin():
-        """
-        SOLO DESARROLLO:
-        Setea en sesión el rol 'Administrador' para poder probar el módulo de usuarios.
-        """
-        session["role"] = "Administrador"
-        flash("Sesión DEV: ingresaste como Administrador.", "success")
-        return redirect(url_for("home"))
 
     # register blueprints
     app.register_blueprint(users_bp)
@@ -98,16 +85,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     @app.cli.command("seed-db")
     def seed_db():
-        """Ejecuta seeds generales si el módulo existe."""
-        try:
-            # Importar directamente aquí
-            from web import seeds
-
-            with app.app_context():
-                seeds.run()
-            print("Seeds ejecutados.")
-        except Exception as e:
-            print(f"Error en seed-db: {e}")
+        seeds.run()
 
     # -------------------------
     # Rutas DEV utilitarias
@@ -122,5 +100,18 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
             return rule.rule.replace("<", "&lt;").replace(">", "&gt;")
 
         return "<br>".join(sorted(safe(r) for r in app.url_map.iter_rules()))
+
+    # -----------------------------------
+    # Ruta auxiliar de DEV: login Admin
+    # -----------------------------------
+    @app.get("/_dev/login_as_admin")
+    def login_as_admin():
+        """
+        SOLO DESARROLLO:
+        Setea en sesión el rol 'Administrador' para poder probar el módulo de usuarios.
+        """
+        session["role"] = "Administrador"
+        flash("Sesión DEV: ingresaste como Administrador.", "success")
+        return redirect(url_for("home"))
 
     return app

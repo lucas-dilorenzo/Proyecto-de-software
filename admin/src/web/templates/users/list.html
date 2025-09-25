@@ -29,8 +29,8 @@ Template para listar, filtrar y administrar usuarios.
         <label class="form-label">Activo</label>
         <select name="activo" class="form-select">
             <option value="">(todos)</option>
-            <option value="SI" {% if activo=='SI' %}selected{% endif %}>SI</option>
-            <option value="NO" {% if activo=='NO' %}selected{% endif %}>NO</option>
+            <option value="SI" {% if activo =='SI' %}selected{% endif %}>SI</option>
+            <option value="NO" {% if activo =='NO' %}selected{% endif %}>NO</option>
         </select>
     </div>
     <div class="col-md-3">

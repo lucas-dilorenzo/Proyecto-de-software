@@ -135,9 +135,7 @@ def create_user():
         )
 
     # Verifica que el email no esté registrado
-    exists = db.session.execute(
-        select(User).where(User.email == data["email"])
-    ).scalar_one_or_none()
+    exists = User.query.filter_by(email=data["email"]).first()
 
     if exists:
         flash("El email ya está registrado.", "warning")

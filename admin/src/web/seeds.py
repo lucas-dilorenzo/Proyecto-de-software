@@ -91,10 +91,7 @@ def run():
 
 def users():
     """Crea un usuario administrador por defecto si no existe."""
-    exists = db.session.execute(
-        select(User).where(User.email == "admin@example.com")
-    ).scalar_one_or_none()
-
+    exists = User.query.filter_by(email="admin@example.com").first()
     if not exists:
         admin = User(
             email="admin@example.com",
