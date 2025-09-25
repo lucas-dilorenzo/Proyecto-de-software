@@ -1,8 +1,11 @@
 from flask import Blueprint, render_template
-from src.core import historicalSites
+from src.core.historicalSites.tag import Tag
+from src.core.database import db
+from src.core.historicalSites import get_all_tags
+
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
 @tags_bp.route("/", methods=["GET"])
 def list_tags():
-    tags = "";
+    tags = get_all_tags();
     return render_template("historicalSites/tags/indexTags.html", tags=tags)

@@ -1,4 +1,5 @@
 from src.core.historicalSites.site import Site  # noqa: F401
+from src.core.historicalSites.tag import Tag  # noqa: F401
 from src.core.database import db
 
 
@@ -120,3 +121,8 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
             .paginate(page, per_page, error_out=False)
         )
     return sites
+
+def get_all_tags():
+    session = db.session
+    query = session.query(Tag).order_by(Tag.name.asc()).all()
+    return query
