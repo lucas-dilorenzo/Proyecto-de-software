@@ -1,19 +1,24 @@
+"""
+Controlador CRUD de usuarios para el módulo Admin.
+Incluye rutas protegidas para listar, crear, editar y eliminar usuarios.
+"""
+
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
 from web.auth import admin_required
 from web.validators.users import validate_user_payload
 from core.database import db
+from core.users import User, UserRole
 
-try:
-    from core.models import User, UserRole
-except ImportError:
-    from core.users import User, UserRole
-
+# Define el blueprint para las rutas de usuarios bajo /admin/users
 users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
 
 
 def _clamp_per_page(val) -> int:
+    """
+    Limita la cantidad de resultados por página entre 1 y 50.
+    """
     try:
         n = int(val)
     except Exception:
@@ -24,6 +29,10 @@ def _clamp_per_page(val) -> int:
 @users_bp.get("/")
 @admin_required
 def list_users():
+    """
+    Listado de usuarios con filtros por email, activo, rol y orden.
+    Soporta paginación.
+    """
     email = (request.args.get("email") or "").strip()
     activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""
     rol = (request.args.get("rol") or "").strip()
@@ -47,6 +56,7 @@ def list_users():
         order = "desc"
         stmt = stmt.order_by(desc(User.created_at))
 
+    # Total de usuarios para paginación
     total = db.session.scalar(select(func.count()).select_from(stmt.subquery()))
     offset = (page - 1) * per_page
     users = db.session.execute(stmt.limit(per_page).offset(offset)).scalars().all()
@@ -56,6 +66,9 @@ def list_users():
     from urllib.parse import urlencode
 
     def qs(**overrides):
+        """
+        Genera la query string para mantener los filtros y paginación en los links.
+        """
         base = dict(
             email=email,
             activo=activo,
@@ -86,41 +99,47 @@ def list_users():
 @users_bp.get("/new")
 @admin_required
 def new_user():
+    """
+    Muestra el formulario para crear un nuevo usuario.
+    """
     return render_template(
         "users/form.html",
         user=None,
-        form={},  # Agregar esto
-        errors={},  # Agregar esto
+        form={},  # Formulario vacío
+        errors={},  # Sin errores iniciales
         roles=[r.value for r in UserRole],
         mode="create",
         action=url_for("users.create_user"),
     )
 
 
-# Cambiamos @users_bp.post("/new") a @users_bp.post("/")
 @users_bp.post("/new")
 @admin_required
 def create_user():
+    """
+    Procesa el formulario de creación de usuario.
+    Si hay errores, los muestra y mantiene los datos ingresados.
+    Si el email ya existe, muestra advertencia.
+    Si todo es correcto, crea el usuario y redirige al listado.
+    """
     data, errors = validate_user_payload(request.form)
     if errors:
-        # En lugar de redireccionar, renderizamos directamente con los datos originales
         return render_template(
             "users/form.html",
             user=None,
-            form=request.form,  # Mantenemos los datos ingresados
-            errors=errors,  # Mostramos los errores
+            form=request.form,
+            errors=errors,
             roles=[r.value for r in UserRole],
             mode="create",
             action=url_for("users.create_user"),
         )
 
-    # Verificar email único
+    # Verifica que el email no esté registrado
     exists = db.session.execute(
         select(User).where(User.email == data["email"])
     ).scalar_one_or_none()
 
     if exists:
-        # También mantenemos los datos para este error
         flash("El email ya está registrado.", "warning")
         return render_template(
             "users/form.html",
@@ -152,6 +171,9 @@ def create_user():
 @users_bp.get("/<int:uid>/edit")
 @admin_required
 def edit_user(uid: int):
+    """
+    Muestra el formulario para editar un usuario existente.
+    """
     user = db.session.get(User, uid)
     if not user:
         abort(404)
@@ -167,6 +189,12 @@ def edit_user(uid: int):
 @users_bp.post("/<int:uid>/edit")
 @admin_required
 def update_user(uid: int):
+    """
+    Procesa el formulario de edición de usuario.
+    Si hay errores, redirige mostrando los mensajes.
+    Si el email ya existe en otro usuario, muestra advertencia.
+    Si todo es correcto, actualiza el usuario y redirige al listado.
+    """
     user = db.session.get(User, uid)
     if not user:
         abort(404)
@@ -205,6 +233,9 @@ def update_user(uid: int):
 @users_bp.post("/<int:uid>/delete")
 @admin_required
 def delete_user(uid: int):
+    """
+    Elimina un usuario por su ID.
+    """
     user = db.session.get(User, uid)
     if not user:
         abort(404)

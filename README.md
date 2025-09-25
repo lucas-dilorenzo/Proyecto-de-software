@@ -80,18 +80,24 @@ poetry run flask run --debug
 
 ---
 
+
 ### Comandos útiles (Admin)
 
-- **Resetear la base de datos (memoria / SQLite local):**
+- **Resetear la base de datos y poblarla con datos iniciales:**
+
+Si ya activaste el entorno virtual de Poetry, puedes usar:
 ```bash
-poetry run flask --app web:create_app reset-db
+flask reset-db    # Borra y recrea todas las tablas de la base de datos
+flask seed-db     # Carga los datos semilla (sitios históricos y admin)
 ```
 
-- **Crear usuario administrador inicial:**
+O bien, sin activar el entorno virtual manualmente:
 ```bash
-poetry run flask --app web:create_app seed-users
+poetry run flask --app app:create_app reset-db
+poetry run flask --app app:create_app seed-db
 ```
-Crea el admin `admin@example.com / admin123`.
+
+El comando `seed-db` carga los sitios históricos y crea el usuario administrador inicial (`admin@example.com` / `admin123`).
 
 ---
 
@@ -170,3 +176,16 @@ python --version
 # o
 python3 --version
 ```
+
+---
+
+## Tabla de Contenido
+
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación y Configuración](#instalación-y-configuración)
+- [Cómo Ejecutar las Aplicaciones](#cómo-ejecutar-las-aplicaciones)
+- [Comandos útiles (Admin)](#comandos-útiles-admin)
+- [Módulo de Usuarios (Admin)](#módulo-de-usuarios-admin)
+- [Calculadora](#calculadora)
+- [Ejecutar Tests](#ejecutar-tests)
+- [Solución de Problemas](#solución-de-problemas)

@@ -1,17 +1,25 @@
+{#
+  Template para listar, filtrar y administrar usuarios.
+  - Muestra un botón para crear un nuevo usuario.
+  - Permite filtrar usuarios por email, estado, rol y orden.
+  - Muestra la tabla de usuarios con acciones de editar y eliminar.
+  - Incluye paginación y muestra el total de usuarios.
+#}
+
 {% extends "layout.html" %}
 {% block title %}Usuarios - Admin{% endblock %}
 
 {% block body %}
 <h1 class="mb-3">Usuarios</h1>
 
-<!-- Solo botón de crear usuario (sin formulario inline) -->
+<!-- Botón para ir al formulario de creación de usuario -->
 <div class="mb-4">
     <a href="{{ url_for('users.new_user') }}" class="btn btn-success">
         <i class="bi bi-plus-circle"></i> Nuevo usuario
     </a>
 </div>
 
-<!-- Filtros de búsqueda -->
+<!-- Formulario de filtros de búsqueda -->
 <form method="GET" class="row g-2 mb-3">
     <div class="col-md-3">
         <label class="form-label">Email</label>
@@ -60,6 +68,7 @@
             </tr>
         </thead>
         <tbody>
+            {# Itera sobre la lista de usuarios y muestra sus datos #}
             {% for u in users %}
             <tr>
                 <td>{{ u.email }}</td>
@@ -74,7 +83,9 @@
                 </td>
                 <td>{{ u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at }}</td>
                 <td class="text-end">
+                    <!-- Botón para editar usuario -->
                     <a class="btn btn-sm btn-primary" href="{{ url_for('users.edit_user', uid=u.id) }}">Editar</a>
+                    <!-- Botón para eliminar usuario (con confirmación) -->
                     <form method="POST" action="{{ url_for('users.delete_user', uid=u.id) }}"
                         style="display:inline-block"
                         onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');">
@@ -91,7 +102,7 @@
     </table>
 </div>
 
-<!-- Paginación -->
+<!-- Paginación de resultados -->
 {% set last_page = (total // per_page) + (1 if total % per_page > 0 else 0) %}
 <nav aria-label="Paginación">
     <ul class="pagination">
@@ -103,13 +114,15 @@
         <li class="page-item disabled">
             <span class="page-link">Página {{ page }} / {{ last_page or 1 }}</span>
         </li>
-        {% if page < last_page %} <li class="page-item">
+        {% if page < last_page %}
+        <li class="page-item">
             <a class="page-link" href="?{{ qs(page=page+1) }}">Siguiente &raquo;</a>
-            </li>
-            {% endif %}
+        </li>
+        {% endif %}
     </ul>
 </nav>
 
+<!-- Resumen de cantidad de usuarios -->
 <p class="text-muted">
     Total: {{ total }} usuarios — mostrando hasta {{ per_page }} por página.
 </p>
