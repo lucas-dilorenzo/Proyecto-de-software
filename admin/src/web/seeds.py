@@ -82,4 +82,55 @@ def run():
         else:
             print(f"Site already exists: {site_data['name']}")
 
+    tags_data = [
+        {
+            "name": "Patrimonio Mundial",
+            "slug": "patrimonio-mundial",
+            "description": "Sitios reconocidos por la UNESCO por su importancia cultural o natural."
+        },
+        {
+            "name": "Antiguo",
+            "slug": "antiguo",
+            "description": "Sitios que datan de civilizaciones o períodos antiguos."
+        },
+        {
+            "name": "Arqueológico",
+            "slug": "arqueologico",
+            "description": "Sitios de importancia arqueológica, a menudo involucrando excavaciones."
+        },
+        {
+            "name": "Cultural",
+            "slug": "cultural",
+            "description": "Sitios que representan un patrimonio cultural significativo."
+        },
+        {
+            "name": "Natural",
+            "slug": "natural",
+            "description": "Sitios importantes por su belleza natural o relevancia ecológica."
+        },
+        {
+            "name": "Moderno",
+            "slug": "moderno",
+            "description": "Sitios de historia reciente que muestran arquitectura o logros modernos."
+        },
+        {
+            "name": "Turismo",
+            "slug": "turismo",
+            "description": "Destinos populares para turistas de todo el mundo."
+        },
+        {
+            "name": "Protegido",
+            "slug": "protegido",
+            "description": "Sitios bajo protección legal para preservar su importancia."
+        },
+    ]
+
+    for tag_data in tags_data:
+        existing_tag = historicalSites.get_tag_by_name(tag_data["name"])  
+        if not existing_tag:
+            historicalSites.create_tag(**tag_data) 
+            print(f"Tag agregado: {tag_data['name']}")
+        else:
+            print(f"El tag ya existe: {tag_data['name']}")
+
     print("Database seeding complete.")

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
-from src.core.historicalSites.tag import Tag
+from core.historicalSites.tags.tag import Tag
 from src.core.database import db
-from src.core.historicalSites import get_all_tags
+from src.core.historicalSites.tags import get_all_tags
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 

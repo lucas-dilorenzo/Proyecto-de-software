@@ -1,4 +1,4 @@
-from flask_sqlalchemy_lite import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
 
 
@@ -12,11 +12,11 @@ def init_app(app):
 
 def reset_db():
     from src.core.historicalSites.site import Site  # noqa: F401
-    from src.core.historicalSites.tag import Tag  # noqa: F401
+    from core.historicalSites.tags.tag import Tag  # noqa: F401
 
     print("Resetting database...")
-    Base.metadata.drop_all(bind=db.engine)
-    Base.metadata.create_all(bind=db.engine)
+    db.drop_all()
+    db.create_all()
     print("Database reset complete.")
 
 
