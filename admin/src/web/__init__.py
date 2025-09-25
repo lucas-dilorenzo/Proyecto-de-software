@@ -9,24 +9,14 @@ from .handlers import error as error_handlers
 
 # DB/core - Opción B: import desde el paquete instalado en src/
 from core import database
-from core.database import db, Base
+from core.database import db
 
-# seeds: puede que exista en web.seeds; importamos de forma segura (no rompe si falta)
-try:
-    from web import seeds  # Importar el módulo correctamente
-except Exception as e:
-    print(f"Error importando seeds: {e}")
-    seeds = None
+from src.web import seeds  # Importar el módulo correctamente
 
-# Modelos: tratamos de importar desde core.models; si la estructura cambió a core.users, lo intentamos también.
-try:
-    from core.models import User, UserRole
-except Exception:
-    # fallback si los modelos se movieron a core/users/
-    from core.users import User, UserRole
+# Modelos
+from core.users import User, UserRole
 
 # Utilidades
-from werkzeug.security import generate_password_hash
 from sqlalchemy import select
 
 from web.controllers.users import users_bp
@@ -103,26 +93,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     @app.cli.command("seed-users")
     def seed_users():
-        """Crea un usuario administrador por defecto si no existe."""
-        with app.app_context():
-            exists = db.session.execute(
-                select(User).where(User.email == "admin@example.com")
-            ).scalar_one_or_none()
-
-            if not exists:
-                admin = User(
-                    email="admin@example.com",
-                    nombre="Admin",
-                    apellido="Local",
-                    password_hash=generate_password_hash("admin123"),
-                    activo=True,
-                    rol=UserRole.ADMIN,
-                )
-                db.session.add(admin)
-                db.session.commit()
-                print("Admin creado: admin@example.com / admin123")
-            else:
-                print("El admin ya existe.")
+        seeds.users()
+        print("Seeds de usuarios ejecutados.")
 
     @app.cli.command("seed-db")
     def seed_db():

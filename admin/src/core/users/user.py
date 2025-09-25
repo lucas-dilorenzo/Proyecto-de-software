@@ -29,18 +29,14 @@ class User(db.Model):
     __tablename__ = "users"
     __table_args__ = (UniqueConstraint("email", name="uq_users_email"),)
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    email: Mapped[str] = mapped_column(String(255), nullable=False)
-    nombre: Mapped[str] = mapped_column(String(120), nullable=False)
-    apellido: Mapped[str] = mapped_column(String(120), nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
-    activo: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    rol: Mapped[UserRole] = mapped_column(
-        Enum(UserRole), nullable=False, default=UserRole.PUBLIC
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
-    )
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    email = db.Column(String(255), nullable=False)
+    nombre = db.Column(String(120), nullable=False)
+    apellido = db.Column(String(120), nullable=False)
+    password_hash = db.Column(String(255), nullable=False)
+    activo = db.Column(Boolean, default=True, nullable=False)
+    rol = db.Column(Enum(UserRole), nullable=False, default=UserRole.PUBLIC)
+    created_at = db.Column(DateTime, default=datetime.utcnow, nullable=False)
 
     def __repr__(self):
         return f"<User {self.email} ({self.rol})>"
