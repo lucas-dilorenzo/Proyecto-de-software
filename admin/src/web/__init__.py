@@ -42,15 +42,10 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
 
-    # En desarrollo, creamos las tablas si no existen
-    # if env == "development":
-    #     with app.app_context():
-    #         Base.metadata.create_all(bind=db.engine)
+    # Register blueprints
+    app.register_blueprint(tags_bp)
 
-    # -------------------------
-    # Rutas base
-    # -------------------------
-    @app.get("/")
+    @app.route("/")
     def home():
         return render_template("home.html")
 

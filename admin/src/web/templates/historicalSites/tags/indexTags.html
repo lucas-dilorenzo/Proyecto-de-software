@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+    <h1>  
+        <i class="bi bi-tags"></i> Tags de Sitios Historicos
+    </h1>
+{% endblock%}
+
+{% block body %}
+    <div class="col-11">
+        <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
+            <div class="card-body">
+                <p class="mb-0">
+                    Formulario de busqueda
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% for tag in tags:  %}
+        <div class="col-11 mt-3">
+            <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
+                <div class="card-body">
+                    <p class="mb-0">
+                        {{ tag.name }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}
