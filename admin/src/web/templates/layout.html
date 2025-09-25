@@ -54,8 +54,8 @@ Template base para la interfaz de administración.
   <div id="sidebar">
     <!-- Información del perfil (hardcodeada por ahora) -->
     <div class="profile-info text-white" style="background-color: #555;">
-      <p class="mb-1"><strong>Perfil:</strong> Administrador </p>
-      <p class="mb-0"><strong>Usuario:</strong> Luna prueba hardcodeado</p>
+      <p class="mb-1"><strong>Perfil:</strong> {{session.role.value}}</p>
+      <p class="mb-0"><strong>Usuario:</strong> {{get_user(session.user).nombre}}</p>
     </div>
     <ul class="nav flex-column">
       <li class="nav-item">

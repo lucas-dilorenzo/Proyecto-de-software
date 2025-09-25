@@ -24,6 +24,7 @@ from flask_wtf.csrf import CSRFProtect
 
 from web.controllers.users import users_bp
 from web.controllers.auth.authenticate import auth_bp
+from web import helpers
 
 """
     Crea la aplicación Flask.
@@ -87,6 +88,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # Funciones que se exportan al contexto de Jinja2
     # Esta primera funcion me va a ayudar a identificar la sesion de un usuario
     app.jinja_env.globals.update(is_authenticated=authenticate.authenticated)
+    app.jinja_env.globals.update(get_user=helpers.get_user_by_id)
 
     # -------------------------
     # Comandos CLI
