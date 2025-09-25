@@ -99,10 +99,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.cli.command("reset-db")
     def reset_db():
         """Elimina y recrea todas las tablas."""
-        with app.app_context():
-            Base.metadata.drop_all(bind=db.engine)
-            Base.metadata.create_all(bind=db.engine)
-            print("DB reseteada.")
+        database.reset_db()
 
     @app.cli.command("seed-users")
     def seed_users():

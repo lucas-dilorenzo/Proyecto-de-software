@@ -36,6 +36,9 @@ class DevelopmentConfig(Config):
     DB_NAME = environ.get("DB_NAME", "grupo37")
     DB_PORT = environ.get("DB_PORT", "5432")
     DB_SCHEME = environ.get("DB_SCHEME", "postgresql")
+    SQLALCHEMY_DATABASE_URI = (
+        f"{DB_SCHEME}://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+    )
 
     # Determinamos la URI final: si hay DATABASE_URL la usamos; si no, construimos desde las partes;
     # si ninguna de las dos está (caso equipo que quiere sqlite), caemos a SQLite local.

@@ -6,7 +6,7 @@ Incluye roles, restricciones y campos relevantes para autenticación y administr
 from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from core.database import Base
+from core.database import db
 import enum
 
 
@@ -20,7 +20,7 @@ class UserRole(str, enum.Enum):
     ADMIN = "Administrador"
 
 
-class User(Base):
+class User(db.Model):
     """
     Modelo de usuario para la base de datos.
     Incluye información personal, credenciales, estado y rol.

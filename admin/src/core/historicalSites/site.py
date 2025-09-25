@@ -1,9 +1,10 @@
 from core.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import date
+from core.database import db
 
 
-class Site(Base):
+class Site(db.Model):
     __tablename__ = "sites"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
