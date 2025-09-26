@@ -29,26 +29,36 @@ Template base para la interfaz de administración.
     <button class="btn btn-sm btn-outline-light" id="toggle-btn">
       <i class="bi bi-list"></i>
     </button>
+    {% if is_authenticated(session) %}
     <!-- Menú de usuario -->
     <div class="dropdown ms-auto">
       <a class="btn btn-dark dropdown-toggle" href="#" id="perfil-btn" role="button" data-bs-toggle="dropdown"
         aria-expanded="false">
         <i class="bi bi-person-circle me-1"></i> Cuenta
       </a>
-      <ul class="dropdown-menu dropdown-menu-end">
+      <ul class="dropdown-menu dropdown-menu-end">        
+        {% if is_authenticated(session) %}
         <li><a class="dropdown-item" href="#">Ver Perfil</a></li>
-        <li><a class="dropdown-item" href="#">Cerrar Sesión</a></li>
+        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Cerrar Sesión</a></li>
+        {% endif %}
       </ul>
     </div>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light ms-auto">
+      <i class="bi bi-box-arrow-in-right me-1"></i> Iniciar Sesión
+    </a>
+    {% endif %}
   </nav>
 
   <!-- Sidebar de navegación lateral -->
   <div id="sidebar">
+    {% if is_authenticated(session) %}
     <!-- Información del perfil (hardcodeada por ahora) -->
-    <div class="profile-info text-white" style="background-color: #555;">
-      <p class="mb-1"><strong>Perfil:</strong> Administrador </p>
-      <p class="mb-0"><strong>Usuario:</strong> Luna prueba hardcodeado</p>
+    <div class="profile-info text-white" style="background-color: #555;">  
+      <p class="mb-1"><strong>Perfil:</strong> {{session.role.value}}</p>
+      <p class="mb-0"><strong>Usuario:</strong> {{get_user(session.user).nombre}}</p>      
     </div>
+    {% endif %}
     <ul class="nav flex-column">
       <li class="nav-item">
         <a href="#" class="nav-link">
@@ -76,11 +86,14 @@ Template base para la interfaz de administración.
       </li>
     </ul>
     <hr class="bg-light" style="margin: 0 0;">
+    {% if is_authenticated(session) %}
     <li class="nav-item" style="background-color: #e0eff4">
-      <a href="#" class="nav-link">
+      <a href="{{ url_for('auth.logout') }}" class="nav-link">
         <i class="bi bi-arrow-left me-2"></i>
         <span>CERRAR SESION</span>
       </a>
+    </li>
+    {% endif %}
     </li>
     <hr class="bg-light" style="margin: 0 0;">
   </div>

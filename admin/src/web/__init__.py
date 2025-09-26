@@ -1,5 +1,6 @@
 # imports habituales de Flask (usados por la factory y las rutas DEV)
 from flask import Flask, render_template, abort, session, redirect, url_for, flash
+from web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
 from .config import config as config_map
@@ -17,8 +18,12 @@ from src.core.users import User, UserRole
 
 # Utilidades
 from sqlalchemy import select
+from flask_session import Session
+from flask_wtf.csrf import CSRFProtect
 
 from src.web.controllers.users import users_bp
+from web.controllers.auth.authenticate import auth_bp
+from web import helpers
 from src.web.controllers.tags_controller import tags_bp
 
 """
@@ -42,9 +47,14 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
 
-    # Register blueprints
-    app.register_blueprint(tags_bp)
-    app.register_blueprint(users_bp)
+    # Protección CSRF
+    csrf = CSRFProtect(app)
+    app.config["WTF_CSRF_TIME_LIMIT"] = None
+    app.config["WTF_CSRF_ENABLED"] = False
+
+    # Server Side session
+    app.config["SESSION_TYPE"] = "filesystem"
+    Session(app)
 
     @app.route("/")
     def home():
@@ -58,10 +68,20 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def trigger_error():
         abort(500)
 
+    # register blueprints
+    app.register_blueprint(users_bp)
+    app.register_blueprint(tags_bp)
+    app.register_blueprint(auth_bp)
+
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)
     app.register_error_handler(401, error_handlers.unauthorized)
     app.register_error_handler(500, error_handlers.generic)
+
+    # Funciones que se exportan al contexto de Jinja2
+    # Esta primera funcion me va a ayudar a identificar la sesion de un usuario
+    app.jinja_env.globals.update(is_authenticated=authenticate.authenticated)
+    app.jinja_env.globals.update(get_user=helpers.get_user_by_id)
 
     # -------------------------
     # Comandos CLI
