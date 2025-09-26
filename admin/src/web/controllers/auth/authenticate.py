@@ -2,12 +2,15 @@ from flask import redirect, render_template, request, session, url_for, Blueprin
 from werkzeug.security import check_password_hash
 from core.users import User, UserRole
 from web.helpers.validations.auth import FormularioInicioSesion
+from web.helpers import is_authenticated
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    if is_authenticated(session):
+        return redirect(url_for("home"))
     if request.method == "POST":
         form = FormularioInicioSesion()
         if form.validate_on_submit():

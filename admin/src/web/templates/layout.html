@@ -52,11 +52,13 @@ Template base para la interfaz de administración.
 
   <!-- Sidebar de navegación lateral -->
   <div id="sidebar">
+    {% if is_authenticated(session) %}
     <!-- Información del perfil (hardcodeada por ahora) -->
-    <div class="profile-info text-white" style="background-color: #555;">
+    <div class="profile-info text-white" style="background-color: #555;">  
       <p class="mb-1"><strong>Perfil:</strong> {{session.role.value}}</p>
-      <p class="mb-0"><strong>Usuario:</strong> {{get_user(session.user).nombre}}</p>
+      <p class="mb-0"><strong>Usuario:</strong> {{get_user(session.user).nombre}}</p>      
     </div>
+    {% endif %}
     <ul class="nav flex-column">
       <li class="nav-item">
         <a href="#" class="nav-link">
