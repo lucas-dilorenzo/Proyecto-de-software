@@ -1,5 +1,5 @@
 from src.core import historicalSites
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, redirect, render_template, request, url_for, abort
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
@@ -38,7 +38,25 @@ def create_site():
 def edit_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
-        return "Site not found", 404
+        abort(404)
+    if request.method == "POST":
+        formulario = request.form
+        historicalSites.update_site(
+            site_id,
+            name=formulario.get("name"),
+            description_short=formulario.get("description_short"),
+            description=formulario.get("description"),
+            city=formulario.get("city"),
+            province=formulario.get("province"),
+            location=formulario.get("location"),
+            conservation_status=formulario.get("conservation_status"),
+            year_declared=formulario.get("year_declared"),
+            category=formulario.get("category"),
+            registration_date=formulario.get("registration_date"),
+            visibility=formulario.get("visibility") == "on",
+        )
+        return redirect(url_for("sites.list_sites"))
+    
     return render_template("historicalSites/edit_site.html", site=site)
 
 
@@ -49,3 +67,5 @@ def delete_site(site_id):
         return "Site not found", 404
     # Logic to delete the site would go here
     return f"Site {site.name} deleted", 200
+
+
