@@ -1,16 +1,13 @@
 from flask import redirect, render_template, request, session, url_for, Blueprint, flash
 from werkzeug.security import check_password_hash
-from src.core.users import User, UserRole
-from src.web.helpers.validations.auth import FormularioInicioSesion
-from src.web import helpers
+from core.users import User, UserRole
+from web.helpers.validations.auth import FormularioInicioSesion
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
-    if helpers.authenticated(session):
-        return redirect(url_for("home"))
     if request.method == "POST":
         form = FormularioInicioSesion()
         if form.validate_on_submit():

@@ -1,5 +1,5 @@
 from os import environ
-from src.core.database import db
+from core.database import db
 
 
 class Config(object):
