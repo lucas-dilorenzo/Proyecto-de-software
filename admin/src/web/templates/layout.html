@@ -100,7 +100,7 @@ Template base para la interfaz de administración.
                   <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
                     <div class="card-body">
                       <p class="mb-0"> -->
-                        {% block bodys %} {% endblock %}     
+                        {% block body %} {% endblock %}     
                       <!-- </p>
                     </div>
                   </div>
@@ -110,34 +110,18 @@ Template base para la interfaz de administración.
           {% endblock %} 
         </div>
       </div>
+
       <!-- Mensajes flash para mostrar notificaciones -->
       {% with msgs = get_flashed_messages(with_categories=True) %}
-      {% if msgs %}
-      <div class="container mt-2">
-        {% for cat, m in msgs %}
-        <div class="alert alert-{{ 'info' if cat=='message' else cat }} mb-2">{{ m }}</div>
-        {% endfor %}
-      </div>
-      {% endif %}
+        {% if msgs %}
+          <div class="container mt-2">
+            {% for cat, m in msgs %}
+            <div class="alert alert-{{ 'info' if cat=='message' else cat }} mb-2">{{ m }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
       {% endwith %}
 
-      {% block main_content %}
-      <div class="container my-4">
-        <div class="row justify-content-center">
-          <div class="col-11">
-            <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
-              <div class="card-body">
-                <p class="mb-0">
-                  {% block body %}
-                  Este es el contenido principal probandooooo
-                  {% endblock %}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {% endblock %}
     </div>
   </div>
 
