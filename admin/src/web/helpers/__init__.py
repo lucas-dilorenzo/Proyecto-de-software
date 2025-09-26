@@ -1,6 +1,6 @@
 from enum import Enum
-from core.users.user import User, UserRole
-from core import users
+from src.core.users.user import UserRole
+from src.core import users
 
 
 def is_authenticated(session):

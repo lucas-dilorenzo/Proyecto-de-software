@@ -6,7 +6,7 @@ Incluye roles, restricciones y campos relevantes para autenticación y administr
 from datetime import datetime
 from sqlalchemy import String, Boolean, DateTime, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
-from core.database import db
+from src.core.database import db
 import enum
 
 

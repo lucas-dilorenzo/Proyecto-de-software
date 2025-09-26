@@ -1,5 +1,5 @@
-from core.database import db
-from .site import Site  # Importar el modelo aquí
+from src.core.database import db
+from src.core.historicalSites.site import Site  # Importar el modelo aquí
 
 
 def create_site(**kwargs):

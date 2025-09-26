@@ -1,9 +1,9 @@
 from select import select
-from core.database import db
-from core import historicalSites
-from core.historicalSites.site import Site  # Esta es la correcta
+from src.core.database import db
+from src.core import historicalSites
+from src.core.historicalSites.site import Site  # Esta es la correcta
 from datetime import date
-from core.users.user import User, UserRole
+from src.core.users.user import User, UserRole
 from werkzeug.security import generate_password_hash
 
 
@@ -91,8 +91,10 @@ def run():
 
 def users():
     """Crea un usuario administrador por defecto si no existe."""
-    exists = User.query.filter_by(email="admin@example.com").first()
-    if not exists:
+    exists = User.query.filter_by(
+        email="admin@example.com"
+    ).first()  # Implementar con la funcion get_user_by_email
+    if not exists:  # implementar con la funcion create_user
         admin = User(
             email="admin@example.com",
             nombre="Admin",

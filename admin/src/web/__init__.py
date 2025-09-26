@@ -1,30 +1,30 @@
 # imports habituales de Flask (usados por la factory y las rutas DEV)
 from flask import Flask, render_template, abort, session, redirect, url_for, flash
-from web.controllers.auth import authenticate
+from src.web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
-from .config import config as config_map
+from src.web.config import config as config_map
 
 # handlers de error (mantener compatibilidad con development)
-from .handlers import error as error_handlers
+from src.web.handlers import error as error_handlers
 
 # DB/core - Opción B: import desde el paquete instalado en src/
-from core import database
-from core.database import db
+from src.core import database
+from src.core.database import db
 
 from src.web import seeds  # Importar el módulo correctamente
 
 # Modelos
-from core.users import User, UserRole
+# from src.core.users import User, UserRole
 
 # Utilidades
 from sqlalchemy import select
 from flask_session import Session
 from flask_wtf.csrf import CSRFProtect
 
-from web.controllers.users import users_bp
-from web.controllers.auth.authenticate import auth_bp
-from web import helpers
+from src.web.controllers.users import users_bp
+from src.web.controllers.auth.authenticate import auth_bp
+from src.web import helpers
 
 """
     Crea la aplicación Flask.
