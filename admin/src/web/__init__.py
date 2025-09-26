@@ -14,7 +14,7 @@ from src.core import database
 from src.web import seeds  # Importar el módulo correctamente
 
 # Modelos
-from src.core.users import User, UserRole
+# from src.core.users import User, UserRole
 
 # Utilidades
 from sqlalchemy import select
