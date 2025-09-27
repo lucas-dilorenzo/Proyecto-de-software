@@ -2,30 +2,84 @@
 
 {% block titulo_body %}
     <h1>  
-        <i class="bi bi-tags"></i> Tags de Sitios Historicos
+        <i class="bi bi-tags-fill"></i> Tags de Sitios Historicos
     </h1>
 {% endblock%}
 
+{% block titulo_acciones_body %}
+    <a href="{{ url_for('tags.new_tag') }}" class="btn btn-new">
+        Crear Tag <i class="bi bi-plus-circle small"></i>
+    </a>
+{% endblock %}
+
 {% block body %}
-    <div class="col-11">
-        <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
-            <div class="card-body">
-                <p class="mb-0">
-                    Formulario de busqueda
-                </p>
+    <div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="row">
+                <form method="get" class="row g-2 mb-4">
+                    <div class="col-6">
+                        <input type="text" name="stringBusqueda" class="form-control"
+                            placeholder="Buscar por nombre" value="{{ stringBusqueda }}">
+                    </div>
+                    <div class="col-3 d-flex justify-content-end align-items-center">
+                        <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+                            Buscar <i class="bi bi-search small"></i> 
+                        </button>
+                    </div>
+                    {% if busqueda %}
+                        <div class="col-3 d-flex justify-content-end align-items-center">
+                            <a href="{{ url_for('tags.list_tags') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
+                                Limpiar <i class="bi bi-x-circle small"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+                </form>
             </div>
         </div>
     </div>
 
-    {% for tag in tags:  %}
+    {% if tags %}
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                <!-- <th scope="col"> Identificador </th> -->
+                <th scope="col"> Nombre </th>
+                <th scope="col"> Descripción </th>
+                <th scope="col"> Cant. sitios </th>
+                <th scope="col">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tag in tags:  %}
+                    <tr>
+                        <td>{{ tag.name }}</td>
+                        <td>{{ tag.description }}</td>
+                        <td> - </td>
+                        <td>
+                            <a href="#" class="btn btn-icon" title="Editar Tag" aria-label="Editar Tag">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <!-- <a href="#" class="btn btn-icon">
+                            <i class="bi bi-people"></i>
+                            </a> -->
+                            <a href="#" class="btn btn-icon" title="Eliminar Tag" aria-label="Eliminar Tag">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                
+            </tbody>
+        </table>
+    {% else %}
         <div class="col-11 mt-3">
             <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
                 <div class="card-body">
                     <p class="mb-0">
-                        {{ tag.name }}
+                        No se encontraron tags.
                     </p>
                 </div>
             </div>
         </div>
-    {% endfor %}
+    {% endif %}
 {% endblock %}

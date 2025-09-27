@@ -4,6 +4,7 @@ from select import select
 from src.core.database import db
 from src.core import historicalSites
 from src.core.historicalSites.site import Site
+from src.core.historicalSites.tags.tag import Tag
 from datetime import date
 from src.core.users.user import User, UserRole
 from werkzeug.security import generate_password_hash
@@ -132,9 +133,9 @@ def run():
     ]
 
     for tag_data in tags_data:
-        existing_tag = historicalSites.get_tag_by_name(tag_data["name"])
+        existing_tag = historicalSites.tags.get_tag_by_name(tag_data["name"])
         if not existing_tag:
-            historicalSites.create_tag(**tag_data)
+            historicalSites.tags.create_tag(**tag_data)
             print(f"Tag agregado: {tag_data['name']}")
         else:
             print(f"El tag ya existe: {tag_data['name']}")

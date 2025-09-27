@@ -48,14 +48,14 @@
 
 /* ====== Responsive tweaks ====== */
   #header {
-    position: fixed;     /* lo fijás arriba */
+    position: fixed; /* lo fijás arriba */
     top: 0;
     left: 0;
     right: 0;
     height: 60px;
-    background-color: #004c82; /* mismo color que el navbar */
+    background-color: #004c82; 
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    /*z-index: 1030;      /*  asegura que quede sobre el contenido */
+    z-index: 1030;   
   }
 
   #perfil-btn {
@@ -86,9 +86,9 @@
   }
 
   /* Sidebar colapsado */
-  #sidebar.collapsed {
+  /* #sidebar.collapsed {
     width: 80px;
-  }
+  } */
 
   .logo-navbar {
     height: 90%; /* Ajusta la altura al 100% del contenedor (navbar) */
@@ -105,9 +105,9 @@
     white-space: nowrap;
   }
 
-  #sidebar.collapsed .nav-link span {
+  /* #sidebar.collapsed .nav-link span {
     display: none;
-  }
+  } */
 
   #sidebar.collapsed ~ #content {
     margin-left: 80px;
@@ -152,10 +152,45 @@
   /* Responsive */
   @media (max-width: 768px) {
     #sidebar {
-      position: relative;
-      width: 100%;
-      height: auto;
-      top: 0;
+      display: block;
+      position: fixed;
+      top: 60px; /* debajo del header */
+      left: 0;
+      height: calc(100vh - 60px);
+      width: 250px;
+      background-color: white;
+      box-shadow: 2px 0 12px rgba(0,0,0,0.0);
+      z-index: 1050;
+      transform: translateX(-110%);
+      transition: transform 300ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms ease;
+    }
+
+    #toggle-btn {
+      /* Mostrar el botón de toggle sólo en pantalla chica(celular) */
+      display: inline-block;
+    }
+
+    #sidebar.open {
+      transform: translateX(0);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+    }
+
+    /* Backdrop: siempre presente para poder animar opacidad */
+    #mobile-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0; /* top:0; right:0; bottom:0; left:0 */
+      background: rgba(0,0,0,0);
+      opacity: 0;
+      transition: background 300ms ease, opacity 300ms ease;
+      pointer-events: none;
+      z-index: 1040;
+    }
+    
+    #mobile-backdrop.show {
+      background: rgba(0,0,0,0.45);
+      opacity: 1;
+      pointer-events: auto;
     }
 
     #sidebar.collapsed {
@@ -184,11 +219,124 @@
 }
 
 #sidebar .nav-link {
-  /* ... tus estilos de color y display ... */
   padding: 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
 }
 
 /* Estilos específicos para el botón de cerrar sesión */
 .signout-button a {
-  color: #333 !important; /* Asegura que el texto y el ícono sean visibles */
+  color: #333 !important; 
+}
+
+/* i {
+  color: #004c82;
+} */
+
+input.form-control {
+  /* background-color: transparent; */
+  border: none;
+  border-bottom: 1px solid #9e9e9e;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.btn.btn-azul {
+  background-color:  #004c82;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.btn.btn-new {
+  background-color:  #C47358;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 33px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.btn.btn-limpiar {
+  background-color: #f57c00;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  border: none;
+}
+
+i.small {
+  font-size: 1rem !important;
+  line-height: inherit;
+}
+
+.btn i {
+  font-size: 1.3rem;
+  line-height: inherit;
+  padding-left: 4%;
+}
+
+.card {
+  padding: 1rem;
+  box-shadow: 
+  0 4px 6px 0 rgba(0,0,0,0.25), 
+  0 6px 10px -2px rgba(0,0,0,0.20), 
+  0 2px 10px 0 rgba(0,0,0,0.22);
+  border: none; /* opcional, elimina el borde gris default de Bootstrap */
+}
+
+.btn-icon {
+  background-color: #0d5c91;   /* Azul estilo de tu ejemplo */
+  color: #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  transition: background 0.3s;
+}
+
+.btn-icon:hover {
+  background-color: #0a4b74;  
+  color: #fff;
+}
+
+.table {
+  margin-top: 4%;
+  background-color: #f9f9f9;
+  border: none;
+}
+
+/* .table th, */
+.table td {
+    border: none; /* Elimina los bordes de las celdas */
+}
+
+/* Contenedor fijo para flashes */
+.flash-container{
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1080;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  pointer-events: none; /* evita bloquear clicks; los botones dentro siguen recibiendo events si los quieres */
+}
+.flash-container .alert{
+  margin: 0;
+  pointer-events: auto; /* permitir interacción con el alert (cerrar) */
 }

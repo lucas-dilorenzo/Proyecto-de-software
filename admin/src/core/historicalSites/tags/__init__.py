@@ -1,4 +1,3 @@
-from src.core.historicalSites.site import Site  # noqa: F401
 from src.core.historicalSites.tags.tag import Tag  # noqa: F401
 from src.core.database import db
 
@@ -10,7 +9,7 @@ def get_all_tags():
 
 # Busca un tag por su nombre
 # Args: name (str): El nombre del tag a buscar.
-# Returns: Tag: El objeto Tag si se encuentra, de lo contrario None.
+# Return: Tag: El objeto Tag si se encuentra, de lo contrario None.
 def get_tag_by_name(name: str):
     query = db.session.query(Tag).filter_by(name=name).first()
     return query

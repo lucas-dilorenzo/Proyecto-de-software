@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+    <h1>
+        <i class="bi bi-tags-fill"></i>
+        <i class="bi bi-plus-circle"></i>
+        Nuevo Tag
+    </h1><br>
+{% endblock %}
+
+{% block body %}
+    <form method="POST" action="{{ url_for('tags.new_tag') }}">
+        <div class="card shadow-sm border-0 rounded-0 bg-white">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                </div>
+                <div class="mb-3">
+                    <label for="slug" class="form-label">Slug</label>
+                    <input type="text" class="form-control" id="slug" name="slug" required>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Descripción</label>
+                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="card-actions p-3 d-flex justify-content-end">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-azul">Crear <i class="bi bi-caret-right small"></i></button>
+                </div>
+            </div>
+        </div>
+        <br>
+        
+        <div class="col-2">
+            <a href="{{ url_for('tags.list_tags') }}" class="btn btn-azul"><i class="bi bi-arrow-left small"></i> Volver</a>
+        </div>
+
+    </form>
+       
+{% endblock %}
