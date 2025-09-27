@@ -6,7 +6,7 @@ Incluye rutas protegidas para listar, crear, editar y eliminar usuarios.
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
-from web.auth import admin_required
+from web.auth import role_required
 from web.validators.users import validate_user_payload
 from core.database import db
 from core.users import User, UserRole
@@ -27,7 +27,7 @@ def _clamp_per_page(val) -> int:
 
 
 @users_bp.get("/")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def list_users():
     """
     Listado de usuarios con filtros por email, activo, rol y orden.
@@ -97,7 +97,7 @@ def list_users():
 
 
 @users_bp.get("/new")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def new_user():
     """
     Muestra el formulario para crear un nuevo usuario.
@@ -114,7 +114,7 @@ def new_user():
 
 
 @users_bp.post("/new")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def create_user():
     """
     Procesa el formulario de creación de usuario.
@@ -169,7 +169,7 @@ def create_user():
 
 
 @users_bp.get("/<int:uid>/edit")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def edit_user(uid: int):
     """
     Muestra el formulario para editar un usuario existente.
@@ -187,7 +187,7 @@ def edit_user(uid: int):
 
 
 @users_bp.post("/<int:uid>/edit")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def update_user(uid: int):
     """
     Procesa el formulario de edición de usuario.
@@ -231,7 +231,7 @@ def update_user(uid: int):
 
 
 @users_bp.post("/<int:uid>/delete")
-@admin_required
+@role_required(role=UserRole.ADMIN)
 def delete_user(uid: int):
     """
     Elimina un usuario por su ID.

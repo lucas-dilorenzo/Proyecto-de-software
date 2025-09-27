@@ -1,27 +1,31 @@
 """
-Decorador para proteger rutas que solo pueden ser accedidas por administradores.
+Decorador para proteger rutas que solo pueden ser accedidas por usuarios con un cierto rol.
 
-- admin_required: Si el usuario no tiene el rol "Administrador" en la sesión,
+- role_required: Si el usuario no tiene el rol especificado en la sesión,
   muestra un mensaje y retorna un error 401 (no autorizado).
 """
 
 from functools import wraps
 from flask import session, flash, abort
+from core.users import UserRole
 
 
-def admin_required(fn):
+def role_required(role: UserRole):
     """
     Decorador para vistas Flask.
-    Permite el acceso solo si el usuario tiene rol de Administrador.
+    Permite el acceso solo si el usuario tiene el rol especificado.
     Si no, muestra un mensaje y retorna error 401.
     """
 
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        # Verifica el rol en la sesión
-        if session.get("role") != "Administrador":
-            flash("No tenés permisos para acceder a este módulo.", "danger")
-            return abort(401)
-        return fn(*args, **kwargs)
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            # Verifica el rol en la sesión
+            if session.get("role") != role.value:
+                flash("No tenés permisos para acceder a este módulo.", "danger")
+                return abort(401)
+            return fn(*args, **kwargs)
 
-    return wrapper
+        return wrapper
+
+    return decorator
