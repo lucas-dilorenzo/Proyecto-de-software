@@ -49,12 +49,10 @@ endblock %} {% block titulo_body %}
                 >Editar</a
               >
             </li>
-            <li>
-              <a
-                class="dropdown-item"
-                href="{{ url_for('sites.delete_site', site_id=site.id) }}"
-                >Eliminar</a
-              >
+              <!-- Eliminar redirecciona hacia el list_sites.html, luego de eliminar -->
+              <a class="dropdown-item" href="{{ url_for('sites.delete_site', site_id=site.id) }}" class="dropdown-item"  onclick="return confirm('¿Estás seguro de que deseas eliminar este sitio?');"> 
+                Eliminar 
+              </a>
             </li>
           </ul>
         </div>

@@ -1,3 +1,4 @@
+from winsound import SND_ASYNC
 from src.core import historicalSites
 from flask import Blueprint, redirect, render_template, request, url_for, abort
 
@@ -60,12 +61,26 @@ def edit_site(site_id):
     return render_template("historicalSites/edit_site.html", site=site)
 
 
+@historical_sites_bp.route("/<int:site_id>/delete", methods=["GET"])
+def delete_site(site_id):
+    site = historicalSites.get_site_by_id(site_id)
+    if site is None:
+        return "Site not found", 404
+    if request.method == "GET":
+        historicalSites.delete_site(site_id)
+        return redirect(url_for("sites.list_sites"))
+        #return f"Site {site.name} deleted", 200
+
+
+""""
+
 @historical_sites_bp.route("/<int:site_id>/delete", methods=["POST"])
 def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
-    # Logic to delete the site would go here
-    return f"Site {site.name} deleted", 200
+    if request.method == "POST":
+        historicalSites.delete_site(site_id)
+        return f"Site {site.name} deleted", 200
 
-
+"""
