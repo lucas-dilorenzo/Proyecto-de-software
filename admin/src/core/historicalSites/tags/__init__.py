@@ -23,3 +23,37 @@ def create_tag(**kwargs):
     session.add(tag)
     session.commit()
     return tag
+
+# Función para generar un slug a partir de un texto(nombre del tag)
+# Args: text (str): El texto del cual generar el slug.
+# Returns str: El slug generado.
+def crear_slug(text):
+    # 1. Paso a minúsculas
+    text = text.lower()
+    # 2. Saco acentos 
+    reemplazos = {
+        "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u",
+        "à": "a", "è": "e", "ì": "i", "ò": "o", "ù": "u",
+        "ä": "a", "ë": "e", "ï": "i", "ö": "o", "ü": "u",
+        "ñ": "n",
+    }
+    texto_sin_acentos = ""
+    for c in text:
+        if c in reemplazos:
+            texto_sin_acentos += reemplazos[c]
+        else:
+            texto_sin_acentos += c
+    # 3. Reemplazo espacios por guiones
+    texto_slug = ""
+    for c in texto_sin_acentos:
+        if c == " ":
+            texto_slug += "-"
+        # 4. Solo dejo letras, números y guiones
+        elif c.isalnum() or c == "-":
+            texto_slug += c
+        # ignorar cualquier otro caracter
+    # 5. Evitar guiones duplicados o al borde
+    while "--" in texto_slug:
+        texto_slug = texto_slug.replace("--", "-")
+    texto_slug = texto_slug.strip("-")
+    return texto_slug

@@ -14,15 +14,29 @@
             <div class="card-body">
                 <div class="mb-3">
                     <label for="name" class="form-label">Nombre</label>
-                    <input type="text" class="form-control" id="name" name="name" required>
+                    <input type="text" class="form-control {% if errors and errors.name %}is-invalid{% endif %}" id="name" name="name" 
+                        value="{{ name|default('') }}" required>
+                    {% if errors and errors.name %}
+                        <div class="invalid-feedback">{{ errors.name }}</div>
+                    {% endif %}
                 </div>
-                <div class="mb-3">
+                <!-- <div class="mb-3">
                     <label for="slug" class="form-label">Slug</label>
-                    <input type="text" class="form-control" id="slug" name="slug" required>
-                </div>
+                    <input type="text" class="form-control {% if errors and errors.slug %}is-invalid{% endif %}" id="slug" name="slug" 
+                    value="{{ slug|default('') }}" required>
+                    {% if errors and errors.slug %}
+                        <div class="invalid-feedback">{{ errors.slug }}</div>
+                    {% endif %}
+                </div> -->
                 <div class="mb-3">
                     <label for="description" class="form-label">Descripción</label>
-                    <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    <textarea class="form-control {% if errors and errors.description %}is-invalid{% endif %}" id="description" name="description" rows="3">{{ description|default('') }}</textarea>
+                    {% if errors and errors.description %}
+                        <div class="invalid-feedback">{{ errors.description }}</div>
+                    {% endif %}
+                    {% if errors and errors.description %}
+                        <div class="invalid-feedback">{{ errors.description }}</div>
+                    {% endif %}
                 </div>
             </div>
             <div class="card-actions p-3 d-flex justify-content-end">
