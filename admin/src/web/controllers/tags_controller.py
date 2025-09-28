@@ -1,10 +1,9 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from src.core.historicalSites.tags import get_all_tags, get_tag_by_name, create_tag, crear_slug
+from src.core.historicalSites.tags import get_all_tags, get_tag_by_name, create_tag, update_tag, crear_slug
 from src.core.historicalSites.tags.tag import Tag
 import re
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
-
 
 @tags_bp.route("/", methods=["GET"])
 def list_tags():
@@ -56,6 +55,7 @@ def new_tag():
 def edit_tag(tag_id):
     # obtener el tag o 404
     tag = Tag.query.get_or_404(tag_id)
+    
     errors = {}
     if request.method == "POST":
         # leo valores enviados
@@ -66,36 +66,32 @@ def edit_tag(tag_id):
             errors["name"] = "El nombre es obligatorio."
         else:
             # verifico unicidad del nombre excluyendo el propio registro
-            duplicate = Tag.query.filter(Tag.name == name, Tag.id != tag.id).first()
-            if duplicate:
-                errors["name"] = "Ya existe un tag con ese nombre."
-
-        # (opcional) generar slug si cambió el nombre; usar la función slugify central
-        nuevo_slug = crear_slug(name) if name else ""
-        # para mantener el slug del tag cuando no cambie el nombre
-        slug_final = tag.slug
-        if nuevo_slug and nuevo_slug != tag.slug:
-            # generar slug si cambio el nombre
-            slug_final = nuevo_slug
+            existing_tag = get_tag_by_name(name)
+            if existing_tag and existing_tag.id != tag.id:
+                errors["name"] = "Ya existe un tag con ese nombre."          
 
         if errors:
             # devolver los mismos valores y errores para mostrar en el form
-            return render_template("historicalSites/tags/editTag.html",
-                                   tag=tag, name=name, description=description, errors=errors)
+            return render_template(
+                "historicalSites/tags/editTag.html",
+                tag=tag, name=name, description=description, errors=errors
+            )
 
         # aplicar cambios y guardar
         try:
-            tag.name = name
-            tag.slug = slug_final
-            tag.description = description
-            db.session.commit()
-            flash("Tag actualizado correctamente.", "success")
+            # genero nuevo slug si cambió el nombre
+            if name != tag.name:
+                slug = crear_slug(name)
+                tag.slug = slug
+            else:
+                slug = tag.slug  # mantener el slug actual si no cambió el nombre
+            update_tag(tag_id=tag.id, name=name, slug=slug, description=description)
+            flash("El tag se actualizó correctamente.", "success")
             return redirect(url_for("tags.list_tags"))
         except Exception as e:
-            db.session.rollback()
             flash("Error al actualizar el tag: " + str(e), "danger")
             return render_template("historicalSites/tags/editTag.html",
-                                   tag=tag, name=name, description=description, errors={"form": "Error al guardar."})
+            tag=tag, name=name, description=description, errors={"form": "Error al guardar."})
 
     # GET: mostrar formulario con los datos actuales
     return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)

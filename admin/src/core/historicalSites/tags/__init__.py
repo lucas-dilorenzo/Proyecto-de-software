@@ -24,6 +24,20 @@ def create_tag(**kwargs):
     session.commit()
     return tag
 
+# Crea un nuevo tag en la base de datos
+# Args: kwargs: Los datos del tag (name, slug, description).
+# Returns Tag: El objeto Tag recién creado.
+def update_tag(tag_id, **kwargs):
+    tag = Tag.query.get(tag_id)
+    if not tag:
+        raise ValueError("El tag no existe.")
+    # Actualizar solo las claves que existan en el modelo
+    for key, value in kwargs.items():
+        if hasattr(tag, key):
+            setattr(tag, key, value)
+    db.session.commit()
+    return tag
+
 # Función para generar un slug a partir de un texto(nombre del tag)
 # Args: text (str): El texto del cual generar el slug.
 # Returns str: El slug generado.

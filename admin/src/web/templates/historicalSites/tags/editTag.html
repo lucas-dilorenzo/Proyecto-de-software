@@ -8,58 +8,51 @@
 {% endblock %}
 
 {% block body %}
-  <form method="POST" action="{{ url_for('tags.edit_tag', tag_id=tag.id) }}">
-    <div class="card shadow-sm border-0 rounded-0 bg-white">
-      <div class="card-body">
+    <form method="POST" action="{{ url_for('tags.edit_tag', tag_id=tag.id) }}">
+        <div class="card shadow-sm border-0 rounded-0 bg-white">
+            <div class="card-body">
 
-        <div class="mb-3">
-          <label for="name" class="form-label">Nombre</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
-            value="{{ name|default('') }}"
-            required
-          >
-          {% if errors and errors.name %}
-            <div class="invalid-feedback">{{ errors.name }}</div>
-          {% endif %}
+                <div class="mb-3">
+                <label for="name" class="form-label">Nombre</label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
+                    value="{{ name|default('') }}"
+                    required
+                >
+                {% if errors and errors.name %}
+                    <div class="invalid-feedback">{{ errors.name }}</div>
+                {% endif %}
+                </div>
+
+                <div class="mb-3">
+                <label for="description" class="form-label">Descripción</label>
+                <textarea
+                    id="description"
+                    name="description"
+                    class="form-control {% if errors and errors.description %}is-invalid{% endif %}"
+                    rows="3"
+                >{{ description|default('') }}</textarea>
+                {% if errors and errors.description %}
+                    <div class="invalid-feedback">{{ errors.description }}</div>
+                {% endif %}
+                </div>
+
+            </div>
+
+            <div class="card-actions p-3 d-flex justify-content-end">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-azul">Actualizar  <i class="bi bi-floppy small"></i></button>
+                </div>
+            </div>
+            <br>
         </div>
 
-        <div class="mb-3">
-          <label for="slug" class="form-label">Slug</label>
-          <!-- mostrar slug actual en read-only para información -->
-          <input type="text" id="slug" name="slug" class="form-control" value="{{ tag.slug }}" readonly>
-          <div class="form-text">El slug se genera automáticamente desde el nombre; se actualizará si cambia el nombre.</div>
+        <div class="col-2" style="padding-top: 2%;">
+            <a href="{{ url_for('tags.list_tags') }}" class="btn btn-azul"><i class="bi bi-arrow-left small"></i> Volver</a>
         </div>
-
-        <div class="mb-3">
-          <label for="description" class="form-label">Descripción</label>
-          <textarea
-            id="description"
-            name="description"
-            class="form-control {% if errors and errors.description %}is-invalid{% endif %}"
-            rows="3"
-          >{{ description|default('') }}</textarea>
-          {% if errors and errors.description %}
-            <div class="invalid-feedback">{{ errors.description }}</div>
-          {% endif %}
-        </div>
-
-      </div>
-
-      <div class="card-actions p-3 d-flex justify-content-end">
-        <div class="col-2">
-          <button type="submit" class="btn btn-primary">Guardar cambios <i class="bi bi-check-lg"></i></button>
-        </div>
-      </div>
-    </div>
-
-    <br>
-
-    <div class="col-2">
-      <a href="{{ url_for('tags.list_tags') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
-    </div>
-  </form>
+    </form>
+  
 {% endblock %}
