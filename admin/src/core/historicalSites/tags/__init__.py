@@ -14,6 +14,13 @@ def get_tag_by_name(name: str):
     query = db.session.query(Tag).filter_by(name=name).first()
     return query
 
+# Busca un tag por su ID
+# Args: id (int): El ID del tag a buscar.
+# Return: Tag: El objeto Tag si se encuentra, de lo contrario None.
+def get_tag_by_id(id: int):
+    query = db.session.query(Tag).filter_by(id=id).first()
+    return query
+
 # Crea un nuevo tag en la base de datos
 # Args: kwargs: Los datos del tag (name, slug, description).
 # Returns Tag: El objeto Tag recién creado.
@@ -71,3 +78,10 @@ def crear_slug(text):
         texto_slug = texto_slug.replace("--", "-")
     texto_slug = texto_slug.strip("-")
     return texto_slug
+
+def delete_tag(tag_id):
+    tag = get_tag_by_id(tag_id)
+    if not tag:
+        return False
+    db.session.delete(tag)
+    db.session.commit()

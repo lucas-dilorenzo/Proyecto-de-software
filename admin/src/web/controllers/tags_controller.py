@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from src.core.historicalSites.tags import get_all_tags, get_tag_by_name, create_tag, update_tag, crear_slug
+from src.core.historicalSites.tags import get_all_tags, get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug
 from src.core.historicalSites.tags.tag import Tag
 import re
 
@@ -95,3 +95,14 @@ def edit_tag(tag_id):
 
     # GET: mostrar formulario con los datos actuales
     return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)
+
+@tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
+def delete_tag(tag_id):
+    # obtener el tag o 404
+    tag = Tag.query.get_or_404(tag_id)
+    try:
+        delete_tag_helper(tag_id)  # función helper
+        flash("El tag se eliminó correctamente.", "success")
+    except Exception as e:
+        flash("Error al eliminar el tag: " + str(e), "danger")
+    return redirect(url_for("tags.list_tags"))

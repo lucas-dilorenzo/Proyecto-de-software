@@ -62,7 +62,7 @@
                             <!-- <a href="#" class="btn btn-icon">
                             <i class="bi bi-people"></i>
                             </a> -->
-                            <a href="#" class="btn btn-icon" title="Eliminar Tag" aria-label="Eliminar Tag">
+                            <a href="#" class="btn btn-icon" title="Eliminar Tag" aria-label="Eliminar Tag" data-delete-url="{{ url_for('tags.delete_tag', tag_id=tag.id) }}" onclick="confirmDeleteSwal(event, this.dataset.deleteUrl)">
                                 <i class="bi bi-trash"></i>
                             </a>
                         </td>
@@ -82,4 +82,40 @@
             </div>
         </div>
     {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        async function confirmDeleteSwal(event, url) {
+            event.preventDefault();
+            const { value: accept } = await Swal.fire({
+                title: '¿Estás segura/o?',
+                text: 'Esta acción eliminará el tag.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            });
+
+            if (!accept) return;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) {
+                    await Swal.fire('Eliminado', 'El tag fue eliminado correctamente.', 'success');
+                    window.location.reload();
+                } else {
+                    const text = await response.text();
+                    throw new Error(text || 'Error al eliminar');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'No se pudo eliminar el tag. ' + (err.message || ''), 'error');
+            }
+        }
+    </script>
 {% endblock %}

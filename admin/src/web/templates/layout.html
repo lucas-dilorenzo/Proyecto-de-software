@@ -132,12 +132,8 @@ Template base para la interfaz de administración.
       {% endblock %}
     </footer> -->
 
-  <!-- Scripts de Bootstrap y funcionalidad del sidebar -->
-  <!-- <script>
-    document.getElementById('toggle-btn').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('collapsed');
-    });
-  </script> -->
+  <!-- Scripts de Bootstrap -->
+  {% block scripts %}{% endblock %}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
