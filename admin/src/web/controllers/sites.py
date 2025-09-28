@@ -72,15 +72,3 @@ def delete_site(site_id):
         #return f"Site {site.name} deleted", 200
 
 
-""""
-
-@historical_sites_bp.route("/<int:site_id>/delete", methods=["POST"])
-def delete_site(site_id):
-    site = historicalSites.get_site_by_id(site_id)
-    if site is None:
-        return "Site not found", 404
-    if request.method == "POST":
-        historicalSites.delete_site(site_id)
-        return f"Site {site.name} deleted", 200
-
-"""
