@@ -1,6 +1,13 @@
-from winsound import SND_ASYNC
 from src.core import historicalSites
-from flask import Blueprint, Response, redirect, render_template, request, url_for, abort
+from flask import (
+    Blueprint,
+    Response,
+    redirect,
+    render_template,
+    request,
+    url_for,
+    abort,
+)
 import csv
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
@@ -58,7 +65,7 @@ def edit_site(site_id):
             visibility=formulario.get("visibility") == "on",
         )
         return redirect(url_for("sites.list_sites"))
-    
+
     return render_template("historicalSites/edit_site.html", site=site)
 
 
@@ -70,7 +77,7 @@ def delete_site(site_id):
     if request.method == "GET":
         historicalSites.delete_site(site_id)
         return redirect(url_for("sites.list_sites"))
-        #return f"Site {site.name} deleted", 200
+        # return f"Site {site.name} deleted", 200
 
 
 @historical_sites_bp.route("/download_CSV", methods=["GET"])
@@ -78,8 +85,8 @@ def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
     if sites is None:
-       return "No sites found", 404
-    
+        return "No sites found", 404
+
     csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro \n"
     for site in sites:
         csv_data += (
@@ -98,15 +105,16 @@ def download_csv_sites():
     return Response(
         csv_data,
         mimetype="text/csv",
-        headers={"Content-disposition": "attachment; filename=sitios_<YYYYMMDD_HHMM>.csv"}
+        headers={
+            "Content-disposition": "attachment; filename=sitios_<YYYYMMDD_HHMM>.csv"
+        },
     )
+
 
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
 def normalizar(valor):
     if valor is not None:
-        valor = str(valor).replace(",","-")
+        valor = str(valor).replace(",", "-")
     else:
         valor = "-"
     return valor
-
-

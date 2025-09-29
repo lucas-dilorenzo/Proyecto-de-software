@@ -25,6 +25,7 @@ from src.web.controllers.users import users_bp
 from web.controllers.auth.authenticate import auth_bp
 from web import helpers
 from src.web.controllers.tags_controller import tags_bp
+from src.web.controllers.sites import historical_sites_bp
 
 """
     Crea la aplicación Flask.
@@ -56,8 +57,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.config["SESSION_TYPE"] = "filesystem"
     Session(app)
 
-    app.register_blueprint(sites.historical_sites_bp)
-
     @app.route("/")
     def home():
         return render_template("home.html")
@@ -74,6 +73,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.register_blueprint(users_bp)
     app.register_blueprint(tags_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(historical_sites_bp)
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)
