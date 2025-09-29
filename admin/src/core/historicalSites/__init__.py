@@ -2,7 +2,6 @@
 from src.core.database import db
 from src.core.historicalSites.site import Site
 
-
 def create_site(**kwargs):
     """
     Creates and saves a new Site instance in the database.

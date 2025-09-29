@@ -1,4 +1,5 @@
 from src.core.database import db
+from sqlalchemy.orm import relationship
 from datetime import date
 
 
@@ -46,3 +47,4 @@ class Site(db.Model):
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"
+
