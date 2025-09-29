@@ -1,4 +1,6 @@
 from src.core.database import db
+from src.core.historicalSites.tags.tags_sites import site_tags
+from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
 class Tag(db.Model):
@@ -13,3 +15,5 @@ class Tag(db.Model):
 
     def __repr__(self):
         return f"<Tag(nombre={self.name}, slug={self.slug})>"
+
+
