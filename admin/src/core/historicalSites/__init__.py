@@ -35,7 +35,7 @@ def list_all_sites():
     Returns:
         list: A list of Site objects representing all historical sites.
     """
-    return db.session.query(Site).all()
+    return Site.query.all()
 
 
 def get_site_by_id(site_id: int):
@@ -46,7 +46,7 @@ def get_site_by_id(site_id: int):
     Returns:
         Site: The Site object with the specified ID, or None if not found.
     """
-    return db.session.query(Site).filter(Site.id == site_id).first()
+    return Site.query.filter(Site.id == site_id).first()
 
 
 def get_site_by_name(name):
@@ -57,10 +57,10 @@ def get_site_by_name(name):
     Returns:
         Site: The Site object with the specified name, or None if not found.
     """
-    return db.session.query(Site).filter(Site.name == name).first()
+    return Site.query.filter(Site.name == name).first()
 
 
-def update_site(site_id: int, **kwargs):
+def update_site(site_id, **kwargs):
     """
     Updates the attributes of a historical site with the given site_id.
     Retrieves the site object by its ID, updates its attributes based on the provided keyword arguments,
@@ -109,16 +109,33 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
         sites: A query containing the paginated list of sites and pagination metadata.
     """
     if order == "desc":
-        sites = (
-            db.session.query(Site)
-            .order_by(Site.name.desc())
-            .paginate(page, per_page, error_out=False)
+        sites = Site.query.order_by(Site.name.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
         )
     else:
-        sites = (
-            db.session.query(Site)
-            .order_by(Site.name.asc())
-            .paginate(page, per_page, error_out=False)
+        sites = Site.query.order_by(Site.name.asc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+    return sites
+
+
+def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
+    """
+    Retrieves a paginated list of historical sites from the database.
+    Args:
+        page (int): The page number to retrieve (default is 1).
+        per_page (int): The number of sites to display per page (default is 25).
+        order (str): The order in which to sort the sites by id ('asc' for ascending(default), 'desc' for descending; default is 'asc').
+    Returns:
+        sites: A query containing the paginated list of sites and pagination metadata.
+    """
+    if order == "desc":
+        sites = Site.query.order_by(Site.id.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+    else:
+        sites = Site.query.order_by(Site.id.asc()).paginate(
+            page=page, per_page=per_page, error_out=False
         )
     return sites
 

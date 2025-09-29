@@ -56,6 +56,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.config["SESSION_TYPE"] = "filesystem"
     Session(app)
 
+    app.register_blueprint(sites.historical_sites_bp)
+
     @app.route("/")
     def home():
         return render_template("home.html")
