@@ -11,11 +11,10 @@ def init_app(app):
 
 
 def reset_db():
-    from src.core.historicalSites.site import Site  # noqa: F401
+    # from src.core.historicalSites.site import Site  # noqa: F401
+    # from src.core.users.user import User  # noqa: F401
 
     print("Resetting database...")
-    # Base.metadata.drop_all(bind=db.engine)
-    # Base.metadata.create_all(bind=db.engine)
     db.drop_all()
     db.create_all()
     print("Database reset complete.")

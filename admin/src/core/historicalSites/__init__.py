@@ -1,5 +1,5 @@
-from src.core.historicalSites.site import Site  # noqa: F401
-from src.core.database import db
+from core.database import db
+from .site import Site  # Importar el modelo aquí
 
 
 def create_site(**kwargs):
@@ -48,7 +48,7 @@ def get_site_by_id(site_id: int):
     return Site.query.filter(Site.id == site_id).first()
 
 
-def get_site_by_name(name: str):
+def get_site_by_name(name):
     """
     Retrieve a Site object from the database by its name.
     Args:
@@ -137,3 +137,4 @@ def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "a
             page=page, per_page=per_page, error_out=False
         )
     return sites
+

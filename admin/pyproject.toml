@@ -16,8 +16,10 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "web", from = "src"}]
-
+packages = [
+    {include = "web", from = "src"},
+    {include = "core", from = "src"}
+]
 
 [tool.poetry.group.test.dependencies]
 pytest = "^8.4.2"
