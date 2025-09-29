@@ -59,7 +59,7 @@ def get_site_by_name(name: str):
     return Site.query.filter(Site.name == name).first()
 
 
-def update_site(site_id: int, **kwargs):
+def update_site(site_id, **kwargs):
     """
     Updates the attributes of a historical site with the given site_id.
     Retrieves the site object by its ID, updates its attributes based on the provided keyword arguments,
