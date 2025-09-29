@@ -6,7 +6,8 @@ from src.core import historicalSites
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
 from datetime import date
-from src.core.users.user import User, UserRole
+
+# from src.core.users.user import User, UserRole
 from werkzeug.security import generate_password_hash
 
 

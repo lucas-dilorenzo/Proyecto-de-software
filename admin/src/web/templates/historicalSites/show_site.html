@@ -1,0 +1,45 @@
+{% extends "layout.html" %} {% block title %} Sitios Historicos - App37 {%
+endblock %} {% block titulo_body %}
+<!--<h1>{{ site.name }}</h1>-->
+{% endblock %} 
+
+{% block main_content %}
+  <div class="container my-4">
+    <div class="row justify-content-center">
+      <div class="col-11">
+        <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-8">
+                <!--Main content-->
+                <h1>{{ site.name }}</h1>
+                <p>{{ site.description_short }}</p>
+                <p> <strong>{{ site.description }}</strong></p>
+              </div>
+
+              <div class="col-md-4">
+                <!--Aside content pane-->
+                <p> <strong>Ubicación:</strong> {{ site.location }}</p>
+                <p> <strong>Provincia:</strong> {{ site.province }}</p>
+                <p> <strong>Año de declaración:</strong> {{ site.year_declared }}</p>
+                <p> <strong>Categoría: </strong> {{ site.category }}</p>
+                <p> <strong>Fecha de registro:</strong> {{ site.registration_date }}</p>
+                <p> <strong>Estado de conservación: </strong> {{ site.conservation_status }}</p>  
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div> 
+    <a class="btn btn-primary" href="{{ url_for('sites.list_sites') }}">
+      Volver a la lista
+    </a>
+  </div> 
+{% endblock %}
+
+
+
+
+
