@@ -1,9 +1,12 @@
 from select import select
-from core.database import db
-from core import historicalSites
-from core.historicalSites.site import Site  # Esta es la correcta
+
+# from core.database import db
+from src.core.database import db
+from src.core import historicalSites
+from src.core.historicalSites.site import Site
 from datetime import date
-from core.users.user import User, UserRole
+
+# from src.core.users.user import User, UserRole
 from werkzeug.security import generate_password_hash
 
 
@@ -90,49 +93,49 @@ def run():
         {
             "name": "Patrimonio Mundial",
             "slug": "patrimonio-mundial",
-            "description": "Sitios reconocidos por la UNESCO por su importancia cultural o natural."
+            "description": "Sitios reconocidos por la UNESCO por su importancia cultural o natural.",
         },
         {
             "name": "Antiguo",
             "slug": "antiguo",
-            "description": "Sitios que datan de civilizaciones o períodos antiguos."
+            "description": "Sitios que datan de civilizaciones o períodos antiguos.",
         },
         {
             "name": "Arqueológico",
             "slug": "arqueologico",
-            "description": "Sitios de importancia arqueológica, a menudo involucrando excavaciones."
+            "description": "Sitios de importancia arqueológica, a menudo involucrando excavaciones.",
         },
         {
             "name": "Cultural",
             "slug": "cultural",
-            "description": "Sitios que representan un patrimonio cultural significativo."
+            "description": "Sitios que representan un patrimonio cultural significativo.",
         },
         {
             "name": "Natural",
             "slug": "natural",
-            "description": "Sitios importantes por su belleza natural o relevancia ecológica."
+            "description": "Sitios importantes por su belleza natural o relevancia ecológica.",
         },
         {
             "name": "Moderno",
             "slug": "moderno",
-            "description": "Sitios de historia reciente que muestran arquitectura o logros modernos."
+            "description": "Sitios de historia reciente que muestran arquitectura o logros modernos.",
         },
         {
             "name": "Turismo",
             "slug": "turismo",
-            "description": "Destinos populares para turistas de todo el mundo."
+            "description": "Destinos populares para turistas de todo el mundo.",
         },
         {
             "name": "Protegido",
             "slug": "protegido",
-            "description": "Sitios bajo protección legal para preservar su importancia."
+            "description": "Sitios bajo protección legal para preservar su importancia.",
         },
     ]
 
     for tag_data in tags_data:
-        existing_tag = historicalSites.get_tag_by_name(tag_data["name"])  
+        existing_tag = historicalSites.get_tag_by_name(tag_data["name"])
         if not existing_tag:
-            historicalSites.create_tag(**tag_data) 
+            historicalSites.create_tag(**tag_data)
             print(f"Tag agregado: {tag_data['name']}")
         else:
             print(f"El tag ya existe: {tag_data['name']}")
