@@ -82,16 +82,16 @@ def download_csv_sites():
     csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro \n"
     for site in sites:
         csv_data += (
-            f"{site.name},"
-            f"{site.description_short},"
-            f"{site.description},"
-            f"{site.city},"
-            f"{site.province},"
-            f"{site.location},"
-            f"{site.conservation_status},"
-            f"{site.year_declared},"
-            f"{site.category},"
-            f"{site.registration_date}\n"
+            f"{normalizar(site.name)},"
+            f"{normalizar(site.description_short)},"
+            f"{normalizar(site.description)},"
+            f"{normalizar(site.city)},"
+            f"{normalizar(site.province)},"
+            f"{normalizar(site.location)}),"
+            f"{normalizar(site.conservation_status)},"
+            f"{normalizar(site.year_declared)},"
+            f"{normalizar(site.category)},"
+            f"{normalizar(site.registration_date)}\n"
         )
 
     return Response(
@@ -101,6 +101,11 @@ def download_csv_sites():
     )
 
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
-def normalizar(valor, default=""):
-    return valor if valor is not None else default
+def normalizar(valor):
+    if valor is not None:
+        str(valor).replace(",",";")
+    else:
+        valor = "-"
+    return valor
+
 
