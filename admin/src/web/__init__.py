@@ -23,9 +23,9 @@ from flask_wtf.csrf import CSRFProtect
 
 from src.web.controllers.users import users_bp
 from web.controllers.auth.authenticate import auth_bp
-from web import helpers
 from src.web.controllers.tags_controller import tags_bp
 from src.web.controllers.sites import historical_sites_bp
+from web import helpers
 
 """
     Crea la aplicación Flask.
