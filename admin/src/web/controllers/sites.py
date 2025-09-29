@@ -1,6 +1,6 @@
 from winsound import SND_ASYNC
 from src.core import historicalSites
-from flask import Blueprint, redirect, render_template, request, url_for, abort
+from flask import Blueprint, Response, redirect, render_template, request, url_for, abort
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
@@ -71,4 +71,36 @@ def delete_site(site_id):
         return redirect(url_for("sites.list_sites"))
         #return f"Site {site.name} deleted", 200
 
+
+@historical_sites_bp.route("/download_CSV", methods=["GET"])
+def download_csv_sites():
+    # Logic to download the list of sites
+    sites = historicalSites.list_all_sites()
+    if sites is None:
+        return "No sites found", 404
+    
+    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro \n"
+    for site in sites:
+        csv_data += (
+            f"{site.name},"
+            f"{site.description_short},"
+            f"{site.description},"
+            f"{site.city},"
+            f"{site.province},"
+            f"{site.location},"
+            f"{site.conservation_status},"
+            f"{site.year_declared},"
+            f"{site.category},"
+            f"{site.registration_date}\n"
+        )
+
+    return Response(
+        csv_data,
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=sitios_<YYYYMMDD_HHMM>.csv"}
+    )
+
+# USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
+def normalizar(valor, default=""):
+    return valor if valor is not None else default
 

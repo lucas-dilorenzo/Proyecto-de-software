@@ -85,6 +85,14 @@ endblock %} {% block titulo_body %}
     <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
     {% endif %} {% endfor %}
   </ul>
+
+  <div>
+  <a href="{{ url_for('sites.download_csv_sites') }}" class="btn btn-primary">
+    <button class="btn btn-primary">Descargar</button>
+  </a>
 </div>
+</div>
+
+
 
 {% endblock %}
