@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-from src.core.historicalSites.tags import get_all_tags, get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug
+from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug
 from src.core.historicalSites.tags.tag import Tag
 import re
 
