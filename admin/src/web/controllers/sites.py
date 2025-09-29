@@ -1,6 +1,7 @@
 from winsound import SND_ASYNC
 from src.core import historicalSites
 from flask import Blueprint, Response, redirect, render_template, request, url_for, abort
+import csv
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
@@ -77,7 +78,7 @@ def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
     if sites is None:
-        return "No sites found", 404
+       return "No sites found", 404
     
     csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro \n"
     for site in sites:
@@ -103,7 +104,7 @@ def download_csv_sites():
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
 def normalizar(valor):
     if valor is not None:
-        str(valor).replace(",",";")
+        valor = str(valor).replace(",","-")
     else:
         valor = "-"
     return valor
