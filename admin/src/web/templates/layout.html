@@ -231,6 +231,31 @@ Bootstrap y estilos propios. #}
 
     <!-- Main content area -->
     <div id="content">
+      <!-- Mensajes flash integrados en el contenido -->
+      <div
+        id="flash-container"
+        class="flash-container"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {% with msgs = get_flashed_messages(with_categories=True) %} {% if msgs
+        %} {% for cat, m in msgs %} {% set bs_class = 'info' if cat=='message'
+        else cat %}
+        <div
+          class="alert alert-{{ bs_class }} alert-dismissible fade show"
+          role="alert"
+        >
+          {{ m }}
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="alert"
+            aria-label="Cerrar"
+          ></button>
+        </div>
+        {% endfor %} {% endif %} {% endwith %}
+      </div>
+
       <div class="container-fluid" style="width: 90%">
         <div class="row">
           <div class="col-9">{% block titulo_body %}{% endblock %}</div>
@@ -245,31 +270,6 @@ Bootstrap y estilos propios. #}
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Mensajes flash para mostrar notificaciones -->
-    <div
-      id="flash-container"
-      class="flash-container"
-      aria-live="polite"
-      aria-atomic="true"
-    >
-      {% with msgs = get_flashed_messages(with_categories=True) %} {% if msgs %}
-      {% for cat, m in msgs %} {% set bs_class = 'info' if cat=='message' else
-      cat %}
-      <div
-        class="alert alert-{{ bs_class }} alert-dismissible fade show"
-        role="alert"
-      >
-        {{ m }}
-        <button
-          type="button"
-          class="btn-close"
-          data-bs-dismiss="alert"
-          aria-label="Cerrar"
-        ></button>
-      </div>
-      {% endfor %} {% endif %} {% endwith %}
     </div>
 
     <!-- Footer (comentado) -->
