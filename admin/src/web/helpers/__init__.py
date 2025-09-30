@@ -1,6 +1,9 @@
 from enum import Enum
+
+from flask import redirect, session, url_for
 from src.core.users.user import UserRole
 from src.core import users
+from functools import wraps
 
 
 def is_authenticated(session):
@@ -26,3 +29,14 @@ def has_role(session, role):
 def get_user_by_id(id):
     user = users.get_user_by_id(id)
     return user
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_authenticated(session):
+            print("User not authenticated, redirecting to login.")
+            return redirect(url_for("auth.login"))
+        return f(*args, **kwargs)
+
+    return decorated_function

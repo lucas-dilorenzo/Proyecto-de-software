@@ -338,19 +338,15 @@ i.small {
     border: none; /* Elimina los bordes de las celdas */
 }
 
-/* Contenedor fijo para flashes */
+/* Contenedor integrado para flashes */
 .flash-container{
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1080;
-  max-width: 360px;
+  position: relative;
+  margin: 1rem 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: .5rem;
-  pointer-events: none; /* evita bloquear clicks; los botones dentro siguen recibiendo events si los quieres */
 }
 .flash-container .alert{
   margin: 0;
-  pointer-events: auto; /* permitir interacción con el alert (cerrar) */
 }
