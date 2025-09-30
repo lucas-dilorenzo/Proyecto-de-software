@@ -113,12 +113,22 @@
                     credentials: 'same-origin',
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
+
+                // parsear el cuerpo: preferir JSON si existe, si no fallback a texto
+                let message = '';
+                const ct = response.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const data = await response.json();
+                    message = data.message || '';
+                } else {
+                    message = await response.text();
+                }
+
                 if (response.ok) {
-                    await Swal.fire('Eliminado', 'El tag fue eliminado correctamente.', 'success');
+                    await Swal.fire('Eliminado', message || 'El tag fue eliminado correctamente.', 'success');
                     window.location.reload();
                 } else {
-                    const text = await response.text();
-                    throw new Error(text || 'Error al eliminar');
+                    await Swal.fire('Error', message || 'No se pudo eliminar el tag.', 'error');
                 }
             } catch (err) {
                 console.error(err);

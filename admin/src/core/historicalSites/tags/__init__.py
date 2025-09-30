@@ -79,6 +79,17 @@ def crear_slug(text):
     texto_slug = texto_slug.strip("-")
     return texto_slug
 
+
+def get_tags(busqueda: str = None):
+    """
+    Retorna una lista de Tag ordenados por nombre. 
+    Si viene cargado el parametro busqueda, lo filtro.
+    """
+    query = db.session.query(Tag)
+    if busqueda:
+        query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
+    return query.order_by(Tag.name.asc(), Tag.created_at.desc()).all()
+
 def delete_tag(tag_id):
     tag = get_tag_by_id(tag_id)
     if not tag:
