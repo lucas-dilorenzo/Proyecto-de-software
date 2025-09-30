@@ -91,10 +91,24 @@
   } */
 
   .logo-navbar {
-    height: 90%; /* Ajusta la altura al 100% del contenedor (navbar) */
+    height: 90%; /* Ajusta la altura al 90% del contenedor (navbar) */
     max-height: 45px; /* Asegúrate de que no exceda la altura del navbar */
     width: auto; /* Mantén la proporción del logo */
     object-fit: contain; /* Asegura que el logo se ajuste sin deformarse */
+    transition: all 0.3s ease; /* Suave transición para cambios responsivos */
+  }
+
+  /* Mejoras responsive para el logo SVG */
+  @media (max-width: 768px) {
+    .logo-navbar {
+      max-height: 35px; /* Logo más pequeño en pantallas móviles */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .logo-navbar {
+      max-height: 30px; /* Logo aún más pequeño en pantallas muy pequeñas */
+    }
   }
 
   #sidebar .nav-link {
