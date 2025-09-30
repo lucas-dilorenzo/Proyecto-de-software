@@ -1,11 +1,21 @@
-{% extends "layout.html" %} {% block title %} Sitios Historicos - App37 {%
-endblock %} {% block titulo_body %}
-<h1>Sitios Historicos</h1>
-{% endblock%} {% block body %}
+{% extends "layout.html" %} 
 
-<h2>Lista de Sitios Historicos</h2>
-<p>Estos son los sitios historicos registrados en el sistema</p>
+{% block title %} Sitios Historicos {% endblock %} 
 
+{% block titulo_body %}
+  <h1 style="margin-top: 3%;">
+    <i class="bi bi-geo"></i>
+    Sitios Historicos
+  </h1>
+{% endblock%} 
+
+{% block titulo_acciones_body %}
+    <a href="{{ url_for('sites.create_site') }}" class="btn btn-new">
+      Añadir Sitio <i class="bi bi-geo small"></i>
+    </a>
+{% endblock %}
+
+{% block body %}
 <table class="table table-striped">
   <thead>
     <tr>

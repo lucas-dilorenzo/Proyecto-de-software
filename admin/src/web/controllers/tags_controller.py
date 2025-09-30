@@ -12,7 +12,7 @@ def list_tags():
     if busqueda:
         query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
 
-    tags = query.order_by(Tag.created_at.desc()).all()
+    tags = query.order_by(Tag.name.asc()).all()
     return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
 
 # Ruta para crear un nuevo tag

@@ -1,4 +1,6 @@
 from src.core import historicalSites
+from src.core.historicalSites.tags import get_all_tags
+
 from flask import (
     Blueprint,
     Response,
@@ -40,7 +42,8 @@ def create_site():
     if request.method == "POST":
         # Logic to create a new site
         return redirect(url_for("sites.list_sites"))
-    return render_template("historicalSites/create_site.html")
+    tags = get_all_tags()
+    return render_template("historicalSites/create_site.html", tags=tags)
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])

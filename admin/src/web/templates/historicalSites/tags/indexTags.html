@@ -44,6 +44,7 @@
                 <tr>
                 <!-- <th scope="col"> Identificador </th> -->
                 <th scope="col"> Nombre </th>
+                <th scope="col"> Slug </th>
                 <th scope="col"> Descripción </th>
                 <th scope="col"> Cant. sitios </th>
                 <th scope="col">Acciones</th>
@@ -53,6 +54,7 @@
                 {% for tag in tags:  %}
                     <tr>
                         <td>{{ tag.name }}</td>
+                        <td>{{ tag.slug }}</td>
                         <td>{{ tag.description }}</td>
                         <td> - </td>
                         <td>
