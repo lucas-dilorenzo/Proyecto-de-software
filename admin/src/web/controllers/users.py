@@ -8,6 +8,7 @@ from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
 from src.web.auth import admin_required
 from src.web.validators.users import validate_user_payload
+from src.web.helpers import login_required
 
 # from core.database import db
 from src.core.users import UserRole
@@ -29,6 +30,7 @@ def _clamp_per_page(val) -> int:
 
 
 @users_bp.get("/")
+@login_required
 @admin_required
 def list_users():
     # if not authenticated(session):
@@ -108,6 +110,7 @@ def list_users():
 
 
 @users_bp.get("/new")
+@login_required
 @admin_required
 def new_user():
     """
@@ -125,6 +128,7 @@ def new_user():
 
 
 @users_bp.post("/new")
+@login_required
 @admin_required
 def create_user():
     """
@@ -176,6 +180,7 @@ def create_user():
 
 
 @users_bp.get("/<int:id>/edit")
+@login_required
 @admin_required
 def edit_user(id: int):
     """
@@ -194,6 +199,7 @@ def edit_user(id: int):
 
 
 @users_bp.post("/<int:id>/edit")
+@login_required
 @admin_required
 def update_user(id: int):
     """
@@ -242,6 +248,7 @@ def update_user(id: int):
 
 
 @users_bp.post("/<int:id>/delete")
+@login_required
 @admin_required
 def delete_user(id: int):
     """
