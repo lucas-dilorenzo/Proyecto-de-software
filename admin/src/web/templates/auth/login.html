@@ -35,11 +35,36 @@
   <body class="min-vh-100 d-flex align-items-center py-4">
     <main class="container">
       <h1 class="mb-4 text-center">Iniciar Sesión</h1>
-
       <!-- Contenido original del template (sin cambios) -->
       <div class="container my-4">
         <div class="row justify-content-center">
           <div class="col-lg-5 col-md-6 col-sm-8">
+            <!--  -->
+            <!-- Mensajes flash para mostrar notificaciones -->
+            <div
+              id="flash-container"
+              class="flash-container mb-4"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              {% with msgs = get_flashed_messages(with_categories=True) %} {% if
+              msgs %} {% for cat, m in msgs %} {% set bs_class = 'info' if
+              cat=='message' else cat %}
+              <div
+                class="alert alert-{{ bs_class }} alert-dismissible fade show"
+                role="alert"
+              >
+                {{ m }}
+                <button
+                  type="button"
+                  class="btn-close"
+                  data-bs-dismiss="alert"
+                  aria-label="Cerrar"
+                ></button>
+              </div>
+              {% endfor %} {% endif %} {% endwith %}
+            </div>
+            <!--  -->
             <div class="card shadow-sm border-0 rounded-3">
               <div class="card-header bg-primary text-white text-center py-3">
                 <h4 class="mb-0">
@@ -121,5 +146,19 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Auto-cierre de alertas después de 4 segundos
+      document.addEventListener("DOMContentLoaded", function () {
+        setTimeout(function () {
+          document
+            .querySelectorAll("#flash-container .alert")
+            .forEach(function (el) {
+              try {
+                bootstrap.Alert.getOrCreateInstance(el).close();
+              } catch (e) {}
+            });
+        }, 4000);
+      });
+    </script>
   </body>
 </html>
