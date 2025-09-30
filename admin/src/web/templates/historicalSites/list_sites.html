@@ -5,6 +5,11 @@ endblock %} {% block titulo_body %}
 
 <h2>Lista de Sitios Historicos</h2>
 <p>Estos son los sitios historicos registrados en el sistema</p>
+<div class="mb-3">
+  <a href="{{ url_for('sites.create_site') }}" class="btn btn-primary">
+    Crear Nuevo Sitio
+  </a>
+</div>
 
 <table class="table table-striped">
   <thead>

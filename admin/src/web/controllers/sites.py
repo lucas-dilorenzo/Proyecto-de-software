@@ -1,4 +1,5 @@
 from src.core import historicalSites
+from src.web.helpers.validations.sites import SiteForm
 from flask import (
     Blueprint,
     Response,
@@ -7,6 +8,7 @@ from flask import (
     request,
     url_for,
     abort,
+    flash,
 )
 import csv
 from src.web.helpers import login_required
@@ -42,8 +44,30 @@ def show_site(site_id):
 @login_required
 def create_site():
     if request.method == "POST":
-        # Logic to create a new site
-        return redirect(url_for("sites.list_sites"))
+        form = SiteForm()
+        if form.validate_on_submit():
+            formulario = request.form
+            visibility_ = True if formulario.get("visibility") is not None else False
+            historicalSites.create_site(
+                name=formulario.get("name"),
+                description_short=formulario.get("description_short"),
+                description=formulario.get("description"),
+                city=formulario.get("city"),
+                province=formulario.get("province"),
+                location=formulario.get("location"),
+                conservation_status=formulario.get("conservation_status"),
+                year_declared=formulario.get("year_declared"),
+                category=formulario.get("category"),
+                registration_date=formulario.get("registration_date"),
+                visibility=visibility_,
+            )
+            return redirect(url_for("sites.list_sites"))
+        else:
+            if form.errors:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f"Error en el campo {field}: {error}", "danger")
+            return render_template("historicalSites/create_site.html")
     return render_template("historicalSites/create_site.html")
 
 
