@@ -102,6 +102,10 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def seed_db():
         seeds.run()
 
+    @app.cli.command("seed-roles")
+    def seed_roles():
+        seeds.roles()
+
     # -------------------------
     # Rutas DEV utilitarias
     # -------------------------

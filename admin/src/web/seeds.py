@@ -7,6 +7,7 @@ from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
 from datetime import date
 from src.core.users.user import User, UserRole
+from src.core.permissions.permission import Permission, UserPermission, Role
 from werkzeug.security import generate_password_hash
 
 
@@ -160,3 +161,16 @@ def users():
         print("Admin creado: admin@example.com / admin123")
     else:
         print("El admin ya existe.")
+
+
+def roles():
+    for name in UserRole.__members__.keys():
+        db.session.add(Role(name=name))
+
+    for name, roles in UserPermission.__members__.values():
+        perm = Permission(name=name)
+        for role in roles:
+            perm.roles.append(role)
+        db.session.add(perm)
+
+    db.session.commit()

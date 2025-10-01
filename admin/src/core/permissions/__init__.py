@@ -1,6 +1,5 @@
 from src.core.users.user import UserRole
-from src.core.users.role import Role
-from src.core.permissions.permission import Permission, UserPermission
+from src.core.permissions.permission import Permission, UserPermission, Role
 from src.core.database import db
 
 
