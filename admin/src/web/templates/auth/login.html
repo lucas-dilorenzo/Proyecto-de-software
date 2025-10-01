@@ -6,34 +6,21 @@ Sesión{% endblock %} {% block titulo_body %}
   <div class="row justify-content-center">
     <div class="col-lg-5 col-md-6 col-sm-8">
       <div class="card shadow-sm border-0 rounded-3">
-        <div class="card-header bg-primary text-white text-center py-3">
-          <h4 class="mb-0">
-            <i class="bi bi-box-arrow-in-right me-2"></i>
-            Acceso al Sistema
+        <div class="card-header text-white text-center py-3 rounded-3" style="background-color: rgba(0, 76, 130, 0.6);">
+          <h4 class="mb-0 d-flex align-items-center justify-content-center gap-2">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" style="height: 120px;">
           </h4>
         </div>
         <div class="card-body p-4">
-          <form
-            action="{{ url_for('auth.login') }}"
-            method="POST"
-            class="needs-validation"
-            novalidate
-          >
+          <form action="{{ url_for('auth.login') }}" method="POST" class="needs-validation" novalidate>
             <!-- Token CSRF -->
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
             <!-- Campo Email -->
             <div class="mb-3">
               <label for="email" class="form-label">Correo Electrónico</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                class="form-control"
-                placeholder="Ingrese su correo electrónico"
-                required
-                autocomplete="email"
-              />
+              <input type="email" id="email" name="email" class="form-control"
+                placeholder="Ingrese su correo electrónico" required autocomplete="email" />
               <div class="invalid-feedback">
                 Por favor ingrese un correo electrónico válido.
               </div>
@@ -42,15 +29,8 @@ Sesión{% endblock %} {% block titulo_body %}
             <!-- Campo Password -->
             <div class="mb-4">
               <label for="password" class="form-label">Contraseña</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                class="form-control"
-                placeholder="Ingrese su contraseña"
-                required
-                autocomplete="current-password"
-              />
+              <input type="password" id="password" name="password" class="form-control"
+                placeholder="Ingrese su contraseña" required autocomplete="current-password" />
               <div class="invalid-feedback">
                 Por favor ingrese su contraseña.
               </div>
@@ -58,7 +38,7 @@ Sesión{% endblock %} {% block titulo_body %}
 
             <!-- Botones -->
             <div class="d-grid gap-2">
-              <button type="submit" class="btn btn-primary btn-lg">
+              <button type="submit" class="btn btn-lg" style="background-color: #004c82; color: #fff; border: none;">
                 <i class="bi bi-box-arrow-in-right me-2"></i>
                 Iniciar Sesión
               </button>
