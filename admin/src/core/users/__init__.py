@@ -1,7 +1,8 @@
 from src.core.users.user import User, UserRole
+from src.core.users.role import Role
 from src.core.database import db
 
-__all__ = ["User", "UserRole"]
+__all__ = ["User", "UserRole", "Role"]
 
 
 def get_user_by_email(email):
@@ -89,3 +90,11 @@ def get_users_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "a
             page=page, per_page=per_page, error_out=False
         )
     return users
+
+
+def get_all_roles():
+    return Role.query.all()
+
+
+def get_role_by_name(name: UserRole):
+    return Role.query.filter_by(name=name.value).first()
