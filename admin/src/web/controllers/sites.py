@@ -1,5 +1,6 @@
 from src.core import historicalSites
 from src.web.helpers.validations.sites import SiteForm
+from src.core.historicalSites.tags import get_all_tags
 from flask import (
     Blueprint,
     Response,
@@ -67,8 +68,9 @@ def create_site():
                 for field, errors in form.errors.items():
                     for error in errors:
                         flash(f"Error en el campo {field}: {error}", "danger")
-            return render_template("historicalSites/create_site.html")
-    return render_template("historicalSites/create_site.html")
+            return render_template("historicalSites/create_site.html", tags=tags)
+        tags = get_all_tags()
+    return render_template("historicalSites/create_site.html", tags=tags)
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])

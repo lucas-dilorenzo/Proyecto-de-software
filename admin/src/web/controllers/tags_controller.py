@@ -1,14 +1,6 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
-from src.core.historicalSites.tags import (
-    get_tag_by_name,
-    get_tag_by_id,
-    create_tag,
-    update_tag,
-    delete_tag as delete_tag_helper,
-    crear_slug,
-)
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags
 from src.core.historicalSites.tags.tag import Tag
-from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
@@ -17,15 +9,8 @@ tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 @login_required
 def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
-    query = Tag.query
-    if busqueda:
-        query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
-
-    tags = query.order_by(Tag.created_at.desc()).all()
-    return render_template(
-        "historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda
-    )
-
+    tags = get_tags(busqueda)
+    return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
 
 # Ruta para crear un nuevo tag
 @tags_bp.route("/new", methods=["GET", "POST"])
@@ -116,23 +101,30 @@ def edit_tag(tag_id):
                 errors={"form": "Error al guardar."},
             )
 
-    # GET: mostrar formulario con los datos actuales
-    return render_template(
-        "historicalSites/tags/editTag.html",
-        tag=tag,
-        name=tag.name,
-        description=tag.description,
-    )
-
+    # Esto seria el GET
+    return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)
 
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
 @login_required
 def delete_tag(tag_id):
-    # obtener el tag o 404
-    tag = Tag.query.get_or_404(tag_id)
+    tag = get_tag_by_id(tag_id)
+    # Si el tag tiene sitios asociados -> devolver error en AJAX 
+    if tag.sites:
+        msg = "No se puede eliminar el tag porque está asociado a uno o más sitios históricos."
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(message=msg), 400
+        flash(msg, "warning")
+        return redirect(url_for("tags.list_tags"))
+
     try:
         delete_tag_helper(tag_id)  # función helper
-        flash("El tag se eliminó correctamente.", "success")
+        msg_ok = "El tag se eliminó correctamente."
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(message=msg_ok), 200
+        flash(msg_ok, "success")
     except Exception as e:
-        flash("Error al eliminar el tag: " + str(e), "danger")
+        msg_err = "Error al eliminar el tag: " + str(e)
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(message=msg_err), 500
+        flash(msg_err, "danger")
     return redirect(url_for("tags.list_tags"))

@@ -138,3 +138,16 @@ def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "a
         )
     return sites
 
+def asignar_tags_a_sitio(site: Site, tags: list):
+    """
+    Asigna tags a un sitio histórico.
+    Args:
+        site (Site): El objeto Site al que se le asignarán los tags.
+        tags (list): Una lista de objetos Tag a asignar al sitio.
+    Returns:
+        Site: El objeto Site actualizado con los tags asignados.
+    """
+    site.tags = tags
+    db.session.commit()
+    return site
+
