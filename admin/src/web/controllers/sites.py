@@ -23,10 +23,58 @@ def list_sites():
     # if not has_permission(session["user"].id, permission="asc_index"):
     #     abort(403)
     page = request.args.get("page", 1, type=int)
+    # legacy search input name used in template
+    stringBusqueda = request.args.get("stringBusqueda", type=str)
+    # Leer filtros desde query params
+    city = request.args.get("city")
+    province = request.args.get("province")
+    tags = request.args.getlist("tags")  # puede venir como tags=1&tags=2
+    conservation_status = request.args.get("conservation_status", type=str)
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+    visibility_raw = request.args.get("visibility")
+    if visibility_raw is None:
+        visibility = None
+    else:
+        visibility = visibility_raw.lower() in ("1", "true", "on", "yes")
+    # support both 'search_text' and legacy 'stringBusqueda'
+    search_text = request.args.get("search_text", type=str) or stringBusqueda
+
     sites = historicalSites.get_sites_paginated_by_id(
-        page=page, per_page=3, order="asc"
+        page=page,
+        per_page=3,
+        order="asc",
+        city=city,
+        province=province,
+        tags=tags,
+        conservation_status=conservation_status,
+        date_from=date_from,
+        date_to=date_to,
+        visibility=visibility,
+        search_text=search_text,
     )
-    return render_template("historicalSites/list_sites.html", sites=sites)
+
+    # Mandás también la lista de tags y provincias para armar el formulario
+    all_tags = historicalSites.tags.get_all_tags()
+    all_provinces = historicalSites.get_all_provinces() 
+
+    # determinar si hay filtros activos para mostrar el botón Limpiar
+    has_filters = any([stringBusqueda, city, province, tags, conservation_status, date_from, date_to, visibility, search_text])
+
+    return render_template(
+        "historicalSites/list_sites.html",
+        sites=sites,
+        city=city,
+        provinces=[p.province for p in all_provinces],
+        tags=all_tags,
+        conservation_status=conservation_status,
+        date_from=date_from,
+        date_to=date_to,
+        visibility=visibility,
+        search_text=search_text,
+        stringBusqueda=stringBusqueda,
+        has_filters=has_filters,
+    )
 
 
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])

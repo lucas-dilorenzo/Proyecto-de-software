@@ -1,6 +1,9 @@
 # from core.database import db
 from src.core.database import db
 from src.core.historicalSites.site import Site
+from sqlalchemy import or_
+from datetime import datetime
+from src.core.historicalSites.tags.tag import Tag
 
 def create_site(**kwargs):
     """
@@ -118,24 +121,97 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
     return sites
 
 
-def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
+    # def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
+    #     """
+    #     Retrieves a paginated list of historical sites from the database.
+    #     Args:
+    #         page (int): The page number to retrieve (default is 1).
+    #         per_page (int): The number of sites to display per page (default is 25).
+    #         order (str): The order in which to sort the sites by id ('asc' for ascending(default), 'desc' for descending; default is 'asc').
+    #     Returns:
+    #         sites: A query containing the paginated list of sites and pagination metadata.
+    #     """
+    #     if order == "desc":
+    #         sites = Site.query.order_by(Site.id.desc()).paginate(
+    #             page=page, per_page=per_page, error_out=False
+    #         )
+    #     else:
+    #         sites = Site.query.order_by(Site.id.asc()).paginate(
+    #             page=page, per_page=per_page, error_out=False
+    #         )
+    #     return sites
+
+def get_sites_paginated_by_id(
+    page: int = 1,
+    per_page: int = 25,
+    order: str = "asc",
+    city: str = None,
+    province: str = None,
+    tags: list = None,
+    conservation_status: str = None,
+    date_from: str = None,
+    date_to: str = None,
+    visibility: bool = None,
+    search_text: str = None,
+):
     """
-    Retrieves a paginated list of historical sites from the database.
-    Args:
-        page (int): The page number to retrieve (default is 1).
-        per_page (int): The number of sites to display per page (default is 25).
-        order (str): The order in which to sort the sites by id ('asc' for ascending(default), 'desc' for descending; default is 'asc').
-    Returns:
-        sites: A query containing the paginated list of sites and pagination metadata.
+    Retorna sitios paginados aplicando filtros opcionales.
     """
+    query = Site.query
+
+    if city:
+        query = query.filter(Site.city.ilike(f"%{city}%"))
+
+    if province:
+        query = query.filter(Site.province.ilike(f"%{province}%"))
+
+    if conservation_status:
+        query = query.filter(Site.conservation_status.ilike(f"%{conservation_status}%"))
+
+    if visibility is not None:
+        query = query.filter(Site.visibility == visibility)
+
+    if search_text:
+        q = f"%{search_text}%"
+        query = query.filter(
+            or_(
+                Site.name.ilike(q),
+                Site.description.ilike(q),
+                Site.description_short.ilike(q),
+            )
+        )
+
+    # filtrar por tags: tags expected as list of ids
+    if tags:
+        try:
+            tag_ids = [int(t) for t in tags]
+            query = query.filter(Site.tags.any(Tag.id.in_(tag_ids)))
+        except Exception:
+            # ignore invalid tag ids
+            pass
+
+    # rango de fechas (registration_date)
+    if date_from:
+        try:
+            df = datetime.fromisoformat(date_from).date()
+            query = query.filter(Site.registration_date >= df)
+        except Exception:
+            pass
+
+    if date_to:
+        try:
+            dt = datetime.fromisoformat(date_to).date()
+            query = query.filter(Site.registration_date <= dt)
+        except Exception:
+            pass
+
+    # ordenar
     if order == "desc":
-        sites = Site.query.order_by(Site.id.desc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        query = query.order_by(Site.id.desc())
     else:
-        sites = Site.query.order_by(Site.id.asc()).paginate(
-            page=page, per_page=per_page, error_out=False
-        )
+        query = query.order_by(Site.id.asc())
+
+    sites = query.paginate(page=page, per_page=per_page, error_out=False)
     return sites
 
 def asignar_tags_a_sitio(site: Site, tags: list):
@@ -151,3 +227,8 @@ def asignar_tags_a_sitio(site: Site, tags: list):
     db.session.commit()
     return site
 
+def get_all_provinces():
+    """
+    Retorna una lista de todas las provincias.
+    """
+    return Site.query.with_entities(Site.province).distinct().all()

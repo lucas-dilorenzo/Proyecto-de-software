@@ -16,6 +16,78 @@
 {% endblock %}
 
 {% block body %}
+  <!-- Filtros -->
+    <div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="row">
+                <form method="get" class="row g-2 mb-4">
+                  <!-- Ciudad -->
+                    <div class="col-4">
+                      <input type="text" name="city" class="form-control"
+                        placeholder="Ciudad" value="{{ city or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Provincia -->
+                    <div class="col-3">
+                      <select name="province" class="form-select">
+                        <option value="">Todas las provincias</option>
+                        {% for prov in provinces %}
+                          <option value="{{ prov }}" {% if request.args.get('province') == prov %}selected{% endif %}>{{ prov }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Tags -->
+                    <div class="col-md-3">
+                      <select name="tags" class="form-select" >
+                        {% for tag in tags %}
+                          <option value="{{ tag.id }}" {% if tag.id|string in request.args.getlist('tags') %}selected{% endif %}>{{ tag.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <!-- Estado de conservación -->
+                    <div class="col-4">
+                      <input type="text" name="conservation_status" class="form-control"
+                        placeholder="Estado de conservación" value="{{ conservation_status or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Fechas de registro -->
+                    <div class="col-3">
+                      <input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <div class="col-3">
+                      <input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}">
+                    </div>
+                    <!-- Busqueda por texto -->
+                    <div class="col-7">
+                      <input type="text" name="search_text" class="form-control"
+                        placeholder="Ingrese un texto" value="{{ search_text or '' }}">
+                    </div>
+                    <div class="col-3 d-flex align-items-center">
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="visibility" id="visibility" {% if visibility %}checked{% endif %}>
+                        <label class="form-check-label" for="visibility">Visible</label>
+                      </div>
+                    </div>
+                    <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+                      <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+                          Buscar <i class="bi bi-search small"></i> 
+                      </button>
+                    </div>
+                    {% if has_filters %}
+                      <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+                          <a href="{{ url_for('sites.list_sites') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
+                              Limpiar <i class="bi bi-x-circle small"></i>
+                          </a>
+                      </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+
 <table class="table table-striped">
   <thead>
     <tr>
