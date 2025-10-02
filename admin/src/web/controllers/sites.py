@@ -64,6 +64,14 @@ def list_sites():
     # determinar si hay filtros activos para mostrar el botón Limpiar
     has_filters = any([stringBusqueda, city, province, tags, conservation_status, date_from, date_to, visibility, search_text])
 
+    # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
+    current_query = {}
+    for k in ("stringBusqueda", "city", "province", "tags", "conservation_status", "date_from", "date_to", "visibility", "search_text"):
+        v = request.args.getlist(k) if k == "tags" else request.args.get(k)
+        if v:
+            # si es lista de tags y tiene varios valores, dejalo como lista
+            current_query[k] = v
+
     return render_template(
         "historicalSites/list_sites.html",
         sites=sites,
@@ -77,6 +85,7 @@ def list_sites():
         search_text=search_text,
         stringBusqueda=stringBusqueda,
         has_filters=has_filters,
+        current_query=current_query,
     )
 
 

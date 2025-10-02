@@ -50,37 +50,45 @@
                         placeholder="Estado de conservación" value="{{ conservation_status or '' }}">
                     </div>
                     <div class="col-1"></div>
-                    <!-- Fechas de registro -->
-                    <div class="col-3">
-                      <input type="date" name="date_from" class="form-control" value="{{ date_from or '' }}">
-                    </div>
-                    <div class="col-1"></div>
-                    <div class="col-3">
-                      <input type="date" name="date_to" class="form-control" value="{{ date_to or '' }}">
-                    </div>
                     <!-- Busqueda por texto -->
                     <div class="col-7">
                       <input type="text" name="search_text" class="form-control"
                         placeholder="Ingrese un texto" value="{{ search_text or '' }}">
                     </div>
-                    <div class="col-3 d-flex align-items-center">
+                    <!-- Fechas de registro -->
+                    <div class="col-3" style="margin-top: 1.5rem;">
+                      <label for="date_from" class="form-label">Fecha registro desde</label>
+                      <input type="date" id="date_from" name="date_from" class="form-control" value="{{ date_from or '' }}">
+                    </div>
+
+                    <div class="col-3" style="margin-top: 1.5rem;">
+                      <label for="date_to" class="form-label">Fecha registro hasta</label>
+                      <input type="date" id="date_to" name="date_to" class="form-control" value="{{ date_to or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Check de visibilidad -->
+                    <div class="col-3 d-flex align-items-center" style="margin-top: 1.5rem;">
                       <div class="form-check">
                         <input class="form-check-input" type="checkbox" name="visibility" id="visibility" {% if visibility %}checked{% endif %}>
                         <label class="form-check-label" for="visibility">Visible</label>
                       </div>
                     </div>
-                    <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
-                      <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
-                          Buscar <i class="bi bi-search small"></i> 
-                      </button>
-                    </div>
-                    {% if has_filters %}
+
+                    <div class="row">
                       <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
-                          <a href="{{ url_for('sites.list_sites') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
-                              Limpiar <i class="bi bi-x-circle small"></i>
-                          </a>
+                        <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+                            Buscar <i class="bi bi-search small"></i> 
+                        </button>
                       </div>
-                    {% endif %}
+                      {% if has_filters %}
+                        <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+                            <a href="{{ url_for('sites.list_sites') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
+                                Limpiar <i class="bi bi-x-circle small"></i>
+                            </a>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
                 </form>
             </div>
         </div>
@@ -91,10 +99,10 @@
   <thead>
     <tr>
       <th>Nombre</th>
-      <th>Descripcion</th>
-      <th>Ubicacion</th>
-      <th>Año de Declaración</th>
-      <th>Categoría</th>
+      <th>Ciudad</th>
+      <th>Provincia</th>
+      <th>Estado de conservación</th>
+      <th>Visible</th>
       <th>Acciones</th>
     </tr>
   </thead>
@@ -102,10 +110,16 @@
     {% for site in sites %}
     <tr>
       <td>{{ site.name }}</td>
-      <td>{{ site.description_short }}</td>
-      <td>{{ site.location }}</td>
-      <td>{{ site.year_declared }}</td>
-      <td>{{ site.category }}</td>
+      <td>{{ site.city }}</td>
+      <td>{{ site.province }}</td>
+      <td>{{ site.conservation_status }}</td>
+      <td>
+        {% if site.visibility %}
+          Sí
+        {% else %}
+          No
+        {% endif %}
+      </td>
       <td>
         <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio" aria-label="Ver Sitio">
           <i class="bi bi-eye"></i>
@@ -129,7 +143,7 @@
     <li class="page-item disabled">
       <a
         class="page-link"
-        href="{{ url_for('sites.list_sites', page=page_num)}}"
+        href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
         >{{ page_num }}</a
       >
     </li>
@@ -137,7 +151,7 @@
     <li class="page-item">
       <a
         class="page-link"
-        href="{{ url_for('sites.list_sites', page=page_num)}}"
+        href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
         >{{ page_num }}</a
       >
     </li>
@@ -147,9 +161,9 @@
   </ul>
 
   <div>
-  <a href="{{ url_for('sites.download_csv_sites') }}" class="btn btn-primary">
+  <!-- <a href="{{ url_for('sites.download_csv_sites') }}" class="btn btn-primary">
     <button class="btn btn-primary">Exportar CSV</button>
-  </a>
+  </a> -->
 </div>
 </div>
 

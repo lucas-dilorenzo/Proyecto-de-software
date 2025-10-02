@@ -1,7 +1,7 @@
 # from core.database import db
 from src.core.database import db
 from src.core.historicalSites.site import Site
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 
@@ -184,12 +184,10 @@ def get_sites_paginated_by_id(
             query = query.filter(
                 or_(
                     Site.name.ilike(q),
-                    Site.description.ilike(q),
                     Site.description_short.ilike(q),
                 )
             )
 
-    # filtrar por tags: tags expected as list of ids
     if tags:
         try:
             tag_ids = [int(t) for t in tags]
@@ -201,15 +199,45 @@ def get_sites_paginated_by_id(
     # rango de fechas (registration_date)
     if date_from:
         try:
-            df = datetime.fromisoformat(date_from).date()
-            query = query.filter(Site.registration_date >= df)
+            s = date_from.strip()
+            df = None
+            # intentar parsear ISO primero, luego formatos comunes
+            try:
+                df = datetime.fromisoformat(s).date()
+            except Exception:
+                from datetime import datetime as _dt
+
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+                    try:
+                        df = _dt.strptime(s, fmt).date()
+                        break
+                    except Exception:
+                        continue
+
+            if df:
+                # comparar por la parte fecha (ignorar hora)
+                query = query.filter(func.date(Site.registration_date) >= df)
         except Exception:
             pass
 
     if date_to:
         try:
-            dt = datetime.fromisoformat(date_to).date()
-            query = query.filter(Site.registration_date <= dt)
+            s = date_to.strip()
+            dt = None
+            try:
+                dt = datetime.fromisoformat(s).date()
+            except Exception:
+                from datetime import datetime as _dt
+
+                for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
+                    try:
+                        dt = _dt.strptime(s, fmt).date()
+                        break
+                    except Exception:
+                        continue
+
+            if dt:
+                query = query.filter(func.date(Site.registration_date) <= dt)
         except Exception:
             pass
 
