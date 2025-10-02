@@ -28,7 +28,7 @@
                     <!-- Provincia -->
                     <div class="col-3">
                       <select name="province" class="form-select">
-                        <option value="">Todas las provincias</option>
+                        <option value="">Seleccione una provincia</option>
                         {% for prov in provinces %}
                           <option value="{{ prov }}" {% if request.args.get('province') == prov %}selected{% endif %}>{{ prov }}</option>
                         {% endfor %}
@@ -38,6 +38,7 @@
                     <!-- Tags -->
                     <div class="col-md-3">
                       <select name="tags" class="form-select" >
+                        <option value="">Seleccione un tag</option>
                         {% for tag in tags %}
                           <option value="{{ tag.id }}" {% if tag.id|string in request.args.getlist('tags') %}selected{% endif %}>{{ tag.name }}</option>
                         {% endfor %}
@@ -89,53 +90,32 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>ID</th>
       <th>Nombre</th>
       <th>Descripcion</th>
       <th>Ubicacion</th>
       <th>Año de Declaración</th>
+      <th>Categoría</th>
+      <th>Acciones</th>
     </tr>
   </thead>
   <tbody>
     {% for site in sites %}
     <tr>
-      <td>{{ site.id }}</td>
       <td>{{ site.name }}</td>
-      <td>{{ site.description }}</td>
+      <td>{{ site.description_short }}</td>
       <td>{{ site.location }}</td>
       <td>{{ site.year_declared }}</td>
+      <td>{{ site.category }}</td>
       <td>
-        <div class="dropdown">
-          <button
-            class="btn btn-secondary dropdown-toggle"
-            type="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            Acciones
-          </button>
-          <ul class="dropdown-menu">
-            <li>
-              <a
-                class="dropdown-item"
-                href="{{ url_for('sites.show_site', site_id=site.id) }}"
-                >Ver</a
-              >
-            </li>
-            <li>
-              <a
-                class="dropdown-item"
-                href="{{ url_for('sites.edit_site', site_id=site.id) }}"
-                >Editar</a
-              >
-            </li>
-              <!-- Eliminar redirecciona hacia el list_sites.html, luego de eliminar -->
-              <a class="dropdown-item" href="{{ url_for('sites.delete_site', site_id=site.id) }}" class="dropdown-item"  onclick="return confirm('¿Estás seguro de que deseas eliminar este sitio?');"> 
-                Eliminar 
-              </a>
-            </li>
-          </ul>
-        </div>
+        <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio" aria-label="Ver Sitio">
+          <i class="bi bi-eye"></i>
+        </a>
+        <a href="{{ url_for('sites.edit_site', site_id=site.id) }}" class="btn btn-icon" title="Editar Sitio" aria-label="Editar Sitio">
+          <i class="bi bi-pencil"></i>
+        </a>
+        <a href="{{ url_for('sites.delete_site', site_id=site.id) }}" class="btn btn-icon" title="Eliminar Sitio" aria-label="Eliminar Sitio" onclick="return confirm('¿Estás seguro de que deseas eliminar este sitio?');">
+          <i class="bi bi-trash"></i>
+        </a>
       </td>
     </tr>
     {% endfor %}

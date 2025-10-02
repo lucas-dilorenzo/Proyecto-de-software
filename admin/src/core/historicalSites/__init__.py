@@ -160,26 +160,34 @@ def get_sites_paginated_by_id(
     query = Site.query
 
     if city:
-        query = query.filter(Site.city.ilike(f"%{city}%"))
+        city_q = city.strip()
+        if city_q:
+            query = query.filter(Site.city.ilike(f"%{city_q}%"))
 
     if province:
-        query = query.filter(Site.province.ilike(f"%{province}%"))
+        province_q = province.strip()
+        if province_q:
+            query = query.filter(Site.province.ilike(f"%{province_q}%"))
 
     if conservation_status:
-        query = query.filter(Site.conservation_status.ilike(f"%{conservation_status}%"))
+        cs_q = conservation_status.strip()
+        if cs_q:
+            query = query.filter(Site.conservation_status.ilike(f"%{cs_q}%"))
 
     if visibility is not None:
         query = query.filter(Site.visibility == visibility)
 
     if search_text:
-        q = f"%{search_text}%"
-        query = query.filter(
-            or_(
-                Site.name.ilike(q),
-                Site.description.ilike(q),
-                Site.description_short.ilike(q),
+        st_q = search_text.strip()
+        if st_q:
+            q = f"%{st_q}%"
+            query = query.filter(
+                or_(
+                    Site.name.ilike(q),
+                    Site.description.ilike(q),
+                    Site.description_short.ilike(q),
+                )
             )
-        )
 
     # filtrar por tags: tags expected as list of ids
     if tags:

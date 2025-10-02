@@ -92,12 +92,16 @@ def show_site(site_id):
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
 @login_required
 def create_site():
+    # cargar tags para el formulario (se usa tanto en GET como en caso de validación fallida)
+    tags = get_all_tags()
+
     if request.method == "POST":
         form = SiteForm()
         if form.validate_on_submit():
             formulario = request.form
             visibility_ = True if formulario.get("visibility") is not None else False
-            historicalSites.create_site(
+            # crear el sitio
+            site = historicalSites.create_site(
                 name=formulario.get("name"),
                 description_short=formulario.get("description_short"),
                 description=formulario.get("description"),
@@ -110,6 +114,26 @@ def create_site():
                 registration_date=formulario.get("registration_date"),
                 visibility=visibility_,
             )
+
+            # Asignar tags seleccionados (si los hay)
+            try:
+                selected_tag_ids = request.form.getlist('tags')
+                if selected_tag_ids:
+                    tag_objs = []
+                    for t in selected_tag_ids:
+                        try:
+                            tid = int(t)
+                        except Exception:
+                            continue
+                        tag = historicalSites.tags.get_tag_by_id(tid)
+                        if tag:
+                            tag_objs.append(tag)
+                    if tag_objs:
+                        historicalSites.asignar_tags_a_sitio(site, tag_objs)
+            except Exception as e:
+                # no fallar la creación por problemas de tags; loguear y seguir
+                flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
+
             return redirect(url_for("sites.list_sites"))
         else:
             if form.errors:
@@ -117,7 +141,8 @@ def create_site():
                     for error in errors:
                         flash(f"Error en el campo {field}: {error}", "danger")
             return render_template("historicalSites/create_site.html", tags=tags)
-        tags = get_all_tags()
+
+    # GET
     return render_template("historicalSites/create_site.html", tags=tags)
 
 

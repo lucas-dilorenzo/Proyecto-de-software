@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags
 from src.core.historicalSites.tags.tag import Tag
+from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
