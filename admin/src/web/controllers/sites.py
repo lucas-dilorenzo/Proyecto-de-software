@@ -1,6 +1,6 @@
 from src.core import historicalSites
+from src.web.helpers.validations.sites import SiteForm
 from src.core.historicalSites.tags import get_all_tags
-
 from flask import (
     Blueprint,
     Response,
@@ -9,13 +9,16 @@ from flask import (
     request,
     url_for,
     abort,
+    flash,
 )
 import csv
+from src.web.helpers import login_required
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
 
 @historical_sites_bp.route("/", methods=["GET"])
+@login_required
 def list_sites():
     # if not authenticated(session):
     # abort(401)
@@ -78,6 +81,7 @@ def list_sites():
 
 
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
+@login_required
 def show_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -86,15 +90,39 @@ def show_site(site_id):
 
 
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
+@login_required
 def create_site():
     if request.method == "POST":
-        # Logic to create a new site
-        return redirect(url_for("sites.list_sites"))
-    tags = get_all_tags()
+        form = SiteForm()
+        if form.validate_on_submit():
+            formulario = request.form
+            visibility_ = True if formulario.get("visibility") is not None else False
+            historicalSites.create_site(
+                name=formulario.get("name"),
+                description_short=formulario.get("description_short"),
+                description=formulario.get("description"),
+                city=formulario.get("city"),
+                province=formulario.get("province"),
+                location=formulario.get("location"),
+                conservation_status=formulario.get("conservation_status"),
+                year_declared=formulario.get("year_declared"),
+                category=formulario.get("category"),
+                registration_date=formulario.get("registration_date"),
+                visibility=visibility_,
+            )
+            return redirect(url_for("sites.list_sites"))
+        else:
+            if form.errors:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f"Error en el campo {field}: {error}", "danger")
+            return render_template("historicalSites/create_site.html", tags=tags)
+        tags = get_all_tags()
     return render_template("historicalSites/create_site.html", tags=tags)
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -121,6 +149,7 @@ def edit_site(site_id):
 
 
 @historical_sites_bp.route("/<int:site_id>/delete", methods=["GET"])
+@login_required
 def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -132,6 +161,7 @@ def delete_site(site_id):
 
 
 @historical_sites_bp.route("/download_CSV", methods=["GET"])
+@login_required
 def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()

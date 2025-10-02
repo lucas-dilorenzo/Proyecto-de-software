@@ -304,10 +304,11 @@
       }
       marker = L.marker([lat, lng]).addTo(map);
 
-      // Guardar valores en los inputs ocultos
-      document.getElementById("lat").value = lat;
-      document.getElementById("lng").value = lng;
-    });
+    // Guardar valores en los inputs ocultos
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
+    document.getElementById("location").value = lat + "+" + lng;
+  });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>

@@ -1,0 +1,159 @@
+from flask_wtf import FlaskForm
+from wtforms import (
+    StringField,
+    TextAreaField,
+    IntegerField,
+    BooleanField,
+    DateField,
+    SelectField,
+)
+from wtforms.validators import InputRequired, Length, NumberRange, Optional, Regexp
+from datetime import date
+
+
+class SiteForm(FlaskForm):
+    """Formulario para validación de sitios históricos"""
+
+    # Campo obligatorio: nombre del sitio
+    name = StringField(
+        "Nombre del sitio",
+        validators=[
+            InputRequired(message="El nombre del sitio es obligatorio"),
+            Length(
+                min=3, max=200, message="El nombre debe tener entre 3 y 200 caracteres"
+            ),
+        ],
+    )
+
+    # Descripción corta
+    description_short = StringField(
+        "Descripción corta",
+        validators=[
+            Optional(),
+            Length(
+                max=500, message="La descripción corta no puede exceder 500 caracteres"
+            ),
+        ],
+    )
+
+    # Descripción completa
+    description = TextAreaField(
+        "Descripción",
+        validators=[
+            Optional(),
+            Length(max=2000, message="La descripción no puede exceder 2000 caracteres"),
+        ],
+    )
+
+    # Ciudad
+    city = StringField(
+        "Ciudad",
+        validators=[
+            Optional(),
+            Length(
+                min=2, max=100, message="La ciudad debe tener entre 2 y 100 caracteres"
+            ),
+        ],
+    )
+
+    # Provincia
+    province = StringField(
+        "Provincia",
+        validators=[
+            Optional(),
+            Length(
+                min=2,
+                max=100,
+                message="La provincia debe tener entre 2 y 100 caracteres",
+            ),
+        ],
+    )
+
+    # Ubicación (puede ser coordenadas)
+    location = StringField(
+        "Ubicación",
+        validators=[
+            Optional(),
+            Length(max=200, message="La ubicación no puede exceder 200 caracteres"),
+        ],
+    )
+
+    # Estado de conservación
+    conservation_status = SelectField(
+        "Estado de conservación",
+        choices=[
+            ("", "Seleccione un estado"),
+            ("excelente", "Excelente"),
+            ("bueno", "Bueno"),
+            ("regular", "Regular"),
+            ("malo", "Malo"),
+            ("critico", "Crítico"),
+            ("en_restauracion", "En restauración"),
+        ],
+        validators=[Optional()],
+    )
+
+    # Año de declaración
+    year_declared = IntegerField(
+        "Año de declaración",
+        validators=[
+            Optional(),
+            NumberRange(
+                min=1500,
+                max=date.today().year,
+                message=f"El año debe estar entre 1500 y {date.today().year}",
+            ),
+        ],
+    )
+
+    # Categoría
+    category = SelectField(
+        "Categoría",
+        choices=[
+            ("", "Seleccione una categoría"),
+            ("monumento_nacional", "Monumento Nacional"),
+            ("sitio_historico", "Sitio Histórico"),
+            ("bien_cultural", "Bien Cultural"),
+            ("patrimonio_mundial", "Patrimonio Mundial"),
+            ("monumento_historico_nacional", "Monumento Histórico Nacional"),
+            ("lugar_historico_nacional", "Lugar Histórico Nacional"),
+        ],
+        validators=[Optional()],
+    )
+
+    # Fecha de registro
+    registration_date = DateField(
+        "Fecha de registro", validators=[Optional()], format="%Y-%m-%d"
+    )
+
+    # Visibilidad
+    visibility = BooleanField("Visible", default=True)
+
+    def validate_name(self, field):
+        """Validación personalizada para el nombre"""
+        if field.data:
+            # Verificar que no contenga solo números
+            if field.data.isdigit():
+                raise ValueError("El nombre no puede contener solo números")
+
+            # Verificar caracteres especiales excesivos
+            special_chars = sum(
+                1 for c in field.data if not c.isalnum() and not c.isspace()
+            )
+            if (
+                special_chars > len(field.data) * 0.3
+            ):  # Máximo 30% de caracteres especiales
+                raise ValueError("El nombre contiene demasiados caracteres especiales")
+
+    def validate_year_declared(self, field):
+        """Validación personalizada para el año de declaración"""
+        if field.data:
+            current_year = date.today().year
+            if field.data > current_year:
+                raise ValueError("El año de declaración no puede ser futuro")
+
+    def validate_registration_date(self, field):
+        """Validación personalizada para la fecha de registro"""
+        if field.data:
+            if field.data > date.today():
+                raise ValueError("La fecha de registro no puede ser futura")

@@ -4,7 +4,9 @@ from src.core.historicalSites.tags.tag import Tag
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
+
 @tags_bp.route("/", methods=["GET"])
+@login_required
 def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
     tags = get_tags(busqueda)
@@ -12,11 +14,12 @@ def list_tags():
 
 # Ruta para crear un nuevo tag
 @tags_bp.route("/new", methods=["GET", "POST"])
+@login_required
 def new_tag():
     errors = {}
     if request.method == "POST":
         name = request.form.get("name")
-        slug = crear_slug(name) 
+        slug = crear_slug(name)
         description = request.form.get("description")
 
         # Validaciones
@@ -46,16 +49,18 @@ def new_tag():
     # Si es un GET, renderizar el formulario
     return render_template("historicalSites/tags/newTag.html")
 
+
 @tags_bp.route("/<int:tag_id>/edit", methods=["GET", "POST"])
+@login_required
 def edit_tag(tag_id):
     # obtener el tag o 404
     tag = Tag.query.get_or_404(tag_id)
-    
+
     errors = {}
     if request.method == "POST":
         # leo valores enviados
-        name = (request.form.get("name"))
-        description = (request.form.get("description")) 
+        name = request.form.get("name")
+        description = request.form.get("description")
         # validaciones
         if not name:
             errors["name"] = "El nombre es obligatorio."
@@ -63,13 +68,16 @@ def edit_tag(tag_id):
             # verifico unicidad del nombre excluyendo el propio registro
             existing_tag = get_tag_by_name(name)
             if existing_tag and existing_tag.id != tag.id:
-                errors["name"] = "Ya existe un tag con ese nombre."          
+                errors["name"] = "Ya existe un tag con ese nombre."
 
         if errors:
             # devolver los mismos valores y errores para mostrar en el form
             return render_template(
                 "historicalSites/tags/editTag.html",
-                tag=tag, name=name, description=description, errors=errors
+                tag=tag,
+                name=name,
+                description=description,
+                errors=errors,
             )
 
         # aplicar cambios y guardar
@@ -85,13 +93,19 @@ def edit_tag(tag_id):
             return redirect(url_for("tags.list_tags"))
         except Exception as e:
             flash("Error al actualizar el tag: " + str(e), "danger")
-            return render_template("historicalSites/tags/editTag.html",
-            tag=tag, name=name, description=description, errors={"form": "Error al guardar."})
+            return render_template(
+                "historicalSites/tags/editTag.html",
+                tag=tag,
+                name=name,
+                description=description,
+                errors={"form": "Error al guardar."},
+            )
 
     # Esto seria el GET
     return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)
 
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
+@login_required
 def delete_tag(tag_id):
     tag = get_tag_by_id(tag_id)
     # Si el tag tiene sitios asociados -> devolver error en AJAX 
