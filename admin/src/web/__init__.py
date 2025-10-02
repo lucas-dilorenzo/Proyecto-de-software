@@ -25,6 +25,7 @@ from src.web.controllers.users import users_bp
 from web.controllers.auth.authenticate import auth_bp
 from src.web.controllers.tags_controller import tags_bp
 from src.web.controllers.sites import historical_sites_bp
+from src.web.controllers.sites import get_categories, get_conservation_statuses
 from src.web import helpers
 from src.web.helpers import login_required
 
@@ -86,6 +87,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # Esta primera funcion me va a ayudar a identificar la sesion de un usuario
     app.jinja_env.globals.update(is_authenticated=authenticate.authenticated)
     app.jinja_env.globals.update(get_user=helpers.get_user_by_id)
+    app.jinja_env.globals.update(get_sites_categories=get_categories)
+    app.jinja_env.globals.update(get_conservation_status=get_conservation_statuses)
 
     # -------------------------
     # Comandos CLI

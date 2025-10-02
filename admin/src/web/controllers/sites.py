@@ -59,14 +59,36 @@ def list_sites():
 
     # Mandás también la lista de tags y provincias para armar el formulario
     all_tags = historicalSites.tags.get_all_tags()
-    all_provinces = historicalSites.get_all_provinces() 
+    all_provinces = historicalSites.get_all_provinces()
 
     # determinar si hay filtros activos para mostrar el botón Limpiar
-    has_filters = any([stringBusqueda, city, province, tags, conservation_status, date_from, date_to, visibility, search_text])
+    has_filters = any(
+        [
+            stringBusqueda,
+            city,
+            province,
+            tags,
+            conservation_status,
+            date_from,
+            date_to,
+            visibility,
+            search_text,
+        ]
+    )
 
     # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
     current_query = {}
-    for k in ("stringBusqueda", "city", "province", "tags", "conservation_status", "date_from", "date_to", "visibility", "search_text"):
+    for k in (
+        "stringBusqueda",
+        "city",
+        "province",
+        "tags",
+        "conservation_status",
+        "date_from",
+        "date_to",
+        "visibility",
+        "search_text",
+    ):
         v = request.args.getlist(k) if k == "tags" else request.args.get(k)
         if v:
             # si es lista de tags y tiene varios valores, dejalo como lista
@@ -126,7 +148,7 @@ def create_site():
 
             # Asignar tags seleccionados (si los hay)
             try:
-                selected_tag_ids = request.form.getlist('tags')
+                selected_tag_ids = request.form.getlist("tags")
                 if selected_tag_ids:
                     tag_objs = []
                     for t in selected_tag_ids:
@@ -224,6 +246,42 @@ def download_csv_sites():
             "Content-disposition": "attachment; filename=sitios_<YYYYMMDD_HHMM>.csv"
         },
     )
+
+
+def get_categories():
+    """
+    Función que devuelve las categorías de sitios históricos disponibles.
+
+    Returns:
+        dict: Diccionario con las categorías como pares key:value
+    """
+    categories = {
+        "monumento_nacional": "Monumento Nacional",
+        "sitio_historico": "Sitio Histórico",
+        "bien_cultural": "Bien Cultural",
+        "patrimonio_mundial": "Patrimonio Mundial",
+        "monumento_historico_nacional": "Monumento Histórico Nacional",
+        "lugar_historico_nacional": "Lugar Histórico Nacional",
+    }
+    return categories
+
+
+def get_conservation_statuses():
+    """
+    Función que devuelve los estados de conservación disponibles.
+
+    Returns:
+        dict: Diccionario con los estados de conservación como pares key:value
+    """
+    statuses = {
+        "excelente": "Excelente",
+        "bueno": "Bueno",
+        "regular": "Regular",
+        "malo": "Malo",
+        "critico": "Crítico",
+        "en_restauracion": "En restauración",
+    }
+    return statuses
 
 
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
