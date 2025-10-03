@@ -45,7 +45,7 @@ def list_sites():
 
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
-        per_page=3,
+        per_page=10,
         order="asc",
         city=city,
         province=province,

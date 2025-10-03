@@ -243,9 +243,9 @@ def get_sites_paginated_by_id(
 
     # ordenar
     if order == "desc":
-        query = query.order_by(Site.id.desc())
+        query = query.order_by(Site.name.desc())
     else:
-        query = query.order_by(Site.id.asc())
+        query = query.order_by(Site.name.asc())
 
     sites = query.paginate(page=page, per_page=per_page, error_out=False)
     return sites
