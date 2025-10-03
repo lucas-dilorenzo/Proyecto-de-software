@@ -1,9 +1,16 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug
 from src.core.historicalSites.tags.tag import Tag
+from src.core.permissions.permission import UserPermission
+from src.web.auth import permission_required
 import re
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
+
+@tags_bp.before_request
+@permission_required(UserPermission.SITE_TAGS)
+def bp_guard():
+    pass
 
 @tags_bp.route("/", methods=["GET"])
 def list_tags():

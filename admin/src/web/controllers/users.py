@@ -6,12 +6,13 @@ Incluye rutas protegidas para listar, crear, editar y eliminar usuarios.
 from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
 from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
-from src.web.auth import admin_required
+from src.web.auth import permission_required
 from src.web.validators.users import validate_user_payload
 
 # from core.database import db
 from src.core.users import UserRole
 from src.core import users
+from src.core.permissions.permission import UserPermission
 
 # Define el blueprint para las rutas de usuarios bajo /admin/users
 users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
@@ -29,7 +30,7 @@ def _clamp_per_page(val) -> int:
 
 
 @users_bp.get("/")
-@admin_required
+@permission_required(UserPermission.USER_LIST)
 def list_users():
     # if not authenticated(session):
     # abort(401)
@@ -108,7 +109,7 @@ def list_users():
 
 
 @users_bp.get("/new")
-@admin_required
+@permission_required(UserPermission.USER_CREATE)
 def new_user():
     """
     Muestra el formulario para crear un nuevo usuario.
@@ -125,7 +126,7 @@ def new_user():
 
 
 @users_bp.post("/new")
-@admin_required
+@permission_required(UserPermission.USER_CREATE)
 def create_user():
     """
     Procesa el formulario de creación de usuario.
@@ -176,7 +177,7 @@ def create_user():
 
 
 @users_bp.get("/<int:id>/edit")
-@admin_required
+@permission_required(UserPermission.USER_UPDATE)
 def edit_user(id: int):
     """
     Muestra el formulario para editar un usuario existente.
@@ -194,7 +195,7 @@ def edit_user(id: int):
 
 
 @users_bp.post("/<int:id>/edit")
-@admin_required
+@permission_required(UserPermission.USER_UPDATE)
 def update_user(id: int):
     """
     Procesa el formulario de edición de usuario.
@@ -242,7 +243,7 @@ def update_user(id: int):
 
 
 @users_bp.post("/<int:id>/delete")
-@admin_required
+@permission_required(UserPermission.USER_DELETE)
 def delete_user(id: int):
     """
     Elimina un usuario por su ID.
