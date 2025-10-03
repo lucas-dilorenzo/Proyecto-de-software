@@ -171,10 +171,14 @@ def create_site():
                 for field, errors in form.errors.items():
                     for error in errors:
                         flash(f"Error en el campo {field}: {error}", "danger")
-            return render_template("historicalSites/create_site.html", tags=tags)
+            # preservar estado del checkbox de visibilidad
+            visibility_ = True if request.form.get("visibility") is not None else False
+            return render_template(
+                "historicalSites/create_site.html", tags=tags, visibility=visibility_
+            )
 
     # GET
-    return render_template("historicalSites/create_site.html", tags=tags)
+    return render_template("historicalSites/create_site.html", tags=tags, visibility=True)
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])

@@ -89,7 +89,7 @@ def run():
             "conservation_status": "Protegida, pero amenazada por el turismo masivo.",
             "year_declared": 1450,
             "category": "Sitio arqueologico",
-            "registration_date": date(1983, 12, 10),
+            "registration_date": date(1983, 12, 1),
             "visibility": True,
             "tags": ["Patrimonio Mundial", "Arqueológico"],
         },

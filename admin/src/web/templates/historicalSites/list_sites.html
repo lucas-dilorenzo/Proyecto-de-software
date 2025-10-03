@@ -94,79 +94,89 @@
         </div>
     </div>
 
+  <div class="d-flex justify-content-end align-items-center" style="margin-top: 1rem;">
+    <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
+    style="background-color: #0b5e2e; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
+      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
+    </a>
+  </div>
 
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Nombre</th>
-      <th>Ciudad</th>
-      <th>Provincia</th>
-      <th>Estado de conservación</th>
-      <th>Visible</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for site in sites %}
-    <tr>
-      <td>{{ site.name }}</td>
-      <td>{{ site.city }}</td>
-      <td>{{ site.province }}</td>
-      <td>{{ site.conservation_status }}</td>
-      <td>
-        {% if site.visibility %}
-          Sí
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Ciudad</th>
+        <th>Provincia</th>
+        <th>Estado de conservación</th>
+        <th>Visible</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for site in sites %}
+        <tr>
+          <td>{{ site.name }}</td>
+          <td>{{ site.city }}</td>
+          <td>{{ site.province }}</td>
+          <td>{{ site.conservation_status }}</td>
+          <td>
+            {% if site.visibility %}
+              Sí
+            {% else %}
+              No
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio" aria-label="Ver Sitio">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a href="{{ url_for('sites.edit_site', site_id=site.id) }}" class="btn btn-icon" title="Editar Sitio" aria-label="Editar Sitio">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <a href="{{ url_for('sites.delete_site', site_id=site.id) }}" class="btn btn-icon" title="Eliminar Sitio" aria-label="Eliminar Sitio" onclick="return confirm('¿Estás seguro de que deseas eliminar este sitio?');">
+              <i class="bi bi-trash"></i>
+            </a>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="6" class="text-center">No se encontraron sitios históricos.</td>
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+  <!-- Paginación -->
+  {% if sites.pages > 1 %}
+    <div class="card-footer d-flex justify-content-center">
+      <ul class="pagination">
+        {% for page_num in sites.iter_pages(left_edge=1, right_edge=1,
+        left_current=1, right_current=2) %} {% if page_num %} {% if sites.page ==
+        page_num %}
+        <li class="page-item disabled">
+          <a
+            class="page-link"
+            href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
+            >{{ page_num }}</a
+          >
+        </li>
         {% else %}
-          No
-        {% endif %}
-      </td>
-      <td>
-        <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio" aria-label="Ver Sitio">
-          <i class="bi bi-eye"></i>
-        </a>
-        <a href="{{ url_for('sites.edit_site', site_id=site.id) }}" class="btn btn-icon" title="Editar Sitio" aria-label="Editar Sitio">
-          <i class="bi bi-pencil"></i>
-        </a>
-        <a href="{{ url_for('sites.delete_site', site_id=site.id) }}" class="btn btn-icon" title="Eliminar Sitio" aria-label="Eliminar Sitio" onclick="return confirm('¿Estás seguro de que deseas eliminar este sitio?');">
-          <i class="bi bi-trash"></i>
-        </a>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-<div class="card-footer d-flex justify-content-center">
-  <ul class="pagination">
-    {% for page_num in sites.iter_pages(left_edge=1, right_edge=1,
-    left_current=1, right_current=2) %} {% if page_num %} {% if sites.page ==
-    page_num %}
-    <li class="page-item disabled">
-      <a
-        class="page-link"
-        href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
-        >{{ page_num }}</a
-      >
-    </li>
-    {% else %}
-    <li class="page-item">
-      <a
-        class="page-link"
-        href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
-        >{{ page_num }}</a
-      >
-    </li>
-    {% endif %} {% else %}
-    <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
-    {% endif %} {% endfor %}
-  </ul>
-
+        <li class="page-item">
+          <a
+            class="page-link"
+            href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
+            >{{ page_num }}</a
+          >
+        </li>
+        {% endif %} {% else %}
+        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+        {% endif %} {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
   <div>
-  <!-- <a href="{{ url_for('sites.download_csv_sites') }}" class="btn btn-primary">
-    <button class="btn btn-primary">Exportar CSV</button>
-  </a> -->
-</div>
-</div>
-
+    Página {{ sites.page }} de {{ sites.pages }}, total de sitios: {{ sites.total }}
+  </div>
 
 
 {% endblock %}
