@@ -169,8 +169,9 @@ def roles():
 
     for name, roles in UserPermission.__members__.values():
         perm = Permission(name=name)
-        for role in roles:
-            perm.roles.append(role)
+        for r in roles:
+            r = Role.query.filter_by(name=r).first()
+            if r:
+                perm.roles.append(r)
         db.session.add(perm)
-
     db.session.commit()
