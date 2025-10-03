@@ -1,14 +1,15 @@
+from sqlalchemy import select
 from src.core.users.user import UserRole
 from src.core.permissions.permission import Permission, UserPermission, Role
 from src.core.database import db
 
 
-def get_permission_roles(perm: UserPermission) -> Role:
-    permission = db.session.query(Permission).filter_by(name=perm.value).first()
-    if permission is not None:
-        return permission.roles
-
-
 def check_permission(user_role: UserRole, perm: UserPermission):
-    roles = db.session.query(Role).filter(Role.id in get_permission_roles(perm)).all()
-    return user_role in roles
+    print(f"Role: {user_role.value}", end="; ")
+    if user_role == UserRole.SYS_ADMIN: return True
+    allowed_roles = db.session.execute(
+        select(Role.name).join(Permission.roles).where(Permission.name == perm.value)
+    ).all()
+    allowed_roles = list(map(lambda r: r[0], allowed_roles))
+    print(f"Allowed roles: {allowed_roles}")
+    return user_role.name in allowed_roles

@@ -1,8 +1,8 @@
 from enum import Enum
 from src.core.users.role import Role
 from src.core.users.user import UserRole
-from sqlalchemy import Column, ForeignKey, Integer, String, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, String, UniqueConstraint
+from sqlalchemy.orm import relationship, Mapped
 from src.core.database import db
 
 role_permissions = db.Table(
@@ -44,9 +44,9 @@ class Permission(db.Model):
     __tablename__ = "permissions"
     __table_args__ = (UniqueConstraint("name", name="uq_permissions_name"),)
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(20), nullable=False)
-    roles = relationship(Role, secondary=role_permissions)
+    id: Mapped[int] = Column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = Column(String(20), nullable=False)
+    roles: Mapped[list[Role]] = relationship(secondary=role_permissions)
 
     def __repr__(self):
         return f"<Permission {self.name}>"
