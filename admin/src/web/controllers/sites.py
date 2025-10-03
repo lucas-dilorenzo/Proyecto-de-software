@@ -56,11 +56,9 @@ def list_sites():
         visibility=visibility,
         search_text=search_text,
     )
-
-    # Mandás también la lista de tags y provincias para armar el formulario
+    # Mando también la lista de tags y provincias para armar el formulario
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
-
     # determinar si hay filtros activos para mostrar el botón Limpiar
     has_filters = any(
         [
@@ -75,7 +73,6 @@ def list_sites():
             search_text,
         ]
     )
-
     # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
     current_query = {}
     for k in (
@@ -164,7 +161,7 @@ def create_site():
             except Exception as e:
                 # no fallar la creación por problemas de tags; loguear y seguir
                 flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
-
+            flash("Sitio creado correctamente.", "success")
             return redirect(url_for("sites.list_sites"))
         else:
             if form.errors:
@@ -208,16 +205,25 @@ def edit_site(site_id):
     return render_template("historicalSites/edit_site.html", site=site)
 
 
-@historical_sites_bp.route("/<int:site_id>/delete", methods=["GET"])
+@historical_sites_bp.route("/<int:site_id>/delete", methods=["GET", "POST"])
 @login_required
 def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
+    # if request.method == "POST":
+    #     # llamada vía AJAX desde SweetAlert
+    #     try:
+    #         historicalSites.delete_site(site_id)
+    #         return {"message": f"Sitio {site.name} eliminado correctamente."}, 200
+    #     except Exception as e:
+    #         return {"message": str(e)}, 500
+
+    # fallback GET (compatibilidad)
     if request.method == "GET":
         historicalSites.delete_site(site_id)
+        flash(f"Sitio {site.name} eliminado correctamente.", "success")
         return redirect(url_for("sites.list_sites"))
-        # return f"Site {site.name} deleted", 200
 
 
 @historical_sites_bp.route("/download_CSV", methods=["GET"])
