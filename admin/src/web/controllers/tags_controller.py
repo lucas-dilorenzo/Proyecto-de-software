@@ -5,14 +5,6 @@ from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
-
-# @tags_bp.route("/", methods=["GET"])
-# @login_required
-# def list_tags():
-#     busqueda = request.args.get("stringBusqueda", "", type=str)
-#     tags = get_tags(busqueda)
-#     return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
-
 @tags_bp.route("/", methods=["GET"])
 @login_required
 def list_tags():
@@ -121,6 +113,15 @@ def edit_tag(tag_id):
 
     # Esto seria el GET
     return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)
+
+
+@tags_bp.route("/<int:tag_id>", methods=["GET"])
+@login_required
+def show_tag(tag_id):
+    tag = get_tag_by_id(tag_id)
+    if not tag:
+        return "Tag not found", 404
+    return render_template("historicalSites/tags/showTag.html", tag=tag)
 
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
 @login_required

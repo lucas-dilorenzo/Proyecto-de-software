@@ -203,9 +203,29 @@ def edit_site(site_id):
             registration_date=formulario.get("registration_date"),
             visibility=formulario.get("visibility") == "on",
         )
+        # Procesar tags seleccionados; si no se envían tags, vaciar la relación
+        try:
+            selected_tag_ids = request.form.getlist('tags')
+            tag_objs = []
+            for t in selected_tag_ids:
+                try:
+                    tid = int(t)
+                except Exception:
+                    continue
+                tag = historicalSites.tags.get_tag_by_id(tid)
+                if tag:
+                    tag_objs.append(tag)
+            # asignar (incluso lista vacía para limpiar tags)
+            site = historicalSites.get_site_by_id(site_id)
+            historicalSites.asignar_tags_a_sitio(site, tag_objs)
+        except Exception as e:
+            flash(f"No se pudieron actualizar los tags: {e}", "warning")
+
         return redirect(url_for("sites.list_sites"))
 
-    return render_template("historicalSites/edit_site.html", site=site)
+    # cargar tags para el formulario de edición
+    all_tags = historicalSites.tags.get_all_tags()
+    return render_template("historicalSites/edit_site.html", site=site, tags=all_tags)
 
 
 @historical_sites_bp.route("/<int:site_id>/delete", methods=["GET", "POST"])

@@ -38,7 +38,7 @@
 
 {% block title %} Crear Sitio Histórico {% endblock %} 
 
-{% blocktitulo_body %}
+{% block titulo_body %}
   <h1 style="margin-top: 2%">
     <i class="bi bi-geo"></i>
     <i class="bi bi-plus-circle"></i>
@@ -54,9 +54,6 @@
         <!-- Primera columna -->
         <div class="col-md-6">
           <div class="mb-3">
-            <!-- <label for="name" class="form-label">
-                  <i class="bi bi-building me-1"></i>Nombre
-                </label> -->
             <input
               type="text"
               class="form-control"
@@ -272,21 +269,6 @@
           </button>
         </div>
       </div>
-      <!-- <div class="row">
-            <div class="col-12">
-              <div class="d-flex gap-2 justify-content-end">
-                <a
-                  href="{{ url_for('sites.list_sites') }}"
-                  class="btn btn-outline-secondary"
-                >
-                  <i class="bi bi-arrow-left me-1"></i>Cancelar
-                </a>
-                <button type="submit" class="btn btn-primary">
-                  <i class="bi bi-plus-circle me-1"></i>Crear Sitio
-                </button>
-              </div>
-            </div>
-          </div> -->
     </form>
   </div>
 </div>

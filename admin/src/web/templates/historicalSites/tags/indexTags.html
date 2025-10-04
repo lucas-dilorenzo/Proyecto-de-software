@@ -46,7 +46,6 @@
                 <th scope="col"> Nombre </th>
                 <th scope="col"> Slug </th>
                 <th scope="col"> Descripción </th>
-                <th scope="col"> Cant. sitios </th>
                 <th scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -56,14 +55,13 @@
                         <td>{{ tag.name }}</td>
                         <td>{{ tag.slug }}</td>
                         <td>{{ tag.description }}</td>
-                        <td> - </td>
                         <td>
+                            <a href="{{ url_for('tags.show_tag', tag_id=tag.id) }}" class="btn btn-icon" title="Mostrar Tag" aria-label="Mostrar Tag">
+                                <i class="bi bi-eye"></i>
+                            </a>
                             <a href="{{ url_for('tags.edit_tag', tag_id=tag.id) }}" class="btn btn-icon" title="Editar Tag" aria-label="Editar Tag">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <!-- <a href="#" class="btn btn-icon">
-                            <i class="bi bi-people"></i>
-                            </a> -->
                             <a href="#" class="btn btn-icon" title="Eliminar Tag" aria-label="Eliminar Tag" data-delete-url="{{ url_for('tags.delete_tag', tag_id=tag.id) }}" onclick="confirmDeleteSwal(event, this.dataset.deleteUrl)">
                                 <i class="bi bi-trash"></i>
                             </a>
