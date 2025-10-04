@@ -35,11 +35,13 @@ def list_sites():
     conservation_status = request.args.get("conservation_status", type=str)
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
-    visibility_raw = request.args.get("visibility")
-    if visibility_raw is None:
+    # Leer visibility como lista para distinguir ausencia (no se filtró) de false/true
+    visibility_list = request.args.getlist("visibility")
+    if not visibility_list:
         visibility = None
     else:
-        visibility = visibility_raw.lower() in ("1", "true", "on", "yes")
+        # si cualquiera de los valores es truthy, lo tomamos como True
+        visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
     # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
@@ -60,6 +62,7 @@ def list_sites():
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
     # determinar si hay filtros activos para mostrar el botón Limpiar
+    visibility_present = 'visibility' in request.args
     has_filters = any(
         [
             stringBusqueda,
@@ -69,7 +72,7 @@ def list_sites():
             conservation_status,
             date_from,
             date_to,
-            visibility,
+            visibility_present,
             search_text,
         ]
     )

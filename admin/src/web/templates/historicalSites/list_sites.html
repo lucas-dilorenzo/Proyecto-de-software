@@ -37,10 +37,10 @@
                     <div class="col-1"></div>
                     <!-- Tags -->
                     <div class="col-md-3">
-                      <select name="tags" class="form-select" >
-                        <option value="">Seleccione un tag</option>
+                      <select name="tags" id="filter-tags" class="form-select" multiple>
                         {% for tag in tags %}
-                          <option value="{{ tag.id }}" {% if tag.id|string in request.args.getlist('tags') %}selected{% endif %}>{{ tag.name }}</option>
+                          {% set selected_tags = request.args.getlist('tags') %}
+                          <option value="{{ tag.id }}" {% if (tag.id|string) in selected_tags %}selected{% endif %}>{{ tag.name }}</option>
                         {% endfor %}
                       </select>
                     </div>
@@ -69,7 +69,9 @@
                     <!-- Check de visibilidad -->
                     <div class="col-3 d-flex align-items-center" style="margin-top: 1.5rem;">
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="visibility" id="visibility" {% if visibility %}checked{% endif %}>
+                        {# Enviar siempre un valor para visibility: hidden input con 0, checkbox con 1. #}
+                        <input type="hidden" name="visibility" value="0" />
+                        <input class="form-check-input" type="checkbox" name="visibility" id="visibility" value="1" {% if visibility is none or visibility %}checked{% endif %}>
                         <label class="form-check-label" for="visibility">Visible</label>
                       </div>
                     </div>
@@ -183,6 +185,8 @@
 
 {% block scripts %}
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
     function confirmDeleteSite(el) {
       var siteId = el.dataset.siteId;
@@ -204,5 +208,19 @@
         }
       });
     }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const filterTags = document.getElementById('filter-tags');
+      if (filterTags) {
+        new Choices(filterTags, {
+          removeItemButton: true,
+          placeholderValue: 'Selecciona tags',
+          searchPlaceholderValue: 'Buscar tags',
+          shouldSort: false,
+          maxItemCount: 20,
+        });
+      }
+    });
   </script>
 {% endblock %}

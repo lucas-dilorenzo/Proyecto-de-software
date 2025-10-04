@@ -13,7 +13,6 @@ def list_tags():
     tags = get_tags(busqueda)
     return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
 
-
 # Ruta para crear un nuevo tag
 @tags_bp.route("/new", methods=["GET", "POST"])
 @login_required

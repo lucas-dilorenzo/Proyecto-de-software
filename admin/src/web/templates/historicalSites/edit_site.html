@@ -1,10 +1,16 @@
-{% extends "layout.html" %} {% block title %} Sitios Historicos - App37 {%
-endblock %} {% block titulo_body %}
-<!--<h1>{{ site.name }}</h1>-->
+{% extends "layout.html" %} 
+
+{% block title %} Sitios Historicos - App37 {% endblock %} 
+
+{% block titulo_body %}
+   <h1>
+        <i class="bi bi-geo"></i>
+        <i class="bi bi-pencil"></i>
+        Editar {{ site.name }}
+    </h1>
 {% endblock %} 
 
-{% block main_content %}
-
+{% block body %}
   <div class="container my-4">
     <div class="row justify-content-center">
       <div class="col-11">

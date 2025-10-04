@@ -34,14 +34,19 @@
     margin-top: 10px;
   }
 </style>
-{% endblock %} {% block title %} Crear Sitio Histórico {% endblock %} {% block
-titulo_body %}
-<h1 style="margin-top: 2%">
-  <i class="bi bi-geo"></i>
-  <i class="bi bi-plus-circle"></i>
-  Nuevo Sitio Histórico
-</h1>
-{% endblock %} {% block body %}
+{% endblock %}
+
+{% block title %} Crear Sitio Histórico {% endblock %} 
+
+{% blocktitulo_body %}
+  <h1 style="margin-top: 2%">
+    <i class="bi bi-geo"></i>
+    <i class="bi bi-plus-circle"></i>
+    Nuevo Sitio Histórico
+  </h1>
+{% endblock %} 
+
+{% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
   <div class="card-body">
     <form method="POST" action="{{ url_for('sites.create_site') }}">
@@ -237,7 +242,7 @@ titulo_body %}
             </div>
           </div> -->
       <select
-        name="tags[]"
+        name="tags"
         id="tags"
         class="form-select form-select-sm"
         multiple

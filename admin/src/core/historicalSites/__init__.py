@@ -190,8 +190,16 @@ def get_sites_paginated_by_id(
 
     if tags:
         try:
-            tag_ids = [int(t) for t in tags]
-            query = query.filter(Site.tags.any(Tag.id.in_(tag_ids)))
+            # Normalizar y convertir a enteros, ignorando valores vacíos
+            tag_ids = [int(t) for t in tags if str(t).strip() != ""]
+            if tag_ids:
+                # Si se seleccionó un solo tag, filtrar por existencia (OR de 1)
+                if len(tag_ids) == 1:
+                    query = query.filter(Site.tags.any(Tag.id == tag_ids[0]))
+                else:
+                    # Para múltiples tags, requerir que el sitio tenga todos los tags (AND)
+                    for tid in tag_ids:
+                        query = query.filter(Site.tags.any(Tag.id == tid))
         except Exception:
             # ignore invalid tag ids
             pass
