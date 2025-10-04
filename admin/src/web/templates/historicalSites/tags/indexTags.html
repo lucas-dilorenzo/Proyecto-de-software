@@ -71,9 +71,25 @@
                         </td>
                     </tr>
                 {% endfor %}
-                
             </tbody>
         </table>
+        <!-- Paginación -->
+        {% if tags.pages > 1 %}
+            <div class="pagination">
+                {% for page_num in tags.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                    {% if tags.page == page_num %}
+                        <span class="current">{{ page_num }}</span>
+                    {% else %}
+                        <a href="{{ url_for('tags.list_tags', page=page_num, **current_query) }}">{{ page_num }}</a>
+                    {% endif %}
+                    {% else %}
+                    ...
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+
     {% else %}
         <div class="col-11 mt-3">
             <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">

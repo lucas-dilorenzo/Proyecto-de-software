@@ -1,6 +1,11 @@
 from src.core.historicalSites.tags.tag import Tag  # noqa: F401
 from src.core.database import db
 
+def get_tags_paginated(busqueda, page=1, per_page=3):
+    query = Tag.query
+    if busqueda:
+        query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
+    return query.paginate(page=page, per_page=per_page, error_out=False)
 
 # Retorna todos los tags con nombre ascendente
 def get_all_tags():

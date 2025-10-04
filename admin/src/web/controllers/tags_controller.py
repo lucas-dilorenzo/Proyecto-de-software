@@ -1,17 +1,34 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags
+from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags_paginated
 from src.core.historicalSites.tags.tag import Tag
 from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
 
+# @tags_bp.route("/", methods=["GET"])
+# @login_required
+# def list_tags():
+#     busqueda = request.args.get("stringBusqueda", "", type=str)
+#     tags = get_tags(busqueda)
+#     return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
+
 @tags_bp.route("/", methods=["GET"])
 @login_required
 def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
-    tags = get_tags(busqueda)
-    return render_template("historicalSites/tags/indexTags.html", tags=tags, busqueda=busqueda)
+    page = request.args.get("page", 1, type=int)
+    per_page = 5
+
+    # Solo llama a la capa de servicios
+    tags_paginated = get_tags_paginated(busqueda, page, per_page)
+
+    return render_template(
+        "historicalSites/tags/indexTags.html",
+        tags=tags_paginated,
+        busqueda=busqueda,
+        current_query={'stringBusqueda': busqueda}
+    )
 
 # Ruta para crear un nuevo tag
 @tags_bp.route("/new", methods=["GET", "POST"])
