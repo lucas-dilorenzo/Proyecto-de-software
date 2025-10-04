@@ -149,36 +149,51 @@
   </table>
   <!-- Paginación -->
   {% if sites.pages > 1 %}
-    <div class="card-footer d-flex justify-content-center">
-      <ul class="pagination">
-        {% for page_num in sites.iter_pages(left_edge=1, right_edge=1,
-        left_current=1, right_current=2) %} {% if page_num %} {% if sites.page ==
-        page_num %}
-        <li class="page-item disabled">
-          <a
-            class="page-link"
-            href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
-            >{{ page_num }}</a
-          >
-        </li>
-        {% else %}
-        <li class="page-item">
-          <a
-            class="page-link"
-            href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}"
-            >{{ page_num }}</a
-          >
-        </li>
-        {% endif %} {% else %}
-        <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
-        {% endif %} {% endfor %}
-      </ul>
+    <div class="card-footer">
+      <div class="row align-items-center">
+        <div class="col text-start">
+          <small> Página {{ sites.page }} de {{ sites.pages }}, total de sitios: {{ sites.total }} </small>
+        </div>
+        <div class="col text-end">
+          <nav aria-label="Paginación sitios">
+            <ul class="pagination justify-content-end mb-0">
+              {% if sites.has_prev %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.prev_num, **(current_query or {})) }}" aria-label="Anterior">&laquo;</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#" aria-label="Anterior">&laquo;</a></li>
+              {% endif %}
+
+              {% for page_num in sites.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                  {% if sites.page == page_num %}
+                    <li class="page-item active" aria-current="page">
+                      <a class="page-link" href="#">{{ page_num }}</a>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}">{{ page_num }}</a>
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#">&hellip;</a></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if sites.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.next_num, **(current_query or {})) }}" aria-label="Siguiente">&raquo;</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#" aria-label="Siguiente">&raquo;</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
     </div>
   {% endif %}
-  <div>
-    Página {{ sites.page }} de {{ sites.pages }}, total de sitios: {{ sites.total }}
-  </div>
-
 
 {% endblock %}
 
