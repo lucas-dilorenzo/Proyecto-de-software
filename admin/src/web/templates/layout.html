@@ -231,7 +231,7 @@ Bootstrap y estilos propios. #}
     {% if is_authenticated(session) %}
     <!-- Información del perfil -->
     <div class="profile-info text-white" style="background-color: #555">
-      <p class="mb-1"><strong>Perfil:</strong> {{session.role.value}}</p>
+      <p class="mb-1"><strong>Perfil:</strong> {{session.role}}</p>
       <p class="mb-0">
         <strong>Usuario:</strong> {{get_user(session.user).nombre}}
       </p>
@@ -251,7 +251,7 @@ Bootstrap y estilos propios. #}
       </li>
       <li class="nav-item">
         <a href="#" class="nav-link">
-          <i class="bi bi-file-earmark me-2"></i>
+          <i class="bi bi-list-check"></i>
           <span>Validación de propuestas</span>
         </a>
       </li>
@@ -262,7 +262,7 @@ Bootstrap y estilos propios. #}
         </a>
       </li>
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="{{ url_for('users.list_users') }}" class="nav-link">
           <i class="bi bi-people me-2"></i>
           <span>Gestión de usuarios</span>
         </a>
