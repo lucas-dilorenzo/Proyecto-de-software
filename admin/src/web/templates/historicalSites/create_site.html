@@ -1,0 +1,322 @@
+{% extends "layout.html" %} {% block head %}
+<link
+  href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap"
+  rel="stylesheet"
+/>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+  rel="stylesheet"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+  rel="stylesheet"
+/>
+<link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+  integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+  crossorigin=""
+/>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
+/>
+<script
+  src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+  integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+  crossorigin=""
+></script>
+<style>
+  #map {
+    height: 400px;
+    width: 100%;
+    margin-top: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block title %} Crear Sitio Histórico {% endblock %} 
+
+{% block titulo_body %}
+  <h1 style="margin-top: 2%">
+    <i class="bi bi-geo"></i>
+    <i class="bi bi-plus-circle"></i>
+    Nuevo Sitio Histórico
+  </h1>
+{% endblock %} 
+
+{% block body %}
+<div class="card shadow-sm border-0 rounded-0 bg-white">
+  <div class="card-body">
+    <form method="POST" action="{{ url_for('sites.create_site') }}">
+      <div class="row">
+        <!-- Primera columna -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              required
+              placeholder="Ingrese el nombre del sitio"
+            />
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="description_short" class="form-label">
+                  <i class="bi bi-card-text me-1"></i>Descripción Corta
+                </label> -->
+            <input
+              type="text"
+              class="form-control"
+              id="description_short"
+              name="description_short"
+              required
+              placeholder="Descripción breve del sitio"
+            />
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="city" class="form-label">
+                  <i class="bi bi-geo-alt me-1"></i>Ciudad
+                </label> -->
+            <input
+              type="text"
+              class="form-control"
+              id="city"
+              name="city"
+              required
+              placeholder="Ingrese la ciudad"
+            />
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="province" class="form-label">
+                  <i class="bi bi-map me-1"></i>Provincia
+                </label> -->
+            <input
+              type="text"
+              class="form-control"
+              id="province"
+              name="province"
+              required
+              placeholder="Ingrese la provincia"
+            />
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="location" class="form-label">
+                  <i class="bi bi-pin-map me-1"></i>Ubicación Geográfica
+                </label> -->
+            <input
+              type="text"
+              class="form-control"
+              id="location"
+              name="location"
+              required
+              placeholder="Ingrese coordenadas o detalles de ubicación"
+              hidden
+            />
+            <br />
+          </div>
+        </div>
+
+        <!-- Segunda columna -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <!-- <label for="conservation_status" class="form-label">
+                  <i class="bi bi-shield-check me-1"></i>Estado de
+                  Conservación
+                </label> -->
+            <select
+              class="form-select"
+              id="conservation_status"
+              name="conservation_status"
+              required
+            >
+              <option value="" disabled selected>
+                Selecciona un estado de conservación
+              </option>
+              {% for key, value in get_conservation_status().items() %}
+              <option value="{{ key }}">{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="year_declared" class="form-label">
+                  <i class="bi bi-calendar-event me-1"></i>Año de Declaración
+                </label> -->
+            <input
+              type="number"
+              class="form-control"
+              id="year_declared"
+              name="year_declared"
+              required
+              min="1800"
+              max="2024"
+              placeholder="Año en que fue declarado"
+            />
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="category" class="form-label">
+                  <i class="bi bi-tags me-1"></i>Categoría
+                </label> -->
+            <select class="form-select" id="category" name="category" required>
+              <option value="" disabled selected>
+                Selecciona una categoría
+              </option>
+              {% for key, value in get_sites_categories().items() %}
+              <option value="{{ key }}">{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <!-- <label for="registration_date" class="form-label">
+                  <i class="bi bi-calendar3 me-1"></i>Fecha de Registro
+                </label> -->
+            <input
+              type="date"
+              class="form-control"
+              id="registration_date"
+              name="registration_date"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="visibility"
+                name="visibility"
+                value="true"
+                defaultChecked
+              />
+              <label class="form-check-label" for="visibility">
+                <i class="bi bi-eye me-1"></i>Hacer sitio visible al público
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción detallada en toda la fila -->
+      <div class="row">
+        <div class="col-12">
+          <div class="mb-4">
+            <label for="description" class="form-label">
+              <i class="bi bi-journal-text me-1"></i>Descripción Detallada
+            </label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              required
+              rows="4"
+              placeholder="Proporcione una descripción detallada del sitio histórico..."
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eleccion de tags -->
+      <!-- <div class="row">
+            <div class="col-12">
+              <div class="mb-4">
+                <label for="tags" class="form-label"> Tags</label>
+                <select name="tags" id="tags" class="form-select form-select-sm">
+                  {% for tag in tags %}
+                    <option value="{{ tag.id }}">{{ tag.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div> -->
+      <select
+        name="tags"
+        id="tags"
+        class="form-select form-select-sm"
+        multiple
+      >
+        {% for tag in tags %}
+        <option value="{{ tag.id }}">{{ tag.name }}</option>
+        {% endfor %}
+      </select>
+
+      <!-- MAPA -->
+      <!-- Inputs ocultos para guardar coordenadas -->
+      <input type="hidden" id="lat" name="lat" />
+      <input type="hidden" id="lng" name="lng" />
+
+      <label style="margin-top: auto"
+        >Selecciona la ubicación en el mapa:</label
+      >
+      <div id="map"></div>
+      <br />
+      <!-- FIN MAPA -->
+
+      <!-- Botones de acción -->
+      <div class="card-actions p-3 d-flex justify-content-end">
+        <div class="col-2">
+          <button type="submit" class="btn btn-azul">
+            Crear <i class="bi bi-caret-right small"></i>
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="col-2 justify-content-start">
+  <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+    <i class="bi bi-arrow-left small"></i> Volver
+  </a>
+</div>
+
+<script>
+  // Inicializar mapa
+  var map = L.map("map").setView([-34.6037, -58.3816], 13); // Buenos Aires de ejemplo
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "© OpenStreetMap contributors",
+  }).addTo(map);
+
+  var marker;
+
+  // Evento click en mapa
+  map.on("click", function (e) {
+    var lat = e.latlng.lat;
+    var lng = e.latlng.lng;
+
+    if (marker) {
+      map.removeLayer(marker);
+    }
+    marker = L.marker([lat, lng]).addTo(map);
+
+    // Guardar valores en los inputs ocultos
+    document.getElementById("lat").value = lat;
+    document.getElementById("lng").value = lng;
+    document.getElementById("location").value = lat + "+" + lng;
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const tagsSelect = document.getElementById("tags");
+    if (tagsSelect) {
+      new Choices(tagsSelect, {
+        removeItemButton: true,
+        placeholderValue: "Selecciona tags",
+        searchPlaceholderValue: "Buscar tags",
+        shouldSort: false,
+        maxItemCount: 10,
+      });
+    }
+  });
+</script>
+{% endblock %}

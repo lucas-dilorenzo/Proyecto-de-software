@@ -1,74 +1,41 @@
 /* ====== Base ====== */
-body {
+/* body {
   font-family: Quicksand, sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f9f9f9;
-  color: #333;
+  color: #333; */
 
   /* que el footer quede al fondo */
-  min-height: 100vh;
+  /* min-height: 100vh;
   display: flex;
   flex-direction: column;
-}
-
-/* Contenedor de ancho */
-.container {
-  width: 80%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* ====== Header (ovalado y flotante) ====== */
-header {
-  background-color: #008859;
-  color: #fff;
-  text-align: center;
-  padding: 1.5rem 2rem;
-
-  border-radius: 50px;         /* forma ovalada */
-  width: 80%;
-  max-width: 1200px;
-  margin: 1rem auto;           /* centrado */
-  box-shadow: 0 4px 12px rgba(0,0,0,.2);
-  position: sticky;            /* flotante */
-  top: 1rem;
-  z-index: 1000;
-}
-
-header h1 {
-  margin: 0;
-  font-size: 2rem;
-  font-weight: 700;
-}
-
-/* ====== Navegación ====== */
-nav {
-  background-color: #eaeaea;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-
-  width: 80%;
-  max-width: 1200px;
-  margin: 0 auto 1rem auto;
-}
+} */
 
 /* ====== Contenido principal ====== */
-main {
-  flex: 1;                     /* empuja el footer hacia abajo */
+ #content {
+    background-color: #f9f9f9;
+    margin-top: 60px; /* respeta el header */
+    margin-left: 250px; /* respeta el sidebar */
+    padding: 1rem;
+    transition: margin-left 0.3s;
+    min-height: calc(100vh - 60px);
+  }
+/* main {
+  flex: 1;                      empuja el footer hacia abajo 
   padding: 2rem;
 
-  width: 80%;
+  width: 100%;
   max-width: 1200px;
   margin: 0 auto 2rem auto;
 
   background-color: #FEF8E6;
   border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,.1);
-}
+} */
 
 /* ====== Footer (recto al fondo) ====== */
-footer {
+/* footer {
   background-color: #008859;
   color: #fff;
   text-align: center;
@@ -76,16 +43,352 @@ footer {
 
   width: 100%;
   margin: 0;
-  border-radius: 0;            /* recto */
-  /* no position: fixed; así queda al fondo sin superponerse */
-}
+  border-radius: 0;           
+} */
 
 /* ====== Responsive tweaks ====== */
-@media (max-width: 768px) {
-  header, nav, main {
-    width: 92%;
+  #header {
+    position: fixed; /* lo fijás arriba */
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #004c82; 
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 1030;   
   }
 
-  header { border-radius: 32px; }
-  main { padding: 1.25rem; }
+  #perfil-btn {
+    background-color: #004c82;  
+    border: 1px solid white;   
+    color: white;               
+  }
+
+  #perfil-btn:hover {
+    background-color: #004c82;  
+    color: white;
+    border-color: white;
+  }
+
+  /* Sidebar debajo del header */
+  #sidebar {
+    position: fixed;
+    /* top: 60px; respeta el header */
+    left: 0;
+    height: calc(100vh - 60px);
+    width: 250px;
+    color: #333 !important; 
+    background-color: white;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    /* padding-top: 1rem; */
+    transition: all 0.3s;
+    z-index: 1000;
+  }
+
+  /* Sidebar colapsado */
+  /* #sidebar.collapsed {
+    width: 80px;
+  } */
+
+  .logo-navbar {
+    height: 90%; /* Ajusta la altura al 90% del contenedor (navbar) */
+    max-height: 45px; /* Asegúrate de que no exceda la altura del navbar */
+    width: auto; /* Mantén la proporción del logo */
+    object-fit: contain; /* Asegura que el logo se ajuste sin deformarse */
+    transition: all 0.3s ease; /* Suave transición para cambios responsivos */
+  }
+
+  /* Mejoras responsive para el logo SVG */
+  @media (max-width: 768px) {
+    .logo-navbar {
+      max-height: 35px; /* Logo más pequeño en pantallas móviles */
+    }
+  }
+
+  @media (max-width: 480px) {
+    .logo-navbar {
+      max-height: 30px; /* Logo aún más pequeño en pantallas muy pequeñas */
+    }
+  }
+
+  #sidebar .nav-link {
+    color: #404142 !important; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  /* #sidebar.collapsed .nav-link span {
+    display: none;
+  } */
+
+  #sidebar.collapsed ~ #content {
+    margin-left: 80px;
+  }
+
+  /* #toggle-btn {
+    background-color: white !important;  fondo azul 
+    color: #404142  !important;                texto e icono blanco 
+    border: 1px solid #404142  !important;     borde blanco 
+  } */
+
+  #toggle-btn {
+    border: none;
+    background-color: transparent !important;
+    padding-left: 2%;
+  }
+
+  #sidebar.collapsed ~ #toggle-btn .bi-arrow-left {
+    transform: rotate(180deg);
+  }
+
+  #sidebar.collapsed ~ #toggle-btn .expand-icon {
+    display: none;
+  }
+
+  #sidebar.collapsed ~ #toggle-btn .collapse-icon {
+    display: inline-block !important; /* Asegura que el ícono se muestre */
+  }
+
+  #sidebar.collapsed ~ #toggle-btn .expand-icon {
+    display: none;
+  }
+
+  #sidebar.collapsed ~ #toggle-btn .collapse-icon {
+    display: inline-block;
+  }
+
+  .profile-info {
+    padding: 1rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #sidebar {
+      display: block;
+      position: fixed;
+      top: 60px; /* debajo del header */
+      left: 0;
+      height: calc(100vh - 60px);
+      width: 250px;
+      background-color: white;
+      box-shadow: 2px 0 12px rgba(0,0,0,0.0);
+      z-index: 1050;
+      transform: translateX(-110%);
+      transition: transform 300ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms ease;
+    }
+
+    #toggle-btn {
+      /* Mostrar el botón de toggle sólo en pantalla chica(celular) */
+      display: inline-block;
+    }
+
+    #sidebar.open {
+      transform: translateX(0);
+      box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+    }
+
+    /* Backdrop: siempre presente para poder animar opacidad */
+    #mobile-backdrop {
+      display: block;
+      position: fixed;
+      inset: 0; /* top:0; right:0; bottom:0; left:0 */
+      background: rgba(0,0,0,0);
+      opacity: 0;
+      transition: background 300ms ease, opacity 300ms ease;
+      pointer-events: none;
+      z-index: 1040;
+    }
+    
+    #mobile-backdrop.show {
+      background: rgba(0,0,0,0.45);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #sidebar.collapsed {
+      width: 100%;
+    }
+
+    #content {
+      margin-left: 0 !important;
+    }
+
+    .btn.btn-azul,
+    .btn.btn-new,
+    .btn.btn-limpiar {
+      width: 100%;
+      font-size: 0.50rem;     /* texto un poco más pequeño */
+      padding: 0.35rem 0.6rem;/* menos padding para que no se corte */
+    }
+
+    /* iconos menos grandes para no romper la línea */
+    .btn i {
+      font-size: 0.5rem;
+      padding-left: 0.5rem;
+    }
+  }
+
+  .separator-line {
+    background-color: #e0e0e0;
+    height: 1px;
+    border: none;
+    margin: 0;
+  }
+
+  #sidebar ul.nav {
+  padding: 0; /* Elimina el padding de la lista */
+  margin: 0;
+}
+
+#sidebar .nav-item {
+  padding: 0; /* Elimina el padding de los ítems de la lista */
+}
+
+#sidebar .nav-link {
+  padding: 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
+}
+
+/* Estilos específicos para el botón de cerrar sesión */
+.signout-button a {
+  color: #333 !important; 
+}
+
+/* i {
+  color: #004c82;
+} */
+
+input.form-control {
+  /* background-color: transparent; */
+  border: none;
+  border-bottom: 1px solid #9e9e9e;
+  border-radius: 0;
+  box-shadow: none;
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+.btn.btn-azul {
+  background-color:  #004c82;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.btn.btn-new {
+  background-color:  #C47358;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 33px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+.btn.btn-limpiar {
+  background-color: #f57c00;
+  color: white;
+  width: 90%;
+  border-radius: 2px;
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  font-size: 14px;
+  border: none;
+}
+
+i.small {
+  font-size: 1rem !important;
+  line-height: inherit;
+}
+
+.btn i {
+  font-size: 1.3rem;
+  line-height: inherit;
+  padding-left: 4%;
+}
+
+.card {
+  padding: 1rem;
+  box-shadow: 
+  0 4px 6px 0 rgba(0,0,0,0.25), 
+  0 6px 10px -2px rgba(0,0,0,0.20), 
+  0 2px 10px 0 rgba(0,0,0,0.22);
+  border: none; /* opcional, elimina el borde gris default de Bootstrap */
+}
+
+.btn-icon {
+  background-color: #0d5c91;   /* Azul estilo de tu ejemplo */
+  color: #fff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  transition: background 0.3s;
+}
+
+.btn-icon:hover {
+  background-color: #0a4b74;  
+  color: #fff;
+}
+
+.table {
+  margin-top: 4%;
+  background-color: #f9f9f9;
+  border: none;
+}
+
+/* .table th, */
+.table td {
+    border: none; /* Elimina los bordes de las celdas */
+}
+
+/* Contenedor integrado para flashes */
+.flash-container{
+  position: relative;
+  margin: 1rem 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.flash-container .alert{
+  margin: 0;
+}
+
+/* Make pagination active page show colored text (#004c82) with transparent background */
+.pagination .page-item.active .page-link {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #004c82 !important;
+  font-weight: 600;
+}
+
+/* Ensure the pagination links keep the blue color on hover */
+.pagination .page-link {
+  color: #004c82;
+}
+.pagination .page-link:hover {
+  color: #002a4a;
+}
+
+/* Make active pagination item have blue background and white text */
+.pagination .page-item.active .page-link {
+  background-color: #004c82 !important;
+  border-color: #004c82 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure focus state is visible and accessible */
+.pagination .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0,76,130,0.25);
 }

@@ -1,0 +1,240 @@
+{% extends "layout.html" %} 
+
+{% block titulo_body %}
+  <h1 style="margin-top: 3%;">
+    <i class="bi bi-geo"></i>
+    Sitios Históricos
+  </h1>
+{% endblock%} 
+
+{% block titulo_acciones_body %}
+    <a href="{{ url_for('sites.create_site') }}" class="btn btn-new">
+      Añadir Sitio <i class="bi bi-geo small"></i>
+    </a>
+{% endblock %}
+
+{% block body %}
+  <!-- Filtros -->
+    <div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="row">
+                <form method="get" class="row g-2 mb-4">
+                  <!-- Ciudad -->
+                    <div class="col-4">
+                      <input type="text" name="city" class="form-control"
+                        placeholder="Ciudad" value="{{ city or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Provincia -->
+                    <div class="col-3">
+                      <select name="province" class="form-select">
+                        <option value="">Seleccione una provincia</option>
+                        {% for prov in provinces %}
+                          <option value="{{ prov }}" {% if request.args.get('province') == prov %}selected{% endif %}>{{ prov }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Tags -->
+                    <div class="col-md-3">
+                      <select name="tags" id="filter-tags" class="form-select" multiple>
+                        {% for tag in tags %}
+                          {% set selected_tags = request.args.getlist('tags') %}
+                          <option value="{{ tag.id }}" {% if (tag.id|string) in selected_tags %}selected{% endif %}>{{ tag.name }}</option>
+                        {% endfor %}
+                      </select>
+                    </div>
+                    <!-- Estado de conservación -->
+                    <div class="col-4">
+                      <input type="text" name="conservation_status" class="form-control"
+                        placeholder="Estado de conservación" value="{{ conservation_status or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Busqueda por texto -->
+                    <div class="col-7">
+                      <input type="text" name="search_text" class="form-control"
+                        placeholder="Ingrese un texto" value="{{ search_text or '' }}">
+                    </div>
+                    <!-- Fechas de registro -->
+                    <div class="col-3" style="margin-top: 1.5rem;">
+                      <label for="date_from" class="form-label">Fecha registro desde</label>
+                      <input type="date" id="date_from" name="date_from" class="form-control" value="{{ date_from or '' }}">
+                    </div>
+
+                    <div class="col-3" style="margin-top: 1.5rem;">
+                      <label for="date_to" class="form-label">Fecha registro hasta</label>
+                      <input type="date" id="date_to" name="date_to" class="form-control" value="{{ date_to or '' }}">
+                    </div>
+                    <div class="col-1"></div>
+                    <!-- Check de visibilidad -->
+                    <div class="col-3 d-flex align-items-center" style="margin-top: 1.5rem;">
+                      <div class="form-check">
+                        <input type="hidden" name="visibility" value="0" />
+                        <input class="form-check-input" type="checkbox" name="visibility" id="visibility" value="1" {% if visibility is none or visibility %}checked{% endif %}>
+                        <label class="form-check-label" for="visibility">Visible</label>
+                      </div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+                        <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+                            Buscar <i class="bi bi-search small"></i> 
+                        </button>
+                      </div>
+                      {% if has_filters %}
+                        <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+                            <a href="{{ url_for('sites.list_sites') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
+                                Limpiar <i class="bi bi-x-circle small"></i>
+                            </a>
+                        </div>
+                      {% endif %}
+                    </div>
+                    
+                </form>
+            </div>
+        </div>
+    </div>
+
+  <div class="d-flex justify-content-end align-items-center" style="margin-top: 1rem;">
+    <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
+    style="background-color: #0b5e2e; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
+      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
+    </a>
+  </div>
+
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Ciudad</th>
+        <th>Provincia</th>
+        <th>Estado de conservación</th>
+        <th>Visible</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for site in sites %}
+        <tr>
+          <td>{{ site.name }}</td>
+          <td>{{ site.city }}</td>
+          <td>{{ site.province }}</td>
+          <td>{{ site.conservation_status }}</td>
+          <td>
+            {% if site.visibility %}
+              Sí
+            {% else %}
+              No
+            {% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio" aria-label="Ver Sitio">
+              <i class="bi bi-eye"></i>
+            </a>
+            <a href="{{ url_for('sites.edit_site', site_id=site.id) }}" class="btn btn-icon" title="Editar Sitio" aria-label="Editar Sitio">
+              <i class="bi bi-pencil"></i>
+            </a>
+            <button type="button" class="btn btn-icon" title="Eliminar Sitio" aria-label="Eliminar Sitio" data-site-id="{{ site.id }}" data-site-name="{{ site.name|e }}" onclick="confirmDeleteSite(this)">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="6" class="text-center">No se encontraron sitios históricos.</td>
+        </tr>
+      {% endfor %}
+
+    </tbody>
+  </table>
+  <!-- Paginación -->
+  {% if sites.pages > 1 %}
+    <div class="card-footer">
+      <div class="row align-items-center">
+        <div class="col text-start">
+          <small> Página {{ sites.page }} de {{ sites.pages }}, total de sitios: {{ sites.total }} </small>
+        </div>
+        <div class="col text-end">
+          <nav aria-label="Paginación sitios">
+            <ul class="pagination justify-content-end mb-0">
+              {% if sites.has_prev %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.prev_num, **(current_query or {})) }}" aria-label="Anterior">&laquo;</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#" aria-label="Anterior">&laquo;</a></li>
+              {% endif %}
+
+              {% for page_num in sites.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                  {% if sites.page == page_num %}
+                    <li class="page-item active" aria-current="page">
+                      <a class="page-link" href="#">{{ page_num }}</a>
+                    </li>
+                  {% else %}
+                    <li class="page-item">
+                      <a class="page-link" href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}">{{ page_num }}</a>
+                    </li>
+                  {% endif %}
+                {% else %}
+                  <li class="page-item disabled"><a class="page-link" href="#">&hellip;</a></li>
+                {% endif %}
+              {% endfor %}
+
+              {% if sites.has_next %}
+                <li class="page-item">
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.next_num, **(current_query or {})) }}" aria-label="Siguiente">&raquo;</a>
+                </li>
+              {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#" aria-label="Siguiente">&raquo;</a></li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <script>
+    function confirmDeleteSite(el) {
+      var siteId = el.dataset.siteId;
+      var siteName = el.dataset.siteName;
+
+      Swal.fire({
+        title: `¿Eliminar "${siteName}"?`,
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, eliminar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const urlTemplate = `{{ url_for('sites.delete_site', site_id=0) }}`;
+          const url = urlTemplate.replace('/0/', `/${siteId}/`);
+          window.location.href = url;
+        }
+      });
+    }
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const filterTags = document.getElementById('filter-tags');
+      if (filterTags) {
+        new Choices(filterTags, {
+          removeItemButton: true,
+          placeholderValue: 'Selecciona tags',
+          searchPlaceholderValue: 'Buscar tags',
+          shouldSort: false,
+          maxItemCount: 20,
+        });
+      }
+    });
+  </script>
+{% endblock %}

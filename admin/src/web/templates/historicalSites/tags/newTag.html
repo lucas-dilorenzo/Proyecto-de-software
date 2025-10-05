@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+    <h1>
+        <i class="bi bi-tags-fill"></i>
+        <i class="bi bi-plus-circle"></i>
+        Nuevo Tag
+    </h1><br>
+{% endblock %}
+
+{% block body %}
+    <form method="POST" action="{{ url_for('tags.new_tag') }}">
+        <div class="card shadow-sm border-0 rounded-0 bg-white">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Nombre</label>
+                    <input type="text" class="form-control {% if errors and errors.name %}is-invalid{% endif %}" id="name" name="name" 
+                        value="{{ name|default('') }}" required>
+                    {% if errors and errors.name %}
+                        <div class="invalid-feedback">{{ errors.name }}</div>
+                    {% endif %}
+                </div>
+                <!-- <div class="mb-3">
+                    <label for="slug" class="form-label">Slug</label>
+                    <input type="text" class="form-control {% if errors and errors.slug %}is-invalid{% endif %}" id="slug" name="slug" 
+                    value="{{ slug|default('') }}" required>
+                    {% if errors and errors.slug %}
+                        <div class="invalid-feedback">{{ errors.slug }}</div>
+                    {% endif %}
+                </div> -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">Descripción</label>
+                    <textarea class="form-control {% if errors and errors.description %}is-invalid{% endif %}" id="description" name="description" rows="3">{{ description|default('') }}</textarea>
+                    {% if errors and errors.description %}
+                        <div class="invalid-feedback">{{ errors.description }}</div>
+                    {% endif %}
+                    {% if errors and errors.description %}
+                        <div class="invalid-feedback">{{ errors.description }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-actions p-3 d-flex justify-content-end">
+                <div class="col-2">
+                    <button type="submit" class="btn btn-azul">Crear <i class="bi bi-caret-right small"></i></button>
+                </div>
+            </div>
+        </div>
+        <br>
+        
+        <div class="col-2 justify-content-start">
+            <a href="{{ url_for('tags.list_tags') }}" class="btn btn-azul">
+                <i class="bi bi-arrow-left small"></i> Volver
+            </a>
+        </div>
+
+    </form>
+       
+{% endblock %}

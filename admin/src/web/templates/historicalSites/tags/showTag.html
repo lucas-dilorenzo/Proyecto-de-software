@@ -1,0 +1,93 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+  <h1>
+    <i class="bi bi-tags-fill"></i>
+    Tag {{ tag.name }}
+  </h1>
+{% endblock %}
+
+{% block titulo_acciones_body %}
+    <a href="{{ url_for('tags.edit_tag', tag_id=tag.id) }}" class="btn btn-new">
+        Editar <i class="bi bi-pencil small"></i><i class="bi bi-tags-fill small"></i>
+    </a>
+    <button class="btn btn-new" data-delete-url="{{ url_for('tags.delete_tag', tag_id=tag.id) }}" onclick="confirmDeleteSwal(event, this.dataset.deleteUrl)"
+    style="margin-top: 2%; background-color: #dc3545;">
+        Eliminar <i class="bi bi-trash small"></i><i class="bi bi-tags-fill small"></i>
+    </button>
+{% endblock %}
+
+{% block body %}
+    <div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Slug</label>
+                <div class="form-control-plaintext">{{ tag.slug }}</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Descripción</label>
+                <div class="form-control-plaintext">{{ tag.description or '-' }}</div>
+            </div>    
+
+            <div class="mb-3">
+                <label class="form-label">Cantidad de sitios</label>
+                <div class="form-control-plaintext">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
+            </div>
+
+        </div>
+    </div>
+    <br>
+
+    <div class="col-2 justify-content-start" style="margin-top: 2%;">
+        <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+            <i class="bi bi-arrow-left small"></i> Volver
+        </a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        async function confirmDeleteSwal(event, url) {
+            event.preventDefault();
+            const { value: accept } = await Swal.fire({
+                title: '¿Estás segura/o?',
+                text: 'Esta acción eliminará el tag.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            });
+
+            if (!accept) return;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+
+                // parsear el cuerpo: preferir JSON si existe, si no fallback a texto
+                let message = '';
+                const ct = response.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const data = await response.json();
+                    message = data.message || '';
+                } else {
+                    message = await response.text();
+                }
+
+                if (response.ok) {
+                    await Swal.fire('Eliminado', message || 'El tag fue eliminado correctamente.', 'success');
+                    window.location.href = "{{ url_for('tags.list_tags') }}";
+                } else {
+                    await Swal.fire('Error', message || 'No se pudo eliminar el tag.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'No se pudo eliminar el tag. ' + (err.message || ''), 'error');
+            }
+        }
+    </script>
+{% endblock %}
