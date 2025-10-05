@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    {% if tags %}
+    {% if tags and tags.items %}
         <table class="table table-hover align-middle">
             <thead class="table-light">
                 <tr>
@@ -54,7 +54,7 @@
                     <tr>
                         <td>{{ tag.name }}</td>
                         <td>{{ tag.slug }}</td>
-                        <td>{{ tag.description }}</td>
+                        <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ tag.description }}">{{ tag.description }}</td>
                         <td>
                             <a href="{{ url_for('tags.show_tag', tag_id=tag.id) }}" class="btn btn-icon" title="Mostrar Tag" aria-label="Mostrar Tag">
                                 <i class="bi bi-eye"></i>
@@ -113,7 +113,11 @@
             <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding:1rem;">
                 <div class="card-body">
                     <p class="mb-0">
-                        No se encontraron tags.
+                        {% if busqueda %}
+                            No se encontraron tags que coincidan con "<strong>{{ busqueda }}</strong>".
+                        {% else %}
+                            No se encontraron tags.
+                        {% endif %}
                     </p>
                 </div>
             </div>

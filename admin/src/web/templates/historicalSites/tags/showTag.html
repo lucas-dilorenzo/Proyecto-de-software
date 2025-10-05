@@ -18,23 +18,31 @@
 {% endblock %}
 
 {% block body %}
-  <div class="card shadow-sm border-0 rounded-0 bg-white">
-    <div class="card-body">
-      <div class="mb-3">
-        <label class="form-label">Slug</label>
-        <div class="form-control-plaintext">{{ tag.slug }}</div>
-      </div>
+    <div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="mb-3">
+                <label class="form-label">Slug</label>
+                <div class="form-control-plaintext">{{ tag.slug }}</div>
+            </div>
 
-      <div class="mb-3">
-        <label class="form-label">Descripción</label>
-        <div class="form-control-plaintext">{{ tag.description or '-' }}</div>
-      </div>
+            <div class="mb-3">
+                <label class="form-label">Descripción</label>
+                <div class="form-control-plaintext">{{ tag.description or '-' }}</div>
+            </div>    
 
-      <div class="mb-3">
-        <label class="form-label">Cantidad de sitios</label>
-        <div class="form-control-plaintext">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
-      </div>
+            <div class="mb-3">
+                <label class="form-label">Cantidad de sitios</label>
+                <div class="form-control-plaintext">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
+            </div>
 
+        </div>
+    </div>
+    <br>
+
+    <div class="col-2 justify-content-start" style="margin-top: 2%;">
+        <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+            <i class="bi bi-arrow-left small"></i> Volver
+        </a>
     </div>
 {% endblock %}
 
@@ -72,7 +80,7 @@
 
                 if (response.ok) {
                     await Swal.fire('Eliminado', message || 'El tag fue eliminado correctamente.', 'success');
-                    window.location.reload();
+                    window.location.href = "{{ url_for('tags.list_tags') }}";
                 } else {
                     await Swal.fire('Error', message || 'No se pudo eliminar el tag.', 'error');
                 }
