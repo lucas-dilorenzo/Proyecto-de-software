@@ -1,5 +1,6 @@
 # imports habituales de Flask (usados por la factory y las rutas DEV)
-from flask import Flask, render_template, abort, session, redirect, url_for, flash
+from src.core.users.user import UserRole
+from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
 from web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
@@ -104,6 +105,10 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def seed_db():
         seeds.run()
 
+    @app.cli.command("seed-roles")
+    def seed_roles():
+        seeds.roles()
+
     # -------------------------
     # Rutas DEV utilitarias
     # -------------------------
@@ -119,16 +124,16 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
         return "<br>".join(sorted(safe(r) for r in app.url_map.iter_rules()))
 
     # -----------------------------------
-    # Ruta auxiliar de DEV: login Admin
+    # Ruta auxiliar de DEV: login
     # -----------------------------------
-    @app.get("/_dev/login_as_admin")
+    @app.get("/_dev/login")
     def login_as_admin():
         """
         SOLO DESARROLLO:
-        Setea en sesión el rol 'Administrador' para poder probar el módulo de usuarios.
+        Setea en sesión el rol dado para poder probar el módulo de usuarios.
         """
-        session["role"] = "Administrador"
-        flash("Sesión DEV: ingresaste como Administrador.", "success")
+        session["role"] = request.args.get("role", UserRole.SYS_ADMIN.name)
+        flash("Sesión DEV iniciada.", "success")
         return redirect(url_for("home"))
 
     return app

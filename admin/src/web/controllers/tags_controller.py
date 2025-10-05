@@ -8,9 +8,16 @@ from src.core.historicalSites.tags import (
     crear_slug,
 )
 from src.core.historicalSites.tags.tag import Tag
+from src.core.permissions.permission import UserPermission
+from src.web.auth import permission_required
 from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
+
+@tags_bp.before_request
+@permission_required(UserPermission.SITE_TAGS)
+def bp_guard():
+    pass
 
 
 @tags_bp.route("/", methods=["GET"])

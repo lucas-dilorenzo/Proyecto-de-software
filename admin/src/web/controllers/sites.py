@@ -1,4 +1,6 @@
 from src.core import historicalSites
+from src.web.auth import permission_required
+from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
 from flask import (
     Blueprint,
@@ -18,6 +20,7 @@ historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
 @historical_sites_bp.route("/", methods=["GET"])
 @login_required
+@permission_required(UserPermission.SITE_LIST)
 def list_sites():
     # if not authenticated(session):
     # abort(401)
@@ -33,6 +36,7 @@ def list_sites():
 
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
 @login_required
+@permission_required(UserPermission.SITE_LIST)
 def show_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -42,6 +46,7 @@ def show_site(site_id):
 
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
 @login_required
+@permission_required(UserPermission.SITE_CREATE)
 def create_site():
     if request.method == "POST":
         form = SiteForm()
@@ -73,6 +78,7 @@ def create_site():
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])
 @login_required
+@permission_required(UserPermission.SITE_UPDATE)
 def edit_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -100,6 +106,7 @@ def edit_site(site_id):
 
 @historical_sites_bp.route("/<int:site_id>/delete", methods=["GET"])
 @login_required
+@permission_required(UserPermission.SITE_DELETE)
 def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
@@ -112,6 +119,7 @@ def delete_site(site_id):
 
 @historical_sites_bp.route("/download_CSV", methods=["GET"])
 @login_required
+@permission_required(UserPermission.SITE_EXPORT)
 def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
