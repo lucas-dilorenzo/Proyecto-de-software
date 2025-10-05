@@ -8,6 +8,8 @@ Devuelve dos diccionarios: uno con los datos limpios y otro con los errores enco
 import re
 from typing import Dict, Tuple, Any
 
+from src.core.users.user import UserRole
+
 # Expresión regular para validar emails simples
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -72,7 +74,7 @@ def validate_user_payload(
         cleaned_data["activo"] = activo == "SI"  # Convierte a booleano
 
     # Validación de rol
-    if rol not in ("Usuario público", "Editor", "Administrador"):
+    if rol not in UserRole.__members__.values():
         errors["rol"] = "Rol inválido."
     else:
         cleaned_data["rol"] = rol
