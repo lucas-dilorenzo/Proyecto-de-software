@@ -2,6 +2,11 @@ from src.core.database import db
 from sqlalchemy.orm import relationship
 from datetime import date
 
+sites_tags = db.Table(
+    'sites_tags',
+    db.Column('site_id', db.Integer, db.ForeignKey('sites.id'), primary_key=True),
+    db.Column('tag_id', db.Integer, db.ForeignKey('tags.id'), primary_key=True)
+)
 
 class Site(db.Model):
     __tablename__ = "sites"
@@ -18,6 +23,8 @@ class Site(db.Model):
     category = db.Column(db.String, nullable=True)
     registration_date = db.Column(db.Date, nullable=True)
     visibility = db.Column(db.Boolean, default=True)
+
+    tags = relationship('Tag', secondary=sites_tags, backref='sites')
 
     def __init__(
         self,

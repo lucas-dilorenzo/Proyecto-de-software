@@ -7,6 +7,11 @@ class Config(object):
     DEBUG = True
     TESTING = False
     SECRET_KEY = "secret"
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 10,
+        "pool_recycle": 60,
+        "pool_pre_ping": True
+    }
 
 
 class ProductionConfig(Config):

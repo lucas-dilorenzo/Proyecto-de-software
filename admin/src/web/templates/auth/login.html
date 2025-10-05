@@ -26,8 +26,8 @@
     <style>
       body {
         font-family: Quicksand, sans-serif;
-        background-color: #ebe6df;
-        color: #333;
+        background-color: #004c82 ;
+        color: #ffffff;
       }
     </style>
   </head>
@@ -64,15 +64,17 @@
               </div>
               {% endfor %} {% endif %} {% endwith %}
             </div>
-            <!--  -->
-            <div class="card shadow-sm border-0 rounded-3">
+            <!-- CARD PRINCIPAL  -->
+            <div class="card shadow-sm border-0 rounded-0 bg-white">
+              <div class="card-body">
+            <!-- <div class="card shadow-sm border-0 rounded-3">
               <div class="card-header bg-primary text-white text-center py-3">
                 <h4 class="mb-0">
                   <i class="bi bi-box-arrow-in-right me-2"></i>
                   Acceso al Sistema
                 </h4>
               </div>
-              <div class="card-body p-4">
+              <div class="card-body p-4"> -->
                 <form
                   action="{{ url_for('auth.login') }}"
                   method="POST"
@@ -124,7 +126,7 @@
 
                   <!-- Botones -->
                   <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary btn-lg">
+                    <button type="submit" class="btn btn-primary btn-lg" style="background-color: #004c82; border: none; border-radius: 0%;">
                       <i class="bi bi-box-arrow-in-right me-2"></i>
                       Iniciar Sesión
                     </button>
