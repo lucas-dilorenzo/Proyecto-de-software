@@ -20,19 +20,19 @@
 {% block body %}
     <div class="card shadow-sm border-0 rounded-0 bg-white">
         <div class="card-body">
-            <div class="mb-3">
-                <label class="form-label">Slug</label>
-                <div class="form-control-plaintext">{{ tag.slug }}</div>
+            <div class="row mb-2 align-items-center">
+                <div class="col-3 fw-bold">Slug</div>
+                <div class="col-9">{{ tag.slug }}</div>
             </div>
 
-            <div class="mb-3">
-                <label class="form-label">Descripción</label>
-                <div class="form-control-plaintext">{{ tag.description or '-' }}</div>
-            </div>    
+            <div class="row mb-2 align-items-center">
+                <div class="col-3 fw-bold">Descripción</div>
+                <div class="col-9">{{ tag.description or '-' }}</div>
+            </div>
 
-            <div class="mb-3">
-                <label class="form-label">Cantidad de sitios</label>
-                <div class="form-control-plaintext">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
+            <div class="row mb-2 align-items-center">
+                <div class="col-3 fw-bold">Cantidad de sitios utilizando el tag</div>
+                <div class="col-9">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
             </div>
 
         </div>

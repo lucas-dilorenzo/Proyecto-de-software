@@ -18,7 +18,7 @@ def bp_guard():
 def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
-    per_page = 5
+    per_page = 25
 
     # Solo llama a la capa de servicios
     tags_paginated = get_tags_paginated(busqueda, page, per_page)
