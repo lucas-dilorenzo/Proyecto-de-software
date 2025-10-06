@@ -98,3 +98,43 @@ def get_all_roles():
 
 def get_role_by_name(name: UserRole):
     return Role.query.filter_by(name=name.value).first()
+
+
+def get_users_filtered(page=1, per_page=25, email="", activo="", rol="", order="desc"):
+    """
+    Obtiene usuarios con filtros y paginación
+
+    Args:
+        page (int): Número de página actual
+        per_page (int): Cantidad de usuarios por página
+        email (str): Filtro por email (búsqueda parcial)
+        activo (str): Filtro por estado ("SI", "NO" o vacío para todos)
+        rol (str): Filtro por rol (debe coincidir con UserRole.value)
+        order (str): Ordenamiento por fecha ("asc" o "desc")
+
+    Returns:
+        Un objeto paginated con los usuarios filtrados
+    """
+    # Construir la consulta base
+    query = User.query
+
+    # Aplicar filtros
+    if email:
+        query = query.filter(User.email.ilike(f"%{email}%"))
+
+    if activo in ("SI", "NO"):
+        query = query.filter(User.activo == (activo == "SI"))
+
+    if rol:
+        role_enum = next((r for r in UserRole if r.value == rol), None)
+        if role_enum:
+            query = query.filter(User.rol == role_enum)
+
+    # Aplicar ordenamiento
+    if order == "asc":
+        query = query.order_by(User.created_at.asc())
+    else:
+        query = query.order_by(User.created_at.desc())
+
+    # Ejecutar la consulta paginada
+    return query.paginate(page=page, per_page=per_page, error_out=False)
