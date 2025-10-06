@@ -42,11 +42,11 @@ from src.web.helpers import login_required
 """
 
 
-def create_app(env: str = "development", static_folder: str = "../../static") -> Flask:
+def create_app(env: str = "production", static_folder: str = "../../static") -> Flask:
     app = Flask(__name__, static_folder=static_folder)
 
     # Cargar configuración según el entorno
-    app.config.from_object(config_map.get(env, config_map["development"]))
+    app.config.from_object(config_map.get(env, config_map["production"]))
 
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
