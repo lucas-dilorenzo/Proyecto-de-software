@@ -21,7 +21,7 @@ class ProductionConfig(Config):
     DB_USER = environ.get("DB_USER")
     DB_PASS = environ.get("DB_PASS")
     DB_NAME = environ.get("DB_NAME")
-    SQLALCHEMY_DATABASE_URI = f"postgresql://{environ.get('DATABASE_URL')}"
+    SQLALCHEMY_DATABASE_URI = environ.get("DATABASE_URL")
 
 
 class DevelopmentConfig(Config):

@@ -56,8 +56,7 @@ def create_app(env: str = "production", static_folder: str = "../../static") -> 
 
     # Cargar configuración según el entorno
     app.config.from_object(config_map.get(env, config_map["production"]))
-    print(app.config["SQLALCHEMY_DATABASE_URI"])
-    print(app.config["DB_HOST"])
+
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
 
