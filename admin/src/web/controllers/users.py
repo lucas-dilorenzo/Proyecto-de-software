@@ -200,6 +200,9 @@ def update_user(id: int):
     if data.get("password"):
         user.password_hash = generate_password_hash(data["password"])
     if "activo" in data:  # data ya tiene el booleano correcto del validador
+        if not data["activo"] and user.rol in [UserRole.ADMIN, UserRole.SYS_ADMIN]:
+            flash("No se puede desactivar un usuario Administrador.", "danger")
+            return redirect(url_for("users.edit_user", id=id))
         user.activo = data["activo"]
     if data.get("rol"):
         role_enum = next((r for r in UserRole if r.value == data["rol"]), user.rol)
