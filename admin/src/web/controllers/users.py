@@ -166,7 +166,7 @@ def create_user():
         )
 
     role_enum = next((r for r in UserRole if r.value == data["rol"]), UserRole.PUBLIC)
-    activo_flag = bool(request.form.get("activo")) or data.get("activo", True)
+    activo_flag = data.get("activo", True)
 
     users.create_user(
         email=data["email"],
@@ -237,8 +237,8 @@ def update_user(id: int):
     user.apellido = data["apellido"]
     if data.get("password"):
         user.password_hash = generate_password_hash(data["password"])
-    if request.form.get("activo") is not None:
-        user.activo = bool(request.form.get("activo"))
+    if "activo" in data:  # data ya tiene el booleano correcto del validador
+        user.activo = data["activo"]
     if data.get("rol"):
         role_enum = next((r for r in UserRole if r.value == data["rol"]), user.rol)
         user.rol = role_enum
