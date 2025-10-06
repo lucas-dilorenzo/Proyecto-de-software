@@ -1,6 +1,11 @@
 from src.core.historicalSites.tags.tag import Tag  # noqa: F401
 from src.core.database import db
 
+def get_tags_paginated(busqueda, page=1, per_page=3):
+    query = Tag.query
+    if busqueda:
+        query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
+    return query.paginate(page=page, per_page=per_page, error_out=False)
 
 # Retorna todos los tags con nombre ascendente
 def get_all_tags():
@@ -78,6 +83,17 @@ def crear_slug(text):
         texto_slug = texto_slug.replace("--", "-")
     texto_slug = texto_slug.strip("-")
     return texto_slug
+
+
+def get_tags(busqueda: str = None):
+    """
+    Retorna una lista de Tag ordenados por nombre. 
+    Si viene cargado el parametro busqueda, lo filtro.
+    """
+    query = db.session.query(Tag)
+    if busqueda:
+        query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
+    return query.order_by(Tag.name.asc(), Tag.created_at.desc()).all()
 
 def delete_tag(tag_id):
     tag = get_tag_by_id(tag_id)

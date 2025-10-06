@@ -65,7 +65,7 @@
             <tr>
                 <td>{{ u.email }}</td>
                 <td>{{ u.nombre }} {{ u.apellido }}</td>
-                <td>{{ u.rol.value }}</td>
+                <td>{{ u.rol }}</td>
                 <td>
                     {% if u.activo %}
                     <span class="badge bg-success">SI</span>
@@ -97,23 +97,30 @@
 <div class="card-footer d-flex justify-content-center">
     <ul class="pagination">
         {% for page_num in users.iter_pages(left_edge=1, right_edge=1,
-        left_current=1, right_current=2) %} {% if page_num %} {% if users.page ==
-        page_num %}
-        <li class="page-item disabled">
-            <a class="page-link" href="{{ url_for('users.list_users', page=page_num)}}">{{ page_num }}</a>
+        left_current=1, right_current=2) %}
+        {% if page_num %}
+        {% if users.page == page_num %}
+        <li class="page-item active">
+            <a class="page-link"
+                href="{{ url_for('users.list_users', page=page_num, email=email, activo=activo, rol=rol, order=order)}}">{{
+                page_num }}</a>
         </li>
         {% else %}
         <li class="page-item">
-            <a class="page-link" href="{{ url_for('users.list_users', page=page_num)}}">{{ page_num }}</a>
+            <a class="page-link"
+                href="{{ url_for('users.list_users', page=page_num, email=email, activo=activo, rol=rol, order=order)}}">{{
+                page_num }}</a>
         </li>
-        {% endif %} {% else %}
+        {% endif %}
+        {% else %}
         <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
-        {% endif %} {% endfor %}
+        {% endif %}
+        {% endfor %}
     </ul>
 </div>
 
 <!-- Resumen de cantidad de usuarios -->
-<!-- <p class="text-muted">
-    Total: {{ total }} usuarios — mostrando hasta {{ per_page }} por página. -->
-<!-- </p> -->
+<p class="text-muted">
+    Total: {{ users.total }} usuarios — mostrando hasta {{ users.per_page }} por página.
+</p>
 {% endblock %}

@@ -364,3 +364,31 @@ i.small {
 .flash-container .alert{
   margin: 0;
 }
+
+/* Make pagination active page show colored text (#004c82) with transparent background */
+.pagination .page-item.active .page-link {
+  background-color: transparent !important;
+  border-color: transparent !important;
+  color: #004c82 !important;
+  font-weight: 600;
+}
+
+/* Ensure the pagination links keep the blue color on hover */
+.pagination .page-link {
+  color: #004c82;
+}
+.pagination .page-link:hover {
+  color: #002a4a;
+}
+
+/* Make active pagination item have blue background and white text */
+.pagination .page-item.active .page-link {
+  background-color: #004c82 !important;
+  border-color: #004c82 !important;
+  color: #ffffff !important;
+}
+
+/* Ensure focus state is visible and accessible */
+.pagination .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0,76,130,0.25);
+}

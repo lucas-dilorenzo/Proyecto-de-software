@@ -44,30 +44,32 @@ class Permission(db.Model):
     __tablename__ = "permissions"
     __table_args__ = (UniqueConstraint("name", name="uq_permissions_name"),)
 
-    id: Mapped[int] = Column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = Column(String(20), nullable=False)
-    roles: Mapped[list[Role]] = relationship(secondary=role_permissions)
+    id = db.Column(
+        db.Integer, primary_key=True, autoincrement=True
+    )  # Agregar db.Integer aquí
+    name = db.Column(db.String(20), nullable=False)  # Usar db.String en vez de String
+    roles = db.relationship("Role", secondary=role_permissions, backref="permissions")
 
     def __repr__(self):
         return f"<Permission {self.name}>"
 
 
-class UserPermission(str, Enum):
+class UserPermission(tuple[str, list[UserRole]], Enum):
     """
     Enum de permisos posibles.
     """
 
-    USER_CREATE = "user_create"
-    USER_LIST = "user_list"
-    USER_UPDATE = "user_update"
-    USER_DELETE = "user_delete"
-    USER_ROLE = "user_role"
-    USER_BLOCK = "user_block"
-    SITE_CREATE = "site_create"
-    SITE_LIST = "site_list"
-    SITE_UPDATE = "site_update"
-    SITE_DELETE = "site_delete"
-    SITE_TAGS = "site_tags"
-    SITE_EXPORT = "site_export"
-    SITE_HISTORY = "site_history"
-    FLAGS = "flags"
+    USER_CREATE = ("user_create", [UserRole.ADMIN])
+    USER_LIST = ("user_list", [UserRole.ADMIN])
+    USER_UPDATE = ("user_update", [UserRole.ADMIN])
+    USER_DELETE = ("user_delete", [UserRole.ADMIN])
+    USER_ROLE = ("user_role", [UserRole.ADMIN])
+    USER_BLOCK = ("user_block", [UserRole.ADMIN])
+    SITE_CREATE = ("site_create", [UserRole.EDITOR, UserRole.ADMIN])
+    SITE_LIST = ("site_list", [UserRole.PUBLIC, UserRole.EDITOR, UserRole.ADMIN])
+    SITE_UPDATE = ("site_update", [UserRole.EDITOR, UserRole.ADMIN])
+    SITE_DELETE = ("site_delete", [UserRole.ADMIN])
+    SITE_TAGS = ("site_tags", [UserRole.EDITOR, UserRole.ADMIN])
+    SITE_EXPORT = ("site_export", [UserRole.ADMIN])
+    SITE_HISTORY = ("site_history", [UserRole.EDITOR, UserRole.ADMIN])
+    FLAGS = ("flags", [UserRole.SYS_ADMIN])

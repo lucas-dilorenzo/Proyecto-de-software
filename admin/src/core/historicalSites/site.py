@@ -1,6 +1,13 @@
+from geoalchemy2 import Geometry
 from src.core.database import db
 from sqlalchemy.orm import relationship
 from datetime import date
+
+sites_tags = db.Table(
+    "sites_tags",
+    db.Column("site_id", db.Integer, db.ForeignKey("sites.id"), primary_key=True),
+    db.Column("tag_id", db.Integer, db.ForeignKey("tags.id"), primary_key=True),
+)
 
 
 class Site(db.Model):
@@ -12,12 +19,14 @@ class Site(db.Model):
     description = db.Column(db.String, nullable=True)
     city = db.Column(db.String, nullable=True)
     province = db.Column(db.String, nullable=True)
-    location = db.Column(db.String, nullable=True)  # Could be coordinates
+    location = db.Column(Geometry(geometry_type="POINT", srid=4326), nullable=True)
     conservation_status = db.Column(db.String, nullable=True)
     year_declared = db.Column(db.Integer, nullable=True)
     category = db.Column(db.String, nullable=True)
     registration_date = db.Column(db.Date, nullable=True)
     visibility = db.Column(db.Boolean, default=True)
+
+    tags = relationship("Tag", secondary=sites_tags, backref="sites")
 
     def __init__(
         self,
@@ -47,4 +56,3 @@ class Site(db.Model):
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"
-
