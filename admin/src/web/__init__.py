@@ -1,6 +1,15 @@
 # imports habituales de Flask (usados por la factory y las rutas DEV)
 from src.core.users.user import UserRole
-from flask import Flask, render_template, abort, request, session, redirect, url_for, flash
+from flask import (
+    Flask,
+    render_template,
+    abort,
+    request,
+    session,
+    redirect,
+    url_for,
+    flash,
+)
 from web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
@@ -42,11 +51,11 @@ from src.web.helpers import login_required
 """
 
 
-def create_app(env: str = "development", static_folder: str = "../../static") -> Flask:
+def create_app(env: str = "production", static_folder: str = "../../static") -> Flask:
     app = Flask(__name__, static_folder=static_folder)
 
     # Cargar configuración según el entorno
-    app.config.from_object(config_map.get(env, config_map["development"]))
+    app.config.from_object(config_map.get(env, config_map["production"]))
 
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
