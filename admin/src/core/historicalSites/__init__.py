@@ -4,6 +4,8 @@ from src.core.historicalSites.site import Site
 from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
+from geoalchemy2 import WKTElement
+
 
 def create_site(**kwargs):
     """
@@ -25,7 +27,19 @@ def create_site(**kwargs):
     Returns:
         Site: The newly created Site object.
     """
-    site = Site(**kwargs)
+    site = Site(
+        name=kwargs.get("name"),
+        description_short=kwargs.get("description_short"),
+        description=kwargs.get("description"),
+        city=kwargs.get("city"),
+        province=kwargs.get("province"),
+        location=WKTElement(f"POINT({kwargs.get('location')})", srid=4326),
+        conservation_status=kwargs.get("conservation_status"),
+        year_declared=kwargs.get("year_declared"),
+        category=kwargs.get("category"),
+        registration_date=kwargs.get("registration_date"),
+        visibility=kwargs.get("visibility", True),
+    )
     db.session.add(site)
     db.session.commit()
     return site
@@ -120,7 +134,6 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
         )
     return sites
 
-
     # def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
     #     """
     #     Retrieves a paginated list of historical sites from the database.
@@ -140,6 +153,7 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
     #             page=page, per_page=per_page, error_out=False
     #         )
     #     return sites
+
 
 def get_sites_paginated_by_id(
     page: int = 1,
@@ -258,6 +272,7 @@ def get_sites_paginated_by_id(
     sites = query.paginate(page=page, per_page=per_page, error_out=False)
     return sites
 
+
 def asignar_tags_a_sitio(site: Site, tags: list):
     """
     Asigna tags a un sitio histórico.
@@ -270,6 +285,7 @@ def asignar_tags_a_sitio(site: Site, tags: list):
     site.tags = tags
     db.session.commit()
     return site
+
 
 def get_all_provinces():
     """
