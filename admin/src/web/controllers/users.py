@@ -34,80 +34,36 @@ def _clamp_per_page(val) -> int:
 @login_required
 @permission_required(UserPermission.USER_LIST)
 def list_users():
-    # if not authenticated(session):
-    # abort(401)
+    # Recuperar parámetros de filtrado
+    email = (request.args.get("email") or "").strip()
+    activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""
+    rol = (request.args.get("rol") or "").strip()
+    order = (request.args.get("order") or "desc").lower()
+    page = max(1, int(request.args.get("page") or 1))
+    per_page = _clamp_per_page(request.args.get("per_page") or 25)
 
-    # if not has_permission(session["user"].id, permission="asc_index"):
-    #     abort(403)
-    page = request.args.get("page", 1, type=int)
-    usersList = users.get_users_paginated_by_id(page=page, per_page=25, order="asc")
-    return render_template("users/list.html", users=usersList)
+    # Usar la función get_users_filtered del modelo
+    usersList = users.get_users_filtered(
+        page=page,
+        per_page=per_page,
+        email=email,
+        activo=activo,
+        rol=rol,
+        order=order,
+    )
 
-    # """
-    # Listado de usuarios con filtros por email, activo, rol y orden.
-    # Soporta paginación.
-    # """
-    # email = (request.args.get("email") or "").strip()
-    # activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""
-    # rol = (request.args.get("rol") or "").strip()
-    # order = (request.args.get("order") or "desc").lower()
-    # page = max(1, int(request.args.get("page") or 1))
-    # per_page = _clamp_per_page(request.args.get("per_page") or 25)
-
-    # stmt = select(User)
-    # if email:
-    #     stmt = stmt.where(User.email.ilike(f"%{email}%"))
-    # if activo in ("SI", "NO"):
-    #     stmt = stmt.where(User.activo.is_(activo == "SI"))
-    # if rol:
-    #     role_enum = next((r for r in UserRole if r.value == rol), None)
-    #     if role_enum:
-    #         stmt = stmt.where(User.rol == role_enum)
-
-    # if order == "asc":
-    #     stmt = stmt.order_by(asc(User.created_at))
-    # else:
-    #     order = "desc"
-    #     stmt = stmt.order_by(desc(User.created_at))
-
-    # # Total de usuarios para paginación
-    # total = db.session.scalar(select(func.count()).select_from(stmt.subquery()))
-    # offset = (page - 1) * per_page
-    # users = db.session.execute(stmt.limit(per_page).offset(offset)).scalars().all()
-
-    # roles = [r.value for r in UserRole]
-
-    # from urllib.parse import urlencode
-
-    # def qs(**overrides):
-    #     """
-    #     Genera la query string para mantener los filtros y paginación en los links.
-    #     """
-    #     base = dict(
-    #         email=email,
-    #         activo=activo,
-    #         rol=rol,
-    #         order=order,
-    #         page=page,
-    #         per_page=per_page,
-    #     )
-    #     base.update({k: v for k, v in overrides.items() if v is not None})
-    #     clean = {k: v for k, v in base.items() if v not in ("", None)}
-    #     return urlencode(clean)
-
-    # return render_template(
-    #     "users/list.html",
-    #     users=users,
-    #     email=email,
-    #     activo=activo,
-    #     rol=rol,
-    #     order=order,
-    #     page=page,
-    #     per_page=per_page,
-    #     total=total,
-    #     roles=roles,
-    #     qs=qs,
-    # )
+    # Pasar todos los parámetros al template para mantener el estado de los filtros
+    return render_template(
+        "users/list.html",
+        users=usersList,
+        email=email,
+        activo=activo,
+        rol=rol,
+        order=order,
+        page=page,
+        per_page=per_page,
+        roles=[r.value for r in UserRole],
+    )
 
 
 @users_bp.get("/new")
@@ -166,7 +122,7 @@ def create_user():
         )
 
     role_enum = next((r for r in UserRole if r.value == data["rol"]), UserRole.PUBLIC)
-    activo_flag = bool(request.form.get("activo")) or data.get("activo", True)
+    activo_flag = data.get("activo", True)
 
     users.create_user(
         email=data["email"],
@@ -237,8 +193,8 @@ def update_user(id: int):
     user.apellido = data["apellido"]
     if data.get("password"):
         user.password_hash = generate_password_hash(data["password"])
-    if request.form.get("activo") is not None:
-        user.activo = bool(request.form.get("activo"))
+    if "activo" in data:  # data ya tiene el booleano correcto del validador
+        user.activo = data["activo"]
     if data.get("rol"):
         role_enum = next((r for r in UserRole if r.value == data["rol"]), user.rol)
         user.rol = role_enum

@@ -518,13 +518,12 @@ def run():
                     historicalSites.asignar_tags_a_sitio(existing_site, tag_objs)
             print(f"Site already exists: {site_data['name']}")
 
-    
-
     print("Database seeding complete.")
 
 
 def users():
-    """Crea un usuario administrador por defecto si no existe."""
+    """Crea un usuario administrador por defecto si no existe y usuarios de prueba."""
+    # Crear admin si no existe
     exists = User.query.filter_by(email="admin@example.com").first()
     if not exists:
         admin = User(
@@ -536,10 +535,64 @@ def users():
             rol=UserRole.ADMIN,
         )
         db.session.add(admin)
-        db.session.commit()
         print("Admin creado: admin@example.com / admin123")
     else:
         print("El admin ya existe.")
+
+    # Crear 30 usuarios de prueba
+    test_users = []
+
+    # 10 administradores (algunos inactivos)
+    for i in range(1, 11):
+        email = f"admin{i}@example.com"
+        if not User.query.filter_by(email=email).first():
+            test_users.append(
+                User(
+                    email=email,
+                    nombre=f"Admin{i}",
+                    apellido=f"Apellido{i}",
+                    password_hash=generate_password_hash("password123"),
+                    activo=i % 3 != 0,  # Cada tercer usuario inactivo
+                    rol=UserRole.ADMIN,
+                )
+            )
+
+    # 10 editores (algunos inactivos)
+    for i in range(1, 11):
+        email = f"editor{i}@example.com"
+        if not User.query.filter_by(email=email).first():
+            test_users.append(
+                User(
+                    email=email,
+                    nombre=f"Editor{i}",
+                    apellido=f"Apellido{i}",
+                    password_hash=generate_password_hash("password123"),
+                    activo=i % 4 != 0,  # Cada cuarto usuario inactivo
+                    rol=UserRole.EDITOR,
+                )
+            )
+
+    # 10 usuarios públicos (algunos inactivos)
+    for i in range(1, 11):
+        email = f"user{i}@example.com"
+        if not User.query.filter_by(email=email).first():
+            test_users.append(
+                User(
+                    email=email,
+                    nombre=f"Usuario{i}",
+                    apellido=f"Apellido{i}",
+                    password_hash=generate_password_hash("password123"),
+                    activo=i % 5 != 0,  # Cada quinto usuario inactivo
+                    rol=UserRole.PUBLIC,
+                )
+            )
+
+    if test_users:
+        db.session.add_all(test_users)
+        db.session.commit()
+        print(f"Se crearon {len(test_users)} usuarios de prueba")
+    else:
+        print("Todos los usuarios de prueba ya existen")
 
 
 def roles():
