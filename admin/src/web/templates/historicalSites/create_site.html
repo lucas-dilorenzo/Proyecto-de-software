@@ -34,19 +34,14 @@
     margin-top: 10px;
   }
 </style>
-{% endblock %}
-
-{% block title %} Crear Sitio Histórico {% endblock %} 
-
-{% block titulo_body %}
-  <h1 style="margin-top: 2%">
-    <i class="bi bi-geo"></i>
-    <i class="bi bi-plus-circle"></i>
-    Nuevo Sitio Histórico
-  </h1>
-{% endblock %} 
-
-{% block body %}
+{% endblock %} {% block title %} Crear Sitio Histórico {% endblock %} {% block
+titulo_body %}
+<h1 style="margin-top: 2%">
+  <i class="bi bi-geo"></i>
+  <i class="bi bi-plus-circle"></i>
+  Nuevo Sitio Histórico
+</h1>
+{% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
   <div class="card-body">
     <form method="POST" action="{{ url_for('sites.create_site') }}">
@@ -238,12 +233,7 @@
               </div>
             </div>
           </div> -->
-      <select
-        name="tags"
-        id="tags"
-        class="form-select form-select-sm"
-        multiple
-      >
+      <select name="tags" id="tags" class="form-select form-select-sm" multiple>
         {% for tag in tags %}
         <option value="{{ tag.id }}">{{ tag.name }}</option>
         {% endfor %}
@@ -301,7 +291,7 @@
     // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    document.getElementById("location").value = lat + "+" + lng;
+    document.getElementById("location").value = lat + " " + lng;
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
