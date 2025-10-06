@@ -44,7 +44,9 @@ def list_sites():
         visibility = None
     else:
         # si cualquiera de los valores es truthy, lo tomamos como True
-        visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
+        visibility = any(
+            v.lower() in ("1", "true", "on", "yes") for v in visibility_list
+        )
     # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
@@ -65,7 +67,7 @@ def list_sites():
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
     # determinar si hay filtros activos para mostrar el botón Limpiar
-    visibility_present = 'visibility' in request.args
+    visibility_present = "visibility" in request.args
     has_filters = any(
         [
             stringBusqueda,
@@ -183,7 +185,9 @@ def create_site():
             )
 
     # GET
-    return render_template("historicalSites/create_site.html", tags=tags, visibility=True)
+    return render_template(
+        "historicalSites/create_site.html", tags=tags, visibility=True
+    )
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])
@@ -207,11 +211,12 @@ def edit_site(site_id):
             year_declared=formulario.get("year_declared"),
             category=formulario.get("category"),
             registration_date=formulario.get("registration_date"),
-            visibility=formulario.get("visibility") == "on",
+            visibility=formulario.get("visibility") == "true",
         )
+        print("Visibilidad: ", formulario.get("visibility"))
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
-            selected_tag_ids = request.form.getlist('tags')
+            selected_tag_ids = request.form.getlist("tags")
             tag_objs = []
             for t in selected_tag_ids:
                 try:
