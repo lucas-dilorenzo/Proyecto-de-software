@@ -33,6 +33,15 @@
     width: 100%;
     margin-top: 10px;
   }
+
+  .custom-marker {
+    background: transparent;
+    border: none;
+  }
+
+  .custom-marker div {
+    position: relative;
+  }
 </style>
 {% endblock %} {% block title %} Home - App37 {% endblock %} {% block
 titulo_body %}
@@ -72,6 +81,48 @@ titulo_body %}
     }).addTo(map);
     console.log("Capa de tiles añadida");
 
+    // Función para crear iconos de diferentes colores
+    function createColorIcon(color) {
+      return L.divIcon({
+        className: 'custom-marker',
+        html: `<div style="
+          background-color: ${color};
+          width: 25px;
+          height: 25px;
+          border-radius: 50% 50% 50% 0;
+          border: 3px solid #ffffff;
+          transform: rotate(-45deg);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        ">
+          <div style="
+            width: 8px;
+            height: 8px;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 6px;
+            left: 6px;
+          "></div>
+        </div>`,
+        iconSize: [25, 25],
+        iconAnchor: [12, 25]
+      });
+    }
+
+    // Array de colores para los marcadores
+    var markerColors = [
+      '#e74c3c', // rojo
+      '#3498db', // azul
+      '#2ecc71', // verde
+      '#f39c12', // naranja
+      '#9b59b6', // púrpura
+      '#1abc9c', // turquesa
+      '#e67e22', // naranja oscuro
+      '#34495e', // gris azulado
+      '#f1c40f', // amarillo
+      '#e91e63'  // rosa
+    ];
+
     // Añadir marcadores para todos los sitios históricos
     if (sites && Array.isArray(sites) && sites.length > 0) {
       console.log("Procesando sitios para marcadores...");
@@ -86,7 +137,13 @@ titulo_body %}
         if (site.visibility && site.latitude != null && site.longitude != null &&
             !isNaN(site.latitude) && !isNaN(site.longitude)) {
 
-          var marker = L.marker([parseFloat(site.latitude), parseFloat(site.longitude)])
+          // Seleccionar un color basado en el índice del sitio
+          var colorIndex = validSites.length % markerColors.length;
+          var markerColor = markerColors[colorIndex];
+
+          var marker = L.marker([parseFloat(site.latitude), parseFloat(site.longitude)], {
+            icon: createColorIcon(markerColor)
+          })
             .addTo(map)
             .bindPopup(`
               <div>
@@ -115,7 +172,15 @@ titulo_body %}
 
         try {
           map.fitBounds(group.getBounds().pad(0.1));
-          console.log("Vista ajustada para mostrar todos los marcadores");
+
+          // Asegurar un zoom mínimo para mejor visualización
+          var currentZoom = map.getZoom();
+          var minZoom = 2; // Zoom mínimo deseado
+          if (currentZoom < minZoom) {
+            map.setZoom(minZoom);
+          }
+
+          console.log("Vista ajustada para mostrar todos los marcadores con zoom:", map.getZoom());
         } catch (error) {
           console.warn("No se pudo ajustar la vista del mapa:", error);
         }
