@@ -14,16 +14,13 @@
 {% endblock %}
 
 {% block body %}
-  <!-- Botón para mostrar/ocultar filtros -->
-  <div class="d-flex justify-content-end mb-3">
+  <!-- Botones en la misma fila -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
       <i class="bi bi-funnel"></i> Filtros avanzados
     </button>
-  </div>
-  <!-- Botón para exportar CSV -->
-  <div class="d-flex justify-content-end align-items-center" style="margin-top: 1rem;">
     <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
-    style="background-color: #0b5e2e; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
+    style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
       Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
     </a>
   </div>
