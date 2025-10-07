@@ -155,11 +155,6 @@ def create_site():
                 visibility=visibility_,
             )
 
-            #registro de la creación en el log
-            log = historicalSites.log_site_action(
-                site_id=site.id, user_id=session.get("user"), action="creación"
-            )  
-
             # Asignar tags seleccionados (si los hay)
             try:
                 selected_tag_ids = request.form.getlist("tags")
@@ -257,24 +252,12 @@ def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
-    # if request.method == "POST":
-    #     # llamada vía AJAX desde SweetAlert
-    #     try:
-    #         historicalSites.delete_site(site_id)
-    #         return {"message": f"Sitio {site.name} eliminado correctamente."}, 200
-    #     except Exception as e:
-    #         return {"message": str(e)}, 500
 
-    # fallback GET (compatibilidad)
     if request.method == "GET":
         #eliminado=site.id
         try:
-            #registro de la eliminación en el log
             historicalSites.delete_site(site_id)
             flash(f"Sitio {site.name} eliminado correctamente.", "success")
-           # log = historicalSites.log_site_action(
-           #     site_id=eliminado, user_id=session.get("user"), action="eliminación"
-           # ) 
         except Exception as e:
             flash(f"No se pudo eliminar el sitio: {e}", "danger") 
         return redirect(url_for("sites.list_sites"))

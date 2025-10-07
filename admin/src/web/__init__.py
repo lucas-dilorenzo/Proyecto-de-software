@@ -39,6 +39,8 @@ from src.web.controllers.sites import get_categories, get_conservation_statuses
 from src.web import helpers
 from src.web.helpers import login_required
 
+from src.web.auditoria import site_events
+
 """
     Crea la aplicación Flask.
     Parámetros:
