@@ -113,7 +113,7 @@ block titulo_body %}
   // Obtener coordenadas del sitio histórico
   var lat = {{ site.latitude }};
   var lng = {{ site.longitude }};
-
+  console.log("Coordenadas iniciales - Latitud: " + lat + ", Longitud: " + lng);
   // Inicializar mapa centrado en las coordenadas del sitio
   var map = L.map("map").setView([lat, lng], 15);
 

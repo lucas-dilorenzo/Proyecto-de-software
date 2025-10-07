@@ -92,6 +92,9 @@ def update_site(site_id, **kwargs):
     if not site:
         return None
     for key, value in kwargs.items():
+        if key == "location" and value is not None:
+            value = WKTElement(f"POINT({value})", srid=4326)
+            print(f"Updating location to: {value}")
         setattr(site, key, value)
     db.session.commit()
     return site

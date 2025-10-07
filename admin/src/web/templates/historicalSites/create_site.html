@@ -295,7 +295,9 @@ titulo_body %}
     // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    document.getElementById("location").value = lat + " " + lng;
+    // Formato correcto: "longitud latitud" (compatible con seeds y PostGIS)
+    document.getElementById("location").value = lng + " " + lat;
+    console.log("Latitud: " + lat + ", Longitud: " + lng);
   });
 
   // Función de validación del formulario
