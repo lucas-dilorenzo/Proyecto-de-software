@@ -19,6 +19,12 @@ from src.core.permissions.permission import UserPermission
 users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
 
 
+@users_bp.before_request
+@permission_required(UserPermission.USER_MODULE)
+def bp_guard():
+    pass
+
+
 def _clamp_per_page(val) -> int:
     """
     Limita la cantidad de resultados por página entre 1 y 50.
@@ -32,7 +38,7 @@ def _clamp_per_page(val) -> int:
 
 @users_bp.get("/")
 @login_required
-@permission_required(UserPermission.USER_LIST)
+# @permission_required(UserPermission.USER_LIST)
 def list_users():
     # Recuperar parámetros de filtrado
     email = (request.args.get("email") or "").strip()
@@ -68,7 +74,7 @@ def list_users():
 
 @users_bp.get("/new")
 @login_required
-@permission_required(UserPermission.USER_CREATE)
+# @permission_required(UserPermission.USER_CREATE)
 def new_user():
     """
     Muestra el formulario para crear un nuevo usuario.
@@ -86,7 +92,7 @@ def new_user():
 
 @users_bp.post("/new")
 @login_required
-@permission_required(UserPermission.USER_CREATE)
+# @permission_required(UserPermission.USER_CREATE)
 def create_user():
     """
     Procesa el formulario de creación de usuario.
@@ -138,7 +144,7 @@ def create_user():
 
 @users_bp.get("/<int:id>/edit")
 @login_required
-@permission_required(UserPermission.USER_UPDATE)
+# @permission_required(UserPermission.USER_UPDATE)
 def edit_user(id: int):
     """
     Muestra el formulario para editar un usuario existente.
@@ -157,7 +163,7 @@ def edit_user(id: int):
 
 @users_bp.post("/<int:id>/edit")
 @login_required
-@permission_required(UserPermission.USER_UPDATE)
+# @permission_required(UserPermission.USER_UPDATE)
 def update_user(id: int):
     """
     Procesa el formulario de edición de usuario.
@@ -194,6 +200,9 @@ def update_user(id: int):
     if data.get("password"):
         user.password_hash = generate_password_hash(data["password"])
     if "activo" in data:  # data ya tiene el booleano correcto del validador
+        if not data["activo"] and user.rol in [UserRole.ADMIN, UserRole.SYS_ADMIN]:
+            flash("No se puede desactivar un usuario Administrador.", "danger")
+            return redirect(url_for("users.edit_user", id=id))
         user.activo = data["activo"]
     if data.get("rol"):
         role_enum = next((r for r in UserRole if r.value == data["rol"]), user.rol)
@@ -206,7 +215,7 @@ def update_user(id: int):
 
 @users_bp.post("/<int:id>/delete")
 @login_required
-@permission_required(UserPermission.USER_DELETE)
+# @permission_required(UserPermission.USER_DELETE)
 def delete_user(id: int):
     """
     Elimina un usuario por su ID.
