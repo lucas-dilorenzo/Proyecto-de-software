@@ -89,11 +89,11 @@ def after_update(mapper, connection, target):
         hist = attr.history
         # Veo si hay cambios en el atributo 
         if hist.has_changes():
-            old_value = hist.deleted[0] if hist.deleted else None
-            new_value = hist.added[0] if hist.added else None
+            old_value = serialize_value(hist.deleted[0]) if hist.deleted else None
+            new_value = serialize_value(hist.added[0]) if hist.added else None
             if old_value != new_value:
                 # Si hubo cambio, lo registro en el diccionario (serializando valores)
-                changes[attr.key] = {"old": serialize_value(old_value), "new": serialize_value(new_value)}
+                changes[attr.key] = {"old": old_value, "new": new_value}
 
     if not changes:
         return  # No hubo cambios relevantes            
@@ -102,7 +102,7 @@ def after_update(mapper, connection, target):
         if changes["deleted"] == {"old": False, "new": True}:
             connection.execute(
                 SiteLog.__table__.insert(),
-                {"site_id": target.id, "user_id": user_id, "action": "Eliminado", "details": target.name},
+                {"site_id": target.id, "user_id": user_id, "action": "Eliminado", "details": changes},
             )
     else:
         print(changes)
