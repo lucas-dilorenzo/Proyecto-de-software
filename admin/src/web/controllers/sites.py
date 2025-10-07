@@ -128,6 +128,23 @@ def show_site(site_id):
     return render_template("historicalSites/show_site.html", site=site)
 
 
+@historical_sites_bp.route("/<int:site_id>/history", methods=["GET"])
+@login_required
+# @permission_required(UserPermission.SITE_HISTORY)
+def show_site_history(site_id):
+    site = historicalSites.get_site_by_id(site_id)
+    if site is None:
+        return "Site not found", 404
+
+    # Obtener los logs asociados al sitio, ordenados por timestamp desc
+    try:
+        logs = historicalSites.SiteLog.query.filter_by(site_id=site_id).order_by(historicalSites.SiteLog.timestamp.desc()).all()
+    except Exception:
+        logs = []
+
+    return render_template("historicalSites/site_history.html", site=site, logs=logs)
+
+
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
 @login_required
 @permission_required(UserPermission.SITE_CREATE)
@@ -175,7 +192,7 @@ def create_site():
                 # no fallar la creación por problemas de tags; loguear y seguir
                 flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
             flash("Sitio creado correctamente.", "success")
-            return redirect(url_for("sites.list_sites"))
+            return redirect(url_for("sites.show_site", site_id=site.id))
         else:
             if form.errors:
                 for field, errors in form.errors.items():

@@ -20,7 +20,7 @@ def after_insert(mapper, connection, target):
 
     connection.execute(
         SiteLog.__table__.insert(),
-        {"site_id": target.id, "user_id": user_id, "action": "CREATED"},
+        {"site_id": target.id, "user_id": user_id, "action": "CREATED", "details": target.name},
     )
 
 

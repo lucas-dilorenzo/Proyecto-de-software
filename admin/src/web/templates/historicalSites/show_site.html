@@ -8,6 +8,12 @@
   <h1>{{ site.name }}</h1>
 {% endblock %} 
 
+{% block titulo_acciones_body %}
+  <a class="btn btn-azul ms-2" href="{{ url_for('sites.show_site_history', site_id=site.id) }}">
+    Ver historial
+  </a>
+{% endblock %}
+
 {% block body %}
   <div class="container my-4">
     <div class="row justify-content-center">
@@ -38,11 +44,13 @@
     </div>
   </div>
   
-  <div> 
-    <a class="btn btn-primary" href="{{ url_for('sites.list_sites') }}">
-      Volver a la lista
-    </a>
-  </div> 
+  <!-- <div>  -->
+    <div class="col-2 justify-content-start" style="margin-top: 2%;">
+        <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+            <i class="bi bi-arrow-left small"></i> Volver a la lista
+        </a>
+    </div>
+  <!-- </div>  -->
 {% endblock %}
 
 
