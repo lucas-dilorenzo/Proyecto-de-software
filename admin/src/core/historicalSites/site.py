@@ -1,3 +1,4 @@
+from src.core.users import user
 from geoalchemy2 import Geometry
 from src.core.database import db
 from sqlalchemy.orm import relationship
@@ -56,3 +57,22 @@ class Site(db.Model):
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"
+    
+class SiteLog(db.Model):
+    __tabletName__= "sites_log"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    site_id = db.Column(db.Integer, db.ForeignKey("sites.id") , nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    action = db.Column(db.String, nullable=False)
+    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    site = relationship("Site", backref="logs")
+    user = relationship("User")
+
+    def __repr__(self) -> str:
+        return f"<SiteLog(id={self.id}, site_id={self.site_id}, user_id={self.user_id}, action={self.action})>"
+
+
+
+
+

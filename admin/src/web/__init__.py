@@ -121,6 +121,28 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def seed_roles():
         seeds.roles()
 
+    
+    # -------------------------
+    # script para rearmar la db
+    # -------------------------
+    @app.cli.command("rearmar-db")
+    def rearmar_db():
+        """Resetea y siembra la base de datos (reset + roles + users + seed-db).
+
+        Llamamos directamente a las funciones de `database` y `seeds`
+        en vez de invocar las funciones registradas como comandos CLI
+        para evitar problemas con el contexto o el registro de comandos.
+        """
+        # resetear la base
+        database.reset_db()
+
+        # sembrar roles y usuarios y datos adicionales
+        seeds.roles()
+        seeds.users()
+        seeds.run()
+
+        print("DB rearmada: reset + roles + users + seed_db ejecutados.")
+
     # -------------------------
     # Rutas DEV utilitarias
     # -------------------------

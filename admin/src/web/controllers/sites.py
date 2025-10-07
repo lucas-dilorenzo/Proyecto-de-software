@@ -12,9 +12,11 @@ from flask import (
     url_for,
     abort,
     flash,
+    session
 )
 import csv
 from src.web.helpers import login_required
+
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
@@ -64,6 +66,7 @@ def list_sites():
     # Mando también la lista de tags y provincias para armar el formulario
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
+
     # determinar si hay filtros activos para mostrar el botón Limpiar
     visibility_present = 'visibility' in request.args
     has_filters = any(
@@ -79,6 +82,7 @@ def list_sites():
             search_text,
         ]
     )
+
     # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
     current_query = {}
     for k in (
@@ -151,6 +155,11 @@ def create_site():
                 visibility=visibility_,
             )
 
+            #registro de la creación en el log
+            log = historicalSites.log_site_action(
+                site_id=site.id, user_id=session.get("user"), action="creación"
+            )  
+
             # Asignar tags seleccionados (si los hay)
             try:
                 selected_tag_ids = request.form.getlist("tags")
@@ -167,6 +176,7 @@ def create_site():
                     if tag_objs:
                         historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:
+
                 # no fallar la creación por problemas de tags; loguear y seguir
                 flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
             flash("Sitio creado correctamente.", "success")
@@ -209,6 +219,12 @@ def edit_site(site_id):
             registration_date=formulario.get("registration_date"),
             visibility=formulario.get("visibility") == "on",
         )
+        
+        #registro de la edición en el log
+        log = historicalSites.log_site_action(
+            site_id=site.id, user_id=session.get("user"), action="edición"
+        ) 
+
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
             selected_tag_ids = request.form.getlist('tags')
@@ -251,8 +267,16 @@ def delete_site(site_id):
 
     # fallback GET (compatibilidad)
     if request.method == "GET":
-        historicalSites.delete_site(site_id)
-        flash(f"Sitio {site.name} eliminado correctamente.", "success")
+        #eliminado=site.id
+        try:
+            #registro de la eliminación en el log
+            historicalSites.delete_site(site_id)
+            flash(f"Sitio {site.name} eliminado correctamente.", "success")
+           # log = historicalSites.log_site_action(
+           #     site_id=eliminado, user_id=session.get("user"), action="eliminación"
+           # ) 
+        except Exception as e:
+            flash(f"No se pudo eliminar el sitio: {e}", "danger") 
         return redirect(url_for("sites.list_sites"))
 
 

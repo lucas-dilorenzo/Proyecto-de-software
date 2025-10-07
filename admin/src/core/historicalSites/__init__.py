@@ -5,6 +5,7 @@ from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
+from src.core.historicalSites.site import SiteLog  # Importar aquí para evitar dependencias circulares
 
 
 def create_site(**kwargs):
@@ -292,3 +293,19 @@ def get_all_provinces():
     Retorna una lista de todas las provincias.
     """
     return Site.query.with_entities(Site.province).distinct().all()
+
+def log_site_action(site_id: int, user_id: int, action: str):
+    """
+    Registra una acción realizada en un sitio histórico.
+    Args:
+        site_id (int): El ID del sitio histórico.
+        user_id (int): El ID del usuario que realizó la acción.
+        action (str): Descripción de la acción realizada.
+    Returns:
+        SiteLog: El objeto SiteLog creado que registra la acción.
+    """
+    
+    log_entry = SiteLog(site_id=site_id, user_id=user_id, action=action)
+    db.session.add(log_entry)
+    db.session.commit()
+    return log_entry
