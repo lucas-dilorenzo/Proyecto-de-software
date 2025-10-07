@@ -47,18 +47,22 @@ def after_update(mapper, connection, target):
                 # Si hubo cambio, lo registro en el diccionario
                 changes[attr.key] = {"old": old_value, "new": new_value}
 
-                
-
-    if changes["deleted"] == {"old": False, "new": True}:
-        connection.execute(
-            SiteLog.__table__.insert(),
-            {"site_id": target.id, "user_id": user_id, "action": "Eliminado", "details": target.name},
-        )
+    if not changes:
+        return  # No hubo cambios relevantes            
+    if "deleted" in changes:
+        # Si el cambio fue en el campo "deleted", registro una acción específica
+        if changes["deleted"] == {"old": False, "new": True}:
+            connection.execute(
+                SiteLog.__table__.insert(),
+                {"site_id": target.id, "user_id": user_id, "action": "Eliminado", "details": target.name},
+            )
     else:
+        print(changes)
         connection.execute(
             SiteLog.__table__.insert(),
             {"site_id": target.id, "user_id": user_id, "action": "Modificacion", "details": target.name},
         )
+        print("entré al else")
 
 # @event.listens_for(Site, "after_delete")
 # def after_delete(mapper, connection, target):
