@@ -238,4 +238,27 @@
       }
     });
   </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const dateFrom = document.getElementById("date_from");
+      const dateTo = document.getElementById("date_to");
+      const form = document.querySelector("form");
+
+      // Cuando cambia la fecha "desde", ajusta el mínimo de "hasta"
+      dateFrom.addEventListener("change", function() {
+        dateTo.min = this.value;
+        if (dateTo.value && dateTo.value < this.value) {
+          dateTo.value = ""; // Limpia el campo si quedó inconsistente
+        }
+      });
+
+      // Validación antes de enviar el formulario
+      form.addEventListener("submit", function(event) {
+        if (dateFrom.value && dateTo.value && dateTo.value < dateFrom.value) {
+          event.preventDefault();
+          alert("La fecha 'hasta' no puede ser anterior a la fecha 'desde'.");
+        }
+      });
+    });
+    </script>
 {% endblock %}
