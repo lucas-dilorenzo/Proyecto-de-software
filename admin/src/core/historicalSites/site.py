@@ -66,6 +66,7 @@ class SiteLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     action = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    details = db.Column(db.JSON, nullable=True) 
     site = relationship("Site", backref="logs")
     user = relationship("User")
 
