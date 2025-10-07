@@ -73,7 +73,7 @@ class SiteForm(FlaskForm):
     location = StringField(
         "Ubicación",
         validators=[
-            Optional(),
+            InputRequired(message="La ubicación es obligatoria"),
             Length(max=200, message="La ubicación no puede exceder 200 caracteres"),
         ],
     )

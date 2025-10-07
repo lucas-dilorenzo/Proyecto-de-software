@@ -213,7 +213,6 @@ def edit_site(site_id):
             registration_date=formulario.get("registration_date"),
             visibility=formulario.get("visibility") == "true",
         )
-        print("Visibilidad: ", formulario.get("visibility"))
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
             selected_tag_ids = request.form.getlist("tags")
