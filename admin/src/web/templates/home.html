@@ -67,6 +67,9 @@ titulo_body %}
     var sites = [];
   }
 
+  // URL base para los sitios (generada con url_for de Jinja2)
+  var siteUrlTemplate = "{{ url_for('sites.show_site', site_id=1) }}".replace('1', 'PLACEHOLDER');
+
   // Coordenadas por defecto (centro de Argentina aproximadamente)
   var defaultLat = -34.6118;
   var defaultLng = -58.3960;
@@ -154,7 +157,7 @@ titulo_body %}
                 ${site.city ? `<p>Ciudad: ${site.city}</p>` : ''}
                 ${site.province ? `<p>Provincia: ${site.province}</p>` : ''}
                 ${site.description_short ? `<p>${site.description_short}</p>` : ''}
-                <a href="/sites/${site.id}" class="btn btn-sm btn-primary mt-2">
+                <a href="${siteUrlTemplate.replace('PLACEHOLDER', site.id)}" class="btn btn-sm btn-primary mt-2">
                   <strong class="text-light">Ver sitio</strong>
                 </a>
               </div>
