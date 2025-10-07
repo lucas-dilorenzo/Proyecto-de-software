@@ -2,6 +2,8 @@ from sqlalchemy import event, inspect
 from flask import session
 from src.core.database import db
 from src.core.historicalSites.site import Site, SiteLog
+import json
+import datetime
 
 # 🔹 Helper para obtener el user_id desde la sesión
 def get_current_user_id():
@@ -35,6 +37,52 @@ def after_update(mapper, connection, target):
     state = inspect(target)
     changes = {}
 
+    def serialize_value(v):
+        """Try to convert v into a JSON-serializable value.
+
+        Rules:
+        - None, str, int, float, bool kept as-is
+        - date/datetime -> ISO string
+        - list/tuple/set -> list with serialized elements
+        - SQLAlchemy mapped instances -> try to expose identity and repr
+        - Fallback to str(v)
+        """
+        # primitives
+        if v is None or isinstance(v, (str, int, float, bool)):
+            return v
+
+        # datetimes / dates
+        if isinstance(v, (datetime.datetime, datetime.date)):
+            try:
+                return v.isoformat()
+            except Exception:
+                return str(v)
+
+        # collections
+        if isinstance(v, (list, tuple, set)):
+            return [serialize_value(x) for x in v]
+
+        # try JSON dump directly
+        try:
+            json.dumps(v)
+            return v
+        except TypeError:
+            pass
+
+        # SQLAlchemy mapped instance: expose primary key identity if available
+        try:
+            insp = inspect(v)
+            # if inspect() returns an object with identity, use it
+            identity = getattr(insp, "identity", None)
+            if identity:
+                return {"_sa_identity": identity, "repr": str(v)}
+        except Exception:
+            # not a mappable object
+            pass
+
+        # fallback
+        return str(v)
+
     # Recorro los atributos del objeto para detectar cambios
     for attr in state.attrs:
         # Obtengo el historial de cambios de cada atributo
@@ -44,8 +92,8 @@ def after_update(mapper, connection, target):
             old_value = hist.deleted[0] if hist.deleted else None
             new_value = hist.added[0] if hist.added else None
             if old_value != new_value:
-                # Si hubo cambio, lo registro en el diccionario
-                changes[attr.key] = {"old": old_value, "new": new_value}
+                # Si hubo cambio, lo registro en el diccionario (serializando valores)
+                changes[attr.key] = {"old": serialize_value(old_value), "new": serialize_value(new_value)}
 
     if not changes:
         return  # No hubo cambios relevantes            
@@ -60,7 +108,7 @@ def after_update(mapper, connection, target):
         print(changes)
         connection.execute(
             SiteLog.__table__.insert(),
-            {"site_id": target.id, "user_id": user_id, "action": "Modificacion", "details": target.name},
+            {"site_id": target.id, "user_id": user_id, "action": "Modificacion", "details": changes},
         )
         print("entré al else")
 
