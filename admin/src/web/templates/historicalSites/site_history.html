@@ -20,8 +20,8 @@
           <tbody>
             {% for l in logs %}
               <tr>
-                <td>{{ l.timestamp }}</td>
-                <td>{{ l.user_id or '-' }}</td>
+                <td>{{ l.timestamp.strftime('%d/%m/%Y - %H:%M')}}</td>
+                <td>{{ l.user.nombre or '-' }}</td>
                 <td>{{ l.action }}</td>
                 <td>{{ l.details or '-' }}</td>
               </tr>

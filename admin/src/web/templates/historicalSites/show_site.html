@@ -5,12 +5,17 @@
 {% endblock %} 
 
 {% block titulo_body %}
-  <h1>{{ site.name }}</h1>
-{% endblock %} 
+  <h1>
+    <i class="bi bi-geo"></i>
+    {{ site.name }}
+  </h1>{% endblock %} 
 
 {% block titulo_acciones_body %}
-  <a class="btn btn-azul ms-2" href="{{ url_for('sites.show_site_history', site_id=site.id) }}">
-    Ver historial
+  <a class="btn btn-azul" href="{{ url_for('sites.show_site_history', site_id=site.id) }}" style="margin-top: 0;">
+    Historial de cambios<i class="bi bi-list small"></i>
+  </a>
+  <a class="btn btn-new" href="{{ url_for('sites.edit_site', site_id=site.id) }}" style="margin-top: 2%;">
+    Editar <i class="bi bi-pencil small"></i><i class="bi bi-tags-fill small"></i>
   </a>
 {% endblock %}
 

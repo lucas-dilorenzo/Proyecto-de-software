@@ -31,7 +31,7 @@
             </div>
 
             <div class="row mb-2 align-items-center">
-                <div class="col-3 fw-bold">Cantidad de sitios utilizando el tag</div>
+                <div class="col-3 fw-bold">Cantidad de sitios utilizandolo</div>
                 <div class="col-9">{{ tag.sites|length if tag.sites is defined else '-' }}</div>
             </div>
 
@@ -40,7 +40,7 @@
     <br>
 
     <div class="col-2 justify-content-start" style="margin-top: 2%;">
-        <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+        <a href="{{ url_for('tags.list_tags') }}" class="btn btn-azul">
             <i class="bi bi-arrow-left small"></i> Volver
         </a>
     </div>
