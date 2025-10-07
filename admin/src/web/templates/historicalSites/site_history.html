@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block titulo_body %}
-  <h1>Historial de cambios - {{ site.name }}</h1>
+  <h1>Historial- {{ site.name }}</h1>
 {% endblock %}
 
 {% block body %}
@@ -23,7 +23,17 @@
                 <td>{{ l.timestamp.strftime('%d/%m/%Y - %H:%M')}}</td>
                 <td>{{ l.user.nombre or '-' }}</td>
                 <td>{{ l.action }}</td>
-                <td>{{ l.details or '-' }}</td>
+                <td>
+                  {% if l.parsed_changes %}
+                    <ul class="mb-0">
+                      {% for field, old, new in l.parsed_changes %}
+                        <li><strong>{{ field }}</strong>: {{ old or '-' }} &rarr; {{ new or '-' }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    {{ l.details or '-' }}
+                  {% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>
@@ -34,7 +44,9 @@
     </div>
   </div>
 
-  <div class="mt-3">
-    <a class="btn btn-azul" href="{{ url_for('sites.show_site', site_id=site.id) }}">Volver</a>
+  <div class="col-2 justify-content-start" style="margin-top: 2%;">
+    <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-azul">
+        <i class="bi bi-arrow-left small"></i> Volver
+    </a>
   </div>
 {% endblock %}

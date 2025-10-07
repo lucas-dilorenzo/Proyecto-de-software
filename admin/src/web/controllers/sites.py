@@ -15,6 +15,7 @@ from flask import (
     session
 )
 import csv
+import json
 from src.web.helpers import login_required
 
 
@@ -137,10 +138,48 @@ def show_site_history(site_id):
         return "Site not found", 404
 
     # Obtener los logs asociados al sitio, ordenados por timestamp desc
-    try:
-        logs = historicalSites.SiteLog.query.filter_by(site_id=site_id).order_by(historicalSites.SiteLog.timestamp.desc()).all()
-    except Exception:
-        logs = []
+    # Obtener logs a través de la capa de servicios (respeta MVC)
+    logs = historicalSites.get_site_logs(site_id)
+
+    # Normalizar el campo details para facilitar renderizado en la plantilla
+    for l in logs:
+        parsed = None
+        if l.details is None:
+            parsed = None
+        else:
+            # puede venir como JSON o como string serializado
+            if isinstance(l.details, str):
+                try:
+                    normalizado = json.loads(l.details)
+                except Exception:
+                    # no json -> dejar el string tal cual
+                    normalizado = l.details
+            else:
+                # ya es un objeto (dict/list)
+                normalizado = l.details
+
+        # Si normalizado es dict con el formato {field: {old:..., new:...}}, convertir a lista de tuplas
+        display_changes = None
+        if isinstance(normalizado, dict):
+            # cada key -> {old:..., new:...}
+            display_changes = []
+            for field, change in normalizado.items():
+                old = None
+                new = None
+                if isinstance(change, dict):
+                    old = change.get("old")
+                    new = change.get("new")
+                else:
+                    # si el value no sigue el formato esperado, representarlo como str
+                    old = None
+                    new = change
+                display_changes.append((field, old, new))
+        else:
+            # parsed no es dict -> no hay cambios estructurados
+            display_changes = None
+
+        # adjuntar al objeto log para usar en la plantilla
+        setattr(l, "parsed_changes", display_changes)
 
     return render_template("historicalSites/site_history.html", site=site, logs=logs)
 

@@ -1,6 +1,7 @@
 # from core.database import db
 from src.core.database import db
 from src.core.historicalSites.site import Site
+from src.core.historicalSites.site import SiteLog
 from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
@@ -294,3 +295,12 @@ def get_all_provinces():
     Retorna una lista de todas las provincias.
     """
     return Site.query.with_entities(Site.province).distinct().all()
+
+
+def get_site_logs(site_id: int):
+    """Devuelve los logs de un sitio ordenados por fecha descendente, con usuario cargado."""
+    try:
+        logs = SiteLog.query.filter_by(site_id=site_id).order_by(SiteLog.timestamp.desc()).all()
+        return logs
+    except Exception:
+        return []

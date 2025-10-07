@@ -110,18 +110,6 @@ def after_update(mapper, connection, target):
             SiteLog.__table__.insert(),
             {"site_id": target.id, "user_id": user_id, "action": "Modificacion", "details": changes},
         )
-        print("entré al else")
-
-# @event.listens_for(Site, "after_delete")
-# def after_delete(mapper, connection, target):
-#     user_id = get_current_user_id()
-#     if not user_id:
-#         return
-
-#     connection.execute(
-#         SiteLog.__table__.insert(),
-#         {"site_id": target.id, "user_id": user_id, "action": "Baja", "details": target.name},
-#     )
 
 
 # # 🔹 Eventos sobre la relación many-to-many (tags)
