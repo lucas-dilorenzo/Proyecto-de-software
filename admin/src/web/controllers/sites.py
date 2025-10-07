@@ -231,11 +231,6 @@ def edit_site(site_id):
             registration_date=formulario.get("registration_date"),
             visibility=formulario.get("visibility") == "on",
         )
-        
-        #registro de la edición en el log
-        log = historicalSites.log_site_action(
-            site_id=site.id, user_id=session.get("user"), action="edición"
-        ) 
 
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:

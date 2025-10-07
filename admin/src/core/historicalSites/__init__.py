@@ -110,7 +110,8 @@ def delete_site(site_id: int):
     site = get_site_by_id(site_id)
     if not site:
         return False
-    db.session.delete(site)
+
+    site.deleted = True
     db.session.commit()
     return True
 
@@ -172,7 +173,7 @@ def get_sites_paginated_by_id(
     """
     Retorna sitios paginados aplicando filtros opcionales.
     """
-    query = Site.query
+    query = Site.query.filter(Site.deleted == False)
 
     if city:
         city_q = city.strip()
