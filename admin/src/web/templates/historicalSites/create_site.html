@@ -45,21 +45,7 @@ titulo_body %}
 </h1>
 {% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
-  <div class="card-body">
-    <!-- Mostrar mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        <div class="alert-container mb-3">
-          {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'danger' else 'warning' if category == 'warning' else 'success' }} alert-dismissible fade show" role="alert">
-              {{ message }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endwith %}
-    
+  <div class="card-body">        
     <form method="POST" action="{{ url_for('sites.create_site') }}")
       <div class="row">
         <!-- Primera columna -->
