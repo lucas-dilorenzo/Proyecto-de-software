@@ -135,6 +135,15 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
         en vez de invocar las funciones registradas como comandos CLI
         para evitar problemas con el contexto o el registro de comandos.
         """
+        #before seeding, we remove events to avoid errors
+        from sqlalchemy import event, inspect
+        from src.core.historicalSites.site import Site, SiteLog
+        from src.web.auditoria.site_events import after_insert, after_update
+
+        event.remove(Site, "after_insert", after_insert)
+        event.remove(Site, "after_update", after_update)
+
+
         # resetear la base
         database.reset_db()
 

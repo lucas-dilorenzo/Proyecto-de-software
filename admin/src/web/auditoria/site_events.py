@@ -5,6 +5,8 @@ from src.core.historicalSites.site import Site, SiteLog
 
 # 🔹 Helper para obtener el user_id desde la sesión
 def get_current_user_id():
+    if session is None:
+        return
     user = session.get("user")
     if not user:
         return None
