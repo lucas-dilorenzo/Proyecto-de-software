@@ -44,13 +44,15 @@ def list_sites():
         visibility = None
     else:
         # si cualquiera de los valores es truthy, lo tomamos como True
-        visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
+        visibility = any(
+            v.lower() in ("1", "true", "on", "yes") for v in visibility_list
+        )
     # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
-        per_page=5,
+        per_page=25,
         order="asc",
         city=city,
         province=province,
@@ -65,7 +67,7 @@ def list_sites():
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
     # determinar si hay filtros activos para mostrar el botón Limpiar
-    visibility_present = 'visibility' in request.args
+    visibility_present = "visibility" in request.args
     has_filters = any(
         [
             stringBusqueda,
@@ -137,40 +139,50 @@ def create_site():
             formulario = request.form
             visibility_ = True if formulario.get("visibility") is not None else False
             # crear el sitio
-            site = historicalSites.create_site(
-                name=formulario.get("name"),
-                description_short=formulario.get("description_short"),
-                description=formulario.get("description"),
-                city=formulario.get("city"),
-                province=formulario.get("province"),
-                location=formulario.get("location"),
-                conservation_status=formulario.get("conservation_status"),
-                year_declared=formulario.get("year_declared"),
-                category=formulario.get("category"),
-                registration_date=formulario.get("registration_date"),
-                visibility=visibility_,
-            )
+            if historicalSites.get_site_by_name(formulario.get("name")) is None:
+                site = historicalSites.create_site(
+                    name=formulario.get("name"),
+                    description_short=formulario.get("description_short"),
+                    description=formulario.get("description"),
+                    city=formulario.get("city"),
+                    province=formulario.get("province"),
+                    location=formulario.get("location"),
+                    conservation_status=formulario.get("conservation_status"),
+                    year_declared=formulario.get("year_declared"),
+                    category=formulario.get("category"),
+                    registration_date=formulario.get("registration_date"),
+                    visibility=visibility_,
+                )
 
-            # Asignar tags seleccionados (si los hay)
-            try:
-                selected_tag_ids = request.form.getlist("tags")
-                if selected_tag_ids:
-                    tag_objs = []
-                    for t in selected_tag_ids:
-                        try:
-                            tid = int(t)
-                        except Exception:
-                            continue
-                        tag = historicalSites.tags.get_tag_by_id(tid)
-                        if tag:
-                            tag_objs.append(tag)
-                    if tag_objs:
-                        historicalSites.asignar_tags_a_sitio(site, tag_objs)
-            except Exception as e:
-                # no fallar la creación por problemas de tags; loguear y seguir
-                flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
-            flash("Sitio creado correctamente.", "success")
-            return redirect(url_for("sites.list_sites"))
+                # Asignar tags seleccionados (si los hay)
+                try:
+                    selected_tag_ids = request.form.getlist("tags")
+                    if selected_tag_ids:
+                        tag_objs = []
+                        for t in selected_tag_ids:
+                            try:
+                                tid = int(t)
+                            except Exception:
+                                continue
+                            tag = historicalSites.tags.get_tag_by_id(tid)
+                            if tag:
+                                tag_objs.append(tag)
+                        if tag_objs:
+                            historicalSites.asignar_tags_a_sitio(site, tag_objs)
+                except Exception as e:
+                    # no fallar la creación por problemas de tags; loguear y seguir
+                    flash(
+                        f"Sitio creado pero no se pudieron asignar tags: {e}", "warning"
+                    )
+                flash("Sitio creado correctamente.", "success")
+                return redirect(url_for("sites.list_sites"))
+            else:
+                flash("Ya existe un sitio con ese nombre.", "danger")
+                return render_template(
+                    "historicalSites/create_site.html",
+                    tags=tags,
+                    visibility=visibility_,
+                )
         else:
             if form.errors:
                 for field, errors in form.errors.items():
@@ -183,7 +195,9 @@ def create_site():
             )
 
     # GET
-    return render_template("historicalSites/create_site.html", tags=tags, visibility=True)
+    return render_template(
+        "historicalSites/create_site.html", tags=tags, visibility=True
+    )
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])
@@ -207,11 +221,11 @@ def edit_site(site_id):
             year_declared=formulario.get("year_declared"),
             category=formulario.get("category"),
             registration_date=formulario.get("registration_date"),
-            visibility=formulario.get("visibility") == "on",
+            visibility=formulario.get("visibility") == "true",
         )
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
-            selected_tag_ids = request.form.getlist('tags')
+            selected_tag_ids = request.form.getlist("tags")
             tag_objs = []
             for t in selected_tag_ids:
                 try:

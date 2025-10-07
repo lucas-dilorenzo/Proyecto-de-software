@@ -1,3 +1,4 @@
+from datetime import timedelta
 from os import environ
 
 
@@ -12,6 +13,7 @@ class Config(object):
         "pool_recycle": 60,
         "pool_pre_ping": True,
     }
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30)
 
 
 class ProductionConfig(Config):

@@ -1,7 +1,9 @@
 from geoalchemy2 import Geometry
+from sqlalchemy import func
 from src.core.database import db
 from sqlalchemy.orm import relationship
 from datetime import date
+from sqlalchemy.ext.hybrid import hybrid_property
 
 sites_tags = db.Table(
     "sites_tags",
@@ -56,3 +58,15 @@ class Site(db.Model):
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"
+
+    @hybrid_property
+    def latitude(self) -> float:
+        if self.location:
+            return db.session.scalar(func.ST_Y(self.location))
+        return None
+
+    @hybrid_property
+    def longitude(self) -> float:
+        if self.location:
+            return db.session.scalar(func.ST_X(self.location))
+        return None
