@@ -3,7 +3,7 @@ Definición del modelo User y el enum UserRole para la gestión de usuarios en l
 Incluye roles, restricciones y campos relevantes para autenticación y administración.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Boolean, DateTime, Enum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,7 +39,9 @@ class User(db.Model):
     password_hash = db.Column(String(255), nullable=False)
     activo = db.Column(Boolean, default=True, nullable=False)
     rol = db.Column(String(10), db.ForeignKey("roles.name"), nullable=False)
-    created_at = db.Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(
+        DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
+    )
 
     def __repr__(self):
         return f"<User {self.email} ({self.rol})>"
