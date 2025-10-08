@@ -1,10 +1,23 @@
 from src.core.historicalSites.tags.tag import Tag  # noqa: F401
 from src.core.database import db
 
-def get_tags_paginated(busqueda, page=1, per_page=3):
+def get_tags_paginated(busqueda, page=1, per_page=3, order_by='name', order_dir='asc'):
     query = Tag.query
     if busqueda:
         query = query.filter(Tag.name.ilike(f"%{busqueda}%"))
+
+    # Campos disponibles para ordenar
+    order_fields = {
+        'name': Tag.name,
+        'created_at': Tag.created_at,
+    }
+    field = order_fields.get(order_by, Tag.name)
+
+    if str(order_dir).lower() == 'desc':
+        query = query.order_by(field.desc())
+    else:
+        query = query.order_by(field.asc())
+
     return query.paginate(page=page, per_page=per_page, error_out=False)
 
 # Retorna todos los tags con nombre ascendente

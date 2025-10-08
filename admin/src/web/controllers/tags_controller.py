@@ -19,15 +19,19 @@ def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
     per_page = 25
+    order_by = request.args.get('order_by', 'name', type=str)
+    order_dir = request.args.get('order_dir', 'asc', type=str)
 
     # Solo llama a la capa de servicios
-    tags_paginated = get_tags_paginated(busqueda, page, per_page)
+    tags_paginated = get_tags_paginated(busqueda, page, per_page, order_by=order_by, order_dir=order_dir)
 
     return render_template(
         "historicalSites/tags/indexTags.html",
         tags=tags_paginated,
         busqueda=busqueda,
-        current_query={'stringBusqueda': busqueda}
+        current_query={'stringBusqueda': busqueda},
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 # Ruta para crear un nuevo tag
