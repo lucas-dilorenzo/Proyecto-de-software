@@ -49,13 +49,18 @@ def list_sites():
     else:
         # si cualquiera de los valores es truthy, lo tomamos como True
         visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
-    # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
+    # parametros para ordenamiento
+    order_by = request.args.get("order_by", default="name", type=str)
+    order_dir = request.args.get("order_dir", default="asc", type=str)
+
+    # Pasar los parámetros de ordenamiento al servicio
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
         per_page=5,
-        order="asc",
+        order=order_dir,
+        order_by=order_by,
         city=city,
         province=province,
         tags=tags,
@@ -103,6 +108,9 @@ def list_sites():
             # si es lista de tags y tiene varios valores, dejalo como lista
             current_query[k] = v
 
+    # NOTA: no agregamos order_by/order_dir a current_query para evitar colisiones
+    # cuando la plantilla pasa **(current_query) y además especifica order_by/order_dir.
+
     return render_template(
         "historicalSites/list_sites.html",
         sites=sites,
@@ -117,6 +125,8 @@ def list_sites():
         stringBusqueda=stringBusqueda,
         has_filters=has_filters,
         current_query=current_query,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 
