@@ -14,19 +14,28 @@
 {% endblock %}
 
 {% block body %}
-  <!-- Botones en la misma fila -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
-      <i class="bi bi-funnel"></i> Filtros avanzados
-    </button>
-    <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn rounded-0" 
-      style="background-color: #dc3545; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
-        Eliminados <i class="bi bi-geo small"></i>
-    </a>
-    <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
-    style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
-      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
-    </a>
+  <!-- Botones en la misma fila con 3 columnas -->
+  <div class="row align-items-center mb-3">
+    <!-- Primera columna: Filtros avanzados -->
+    <div class="col-4">
+      <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
+        <i class="bi bi-funnel"></i> Filtros avanzados
+      </button>
+    </div>
+    <!-- Segunda columna: vacía -->
+    <div class="col-4">
+    </div>
+    <!-- Tercera columna: Eliminados y Exportar -->
+    <div class="col-4 d-flex justify-content-end gap-2">
+      <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn rounded-0" 
+        style="background-color: #dc3545; color: #fff; border: none; text-align: center; border-radius: 0;">
+          Eliminados <i class="bi bi-geo small"></i>
+      </a>
+      <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
+      style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
+        Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
+      </a>
+    </div>
   </div>
 
   <!-- Filtros -->
