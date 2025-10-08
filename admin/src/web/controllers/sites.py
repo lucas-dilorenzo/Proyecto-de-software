@@ -215,7 +215,7 @@ def show_site_history(site_id):
 def create_site():
     # cargar tags para el formulario (se usa tanto en GET como en caso de validación fallida)
     tags = get_all_tags()
-
+    
     if request.method == "POST":
         form = SiteForm()
         if form.validate_on_submit():
@@ -348,11 +348,17 @@ def delete_site(site_id):
 def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
+     
     if sites is None:
         return "No sites found", 404
 
-    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro \n"
+    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro, Tags \n"
     for site in sites:
+
+        listado_tags = [tag.name for tag in site.tags]
+        tags_str = " | ".join(listado_tags)
+        print(tags_str)
+
         csv_data += (
             f"{normalizar(site.name)},"
             f"{normalizar(site.description_short)},"
@@ -363,7 +369,9 @@ def download_csv_sites():
             f"{normalizar(site.conservation_status)},"
             f"{normalizar(site.year_declared)},"
             f"{normalizar(site.category)},"
-            f"{normalizar(site.registration_date)}\n"
+            f"{normalizar(site.registration_date)},"
+            f"{normalizar(tags_str)}\n"
+
         )
 
     return Response(

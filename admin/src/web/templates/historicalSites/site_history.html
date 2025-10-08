@@ -44,9 +44,17 @@
     </div>
   </div>
 
-  <div class="col-2 justify-content-start" style="margin-top: 2%;">
-    <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-azul">
-        <i class="bi bi-arrow-left small"></i> Volver
+  <div class="col-2 justify-content-start" style="margin-top: 2%">
+    {% if not site.deleted %}
+    <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+      <i class="bi bi-arrow-left small"></i> Volver
     </a>
+    {% else %}
+    <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn btn-azul">
+      <i class="bi bi-arrow-left small"></i> Volver
+    </a>
+    {% endif %}
+  </div>
+
   </div>
 {% endblock %}
