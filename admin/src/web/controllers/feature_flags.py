@@ -4,7 +4,7 @@ from src.core.database import db
 from src.core.featureFlags.flag import FeatureFlag
 from src.core.users.user import User, UserRole
 from datetime import datetime, timezone
-import logging  # Agregar esta línea
+import logging
 
 feature_flags_bp = Blueprint(
     "feature_flags", __name__, url_prefix="/admin/feature-flags"
@@ -24,7 +24,6 @@ def index():
     if not _is_sys_admin():
         return ("Acceso denegado", 403)
 
-    # Resto del código...
     flags = (
         db.session.query(FeatureFlag, User)
         .outerjoin(User, FeatureFlag.updated_by_user_id == User.id)

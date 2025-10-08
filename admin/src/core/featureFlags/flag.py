@@ -1,14 +1,16 @@
-from datetime import datetime
+from datetime import datetime, timezone  # Importar timezone explícitamente
 from src.core.database import db
 
 
 class FeatureFlag(db.Model):
     __tablename__ = "feature_flags"
 
-    key = db.Column(db.String(64), primary_key=True)  # p.ej. "admin_maintenance_mode"
+    key = db.Column(db.String(64), primary_key=True)
     value_bool = db.Column(db.Boolean, nullable=False, default=False)
-    message = db.Column(db.String(200), nullable=False, default="")  # mensaje corto
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    message = db.Column(db.String(200), nullable=False, default="")
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )
     updated_by_user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
 
     def set(self, *, value_bool: bool, message: str, user_id: int | None):
