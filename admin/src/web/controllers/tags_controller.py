@@ -18,16 +18,20 @@ def bp_guard():
 def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
-    per_page = 5
+    per_page = 25
+    order_by = request.args.get('order_by', 'name', type=str)
+    order_dir = request.args.get('order_dir', 'asc', type=str)
 
     # Solo llama a la capa de servicios
-    tags_paginated = get_tags_paginated(busqueda, page, per_page)
+    tags_paginated = get_tags_paginated(busqueda, page, per_page, order_by=order_by, order_dir=order_dir)
 
     return render_template(
         "historicalSites/tags/indexTags.html",
         tags=tags_paginated,
         busqueda=busqueda,
-        current_query={'stringBusqueda': busqueda}
+        current_query={'stringBusqueda': busqueda},
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
 # Ruta para crear un nuevo tag
@@ -58,9 +62,10 @@ def new_tag():
 
         # Mando el tag creado sin errores a la base de datos
         try:
-            create_tag(name=name, slug=slug, description=description)
+            created = create_tag(name=name, slug=slug, description=description)
             flash("El tag se creó correctamente.", "success")
-            return redirect(url_for("tags.list_tags"))
+            # Redirigir a la vista de detalle del tag recién creado
+            return redirect(url_for("tags.show_tag", tag_id=created.id))
         except Exception as e:
             flash("Error al crear el tag: " + str(e), "danger")
 

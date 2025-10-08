@@ -162,7 +162,7 @@ Bootstrap y estilos propios. #}
           <i class="bi bi-person-circle me-1" style="color: white"></i> Cuenta
         </a>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="#">Ver Perfil</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('users.show_user', id=session.user) }}">Ver Perfil</a></li>
           <li>
             <a class="dropdown-item" href="{{ url_for('auth.logout') }}"
               >Cerrar Sesión</a
@@ -332,7 +332,7 @@ Bootstrap y estilos propios. #}
       <div class="container-fluid" style="width: 90%">
         <div class="row">
           <div class="col-9">{% block titulo_body %}{% endblock %}</div>
-          <div class="col-3" style="padding-top: 1%">
+          <div class="col-3">
             {% block titulo_acciones_body %}{% endblock %}
           </div>
         </div>

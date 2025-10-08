@@ -41,7 +41,7 @@ from src.web.controllers.sites import historical_sites_bp
 from src.web.controllers.sites import get_categories, get_conservation_statuses
 from src.web import helpers
 from src.web.helpers import login_required
-
+from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
@@ -206,6 +206,37 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.cli.command("seed-roles")
     def seed_roles():
         seeds.roles()
+
+    
+    # -------------------------
+    # script para rearmar la db
+    # -------------------------
+    @app.cli.command("rearmar-db")
+    def rearmar_db():
+        """Resetea y siembra la base de datos (reset + roles + users + seed-db).
+
+        Llamamos directamente a las funciones de `database` y `seeds`
+        en vez de invocar las funciones registradas como comandos CLI
+        para evitar problemas con el contexto o el registro de comandos.
+        """
+        #before seeding, we remove events to avoid errors
+        from sqlalchemy import event, inspect
+        from src.core.historicalSites.site import Site, SiteLog
+        from src.web.auditoria.site_events import after_insert, after_update
+
+        event.remove(Site, "after_insert", after_insert)
+        event.remove(Site, "after_update", after_update)
+
+
+        # resetear la base
+        database.reset_db()
+
+        # sembrar roles y usuarios y datos adicionales
+        seeds.roles()
+        seeds.users()
+        seeds.run()
+
+        print("DB rearmada: reset + roles + users + seed_db ejecutados.")
 
     # -------------------------
     # Rutas DEV utilitarias

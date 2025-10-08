@@ -19,6 +19,10 @@
     <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
       <i class="bi bi-funnel"></i> Filtros avanzados
     </button>
+    <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn rounded-0" 
+      style="background-color: #dc3545; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
+        Eliminados <i class="bi bi-geo small"></i>
+    </a>
     <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
     style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
       Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
@@ -106,14 +110,48 @@
         </div>
     </div>
 
-
-
   <table class="table table-striped">
     <thead>
       <tr>
-        <th>Nombre</th>
-        <th>Ciudad</th>
+        {% set next_dir_name = 'asc' %}
+        {% if order_by == 'name' and order_dir == 'asc' %}
+          {% set next_dir_name = 'desc' %}
+        {% endif %}
+        <th style="width:15%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          <a href="{{ url_for('sites.list_sites', page=1, order_by='name', order_dir=next_dir_name, **(current_query or {})) }}">
+            Nombre
+            {% if order_by == 'name' %}
+              <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+            {% endif %}
+          </a>
+        </th>
+        {# Ciudad - ordenable #}
+        {% set next_dir_city = 'asc' %}
+        {% if order_by == 'city' and order_dir == 'asc' %}
+          {% set next_dir_city = 'desc' %}
+        {% endif %}
+        <th>
+          <a href="{{ url_for('sites.list_sites', page=1, order_by='city', order_dir=next_dir_city, **(current_query or {})) }}">
+            Ciudad
+            {% if order_by == 'city' %}
+              <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+            {% endif %}
+          </a>
+        </th>
         <th>Provincia</th>
+        {# Fecha de registro - ordenable (usa la clave 'date' en el servicio) #}
+        {% set next_dir_date = 'asc' %}
+        {% if order_by == 'date' and order_dir == 'asc' %}
+          {% set next_dir_date = 'desc' %}
+        {% endif %}
+        <th>
+          <a href="{{ url_for('sites.list_sites', page=1, order_by='date', order_dir=next_dir_date, **(current_query or {})) }}">
+            Fecha registro
+            {% if order_by == 'date' %}
+              <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+            {% endif %}
+          </a>
+        </th>
         <th>Estado de conservación</th>
         <th>Visible</th>
         <th>Acciones</th>
@@ -122,10 +160,18 @@
     <tbody>
       {% for site in sites %}
         <tr>
-          <td>{{ site.name }}</td>
+          <td title="{{ site.name }}">{{ site.name }}</td>
           <td>{{ site.city }}</td>
           <td>{{ site.province }}</td>
-          <td>{{ site.conservation_status }}</td>
+          <td>
+            {% if site.registration_date %}
+              {{ site.registration_date.strftime('%d/%m/%Y') }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <!-- <td>{{ site.conservation_status }}</td> -->
+          <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ site.conservation_status }}">{{ site.conservation_status }}</td>
           <td>
             {% if site.visibility %}
               Sí
@@ -147,7 +193,7 @@
         </tr>
       {% else %}
         <tr>
-          <td colspan="6" class="text-center">No se encontraron sitios históricos.</td>
+          <td colspan="7" class="text-center">No se encontraron sitios históricos.</td>
         </tr>
       {% endfor %}
 
@@ -165,7 +211,7 @@
             <ul class="pagination justify-content-end mb-0">
               {% if sites.has_prev %}
                 <li class="page-item">
-                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.prev_num, **(current_query or {})) }}" aria-label="Anterior">&laquo;</a>
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.prev_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}" aria-label="Anterior">&laquo;</a>
                 </li>
               {% else %}
                 <li class="page-item disabled"><a class="page-link" href="#" aria-label="Anterior">&laquo;</a></li>
@@ -179,7 +225,7 @@
                     </li>
                   {% else %}
                     <li class="page-item">
-                      <a class="page-link" href="{{ url_for('sites.list_sites', page=page_num, **(current_query or {}))}}">{{ page_num }}</a>
+                      <a class="page-link" href="{{ url_for('sites.list_sites', page=page_num, order_by=order_by, order_dir=order_dir, **(current_query or {}))}}">{{ page_num }}</a>
                     </li>
                   {% endif %}
                 {% else %}
@@ -189,7 +235,7 @@
 
               {% if sites.has_next %}
                 <li class="page-item">
-                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.next_num, **(current_query or {})) }}" aria-label="Siguiente">&raquo;</a>
+                  <a class="page-link" href="{{ url_for('sites.list_sites', page=sites.next_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}" aria-label="Siguiente">&raquo;</a>
                 </li>
               {% else %}
                 <li class="page-item disabled"><a class="page-link" href="#" aria-label="Siguiente">&raquo;</a></li>
@@ -259,4 +305,27 @@
       }
     });
   </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const dateFrom = document.getElementById("date_from");
+      const dateTo = document.getElementById("date_to");
+      const form = document.querySelector("form");
+
+      // Cuando cambia la fecha "desde", ajusta el mínimo de "hasta"
+      dateFrom.addEventListener("change", function() {
+        dateTo.min = this.value;
+        if (dateTo.value && dateTo.value < this.value) {
+          dateTo.value = ""; // Limpia el campo si quedó inconsistente
+        }
+      });
+
+      // Validación antes de enviar el formulario
+      form.addEventListener("submit", function(event) {
+        if (dateFrom.value && dateTo.value && dateTo.value < dateFrom.value) {
+          event.preventDefault();
+          alert("La fecha 'hasta' no puede ser anterior a la fecha 'desde'.");
+        }
+      });
+    });
+    </script>
 {% endblock %}

@@ -12,9 +12,13 @@ from flask import (
     url_for,
     abort,
     flash,
+    session
 )
 import csv
+import json
+import datetime
 from src.web.helpers import login_required
+
 
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
@@ -50,6 +54,11 @@ def list_sites():
     # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
+    # parametros para ordenamiento
+    order_by = request.args.get("order_by", default="name", type=str)
+    order_dir = request.args.get("order_dir", default="asc", type=str)
+
+    # Pasar los parámetros de ordenamiento al servicio
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
         per_page=25,
@@ -66,6 +75,7 @@ def list_sites():
     # Mando también la lista de tags y provincias para armar el formulario
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
+
     # determinar si hay filtros activos para mostrar el botón Limpiar
     visibility_present = "visibility" in request.args
     has_filters = any(
@@ -81,6 +91,7 @@ def list_sites():
             search_text,
         ]
     )
+
     # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
     current_query = {}
     for k in (
@@ -99,6 +110,9 @@ def list_sites():
             # si es lista de tags y tiene varios valores, dejalo como lista
             current_query[k] = v
 
+    # NOTA: no agregamos order_by/order_dir a current_query para evitar colisiones
+    # cuando la plantilla pasa **(current_query) y además especifica order_by/order_dir.
+
     return render_template(
         "historicalSites/list_sites.html",
         sites=sites,
@@ -113,8 +127,22 @@ def list_sites():
         stringBusqueda=stringBusqueda,
         has_filters=has_filters,
         current_query=current_query,
+        order_by=order_by,
+        order_dir=order_dir,
     )
 
+
+@historical_sites_bp.route("/deleted", methods=["GET"])
+@login_required
+@permission_required(UserPermission.SITE_LIST)
+def list_deleted_sites():
+    # Obtener todos los sitios marcados como eliminados (sin paginación)
+    sites = historicalSites.get_deleted_sites()
+
+    return render_template(
+        "historicalSites/list_deleted_sites.html",
+        sites=sites,
+    )
 
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
 @login_required
@@ -124,6 +152,61 @@ def show_site(site_id):
     if site is None:
         return "Site not found", 404
     return render_template("historicalSites/show_site.html", site=site)
+
+
+@historical_sites_bp.route("/<int:site_id>/history", methods=["GET"])
+@login_required
+# @permission_required(UserPermission.SITE_HISTORY)
+def show_site_history(site_id):
+    site = historicalSites.get_site_by_id(site_id)
+    if site is None:
+        return "Site not found", 404
+
+    # Obtener los logs asociados al sitio, ordenados por timestamp desc
+    # Obtener logs a través de la capa de servicios (respeta MVC)
+    logs = historicalSites.get_site_logs(site_id)
+
+    # Normalizar el campo details para facilitar renderizado en la plantilla
+    for l in logs:
+        parsed = None
+        if l.details is None:
+            parsed = None
+        else:
+            # puede venir como JSON o como string serializado
+            if isinstance(l.details, str):
+                try:
+                    normalizado = json.loads(l.details)
+                except Exception:
+                    # no json -> dejar el string tal cual
+                    normalizado = l.details
+            else:
+                # ya es un objeto (dict/list)
+                normalizado = l.details
+
+        # Si normalizado es dict con el formato {field: {old:..., new:...}}, convertir a lista de tuplas
+        display_changes = None
+        if isinstance(normalizado, dict):
+            # cada key -> {old:..., new:...}
+            display_changes = []
+            for field, change in normalizado.items():
+                old = None
+                new = None
+                if isinstance(change, dict):
+                    old = change.get("old")
+                    new = change.get("new")
+                else:
+                    # si el value no sigue el formato esperado, representarlo como str
+                    old = None
+                    new = change
+                display_changes.append((field, old, new))
+        else:
+            # parsed no es dict -> no hay cambios estructurados
+            display_changes = None
+
+        # adjuntar al objeto log para usar en la plantilla
+        setattr(l, "parsed_changes", display_changes)
+
+    return render_template("historicalSites/site_history.html", site=site, logs=logs)
 
 
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
@@ -154,35 +237,27 @@ def create_site():
                     visibility=visibility_,
                 )
 
-                # Asignar tags seleccionados (si los hay)
-                try:
-                    selected_tag_ids = request.form.getlist("tags")
-                    if selected_tag_ids:
-                        tag_objs = []
-                        for t in selected_tag_ids:
-                            try:
-                                tid = int(t)
-                            except Exception:
-                                continue
-                            tag = historicalSites.tags.get_tag_by_id(tid)
-                            if tag:
-                                tag_objs.append(tag)
-                        if tag_objs:
-                            historicalSites.asignar_tags_a_sitio(site, tag_objs)
-                except Exception as e:
-                    # no fallar la creación por problemas de tags; loguear y seguir
-                    flash(
-                        f"Sitio creado pero no se pudieron asignar tags: {e}", "warning"
-                    )
-                flash("Sitio creado correctamente.", "success")
-                return redirect(url_for("sites.list_sites"))
-            else:
-                flash("Ya existe un sitio con ese nombre.", "danger")
-                return render_template(
-                    "historicalSites/create_site.html",
-                    tags=tags,
-                    visibility=visibility_,
-                )
+            # Asignar tags seleccionados (si los hay)
+            try:
+                selected_tag_ids = request.form.getlist("tags")
+                if selected_tag_ids:
+                    tag_objs = []
+                    for t in selected_tag_ids:
+                        try:
+                            tid = int(t)
+                        except Exception:
+                            continue
+                        tag = historicalSites.tags.get_tag_by_id(tid)
+                        if tag:
+                            tag_objs.append(tag)
+                    if tag_objs:
+                        historicalSites.asignar_tags_a_sitio(site, tag_objs)
+            except Exception as e:
+
+                # no fallar la creación por problemas de tags; loguear y seguir
+                flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
+            flash("Sitio creado correctamente.", "success")
+            return redirect(url_for("sites.show_site", site_id=site.id))
         else:
             if form.errors:
                 for field, errors in form.errors.items():
@@ -223,6 +298,7 @@ def edit_site(site_id):
             registration_date=formulario.get("registration_date"),
             visibility=formulario.get("visibility") == "true",
         )
+
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
             selected_tag_ids = request.form.getlist("tags")
@@ -255,18 +331,14 @@ def delete_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
-    # if request.method == "POST":
-    #     # llamada vía AJAX desde SweetAlert
-    #     try:
-    #         historicalSites.delete_site(site_id)
-    #         return {"message": f"Sitio {site.name} eliminado correctamente."}, 200
-    #     except Exception as e:
-    #         return {"message": str(e)}, 500
 
-    # fallback GET (compatibilidad)
     if request.method == "GET":
-        historicalSites.delete_site(site_id)
-        flash(f"Sitio {site.name} eliminado correctamente.", "success")
+        #eliminado=site.id
+        try:
+            historicalSites.delete_site(site_id)
+            flash(f"Sitio {site.name} eliminado correctamente.", "success")
+        except Exception as e:
+            flash(f"No se pudo eliminar el sitio: {e}", "danger") 
         return redirect(url_for("sites.list_sites"))
 
 
