@@ -230,7 +230,7 @@ def delete_user(id: int):
 
 @users_bp.get("/<int:id>")
 @login_required
-@permission_required(UserPermission.USER_LIST)
+# @permission_required(UserPermission.USER_LIST)
 def show_user(id: int):
     """
     Muestra la ficha de un usuario.
