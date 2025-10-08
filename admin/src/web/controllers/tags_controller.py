@@ -62,9 +62,10 @@ def new_tag():
 
         # Mando el tag creado sin errores a la base de datos
         try:
-            create_tag(name=name, slug=slug, description=description)
+            created = create_tag(name=name, slug=slug, description=description)
             flash("El tag se creó correctamente.", "success")
-            return redirect(url_for("tags.list_tags"))
+            # Redirigir a la vista de detalle del tag recién creado
+            return redirect(url_for("tags.show_tag", tag_id=created.id))
         except Exception as e:
             flash("Error al crear el tag: " + str(e), "danger")
 
