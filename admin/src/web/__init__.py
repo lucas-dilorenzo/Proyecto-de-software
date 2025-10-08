@@ -10,6 +10,7 @@ from flask import (
     url_for,
     flash,
 )
+import json
 from web.controllers.auth import authenticate
 
 # config local (usamos alias config_map para claridad)
@@ -25,6 +26,7 @@ from src.web import seeds  # Importar el módulo correctamente
 
 # Modelos
 # from src.core.users import User, UserRole
+from src.core import historicalSites
 
 # Utilidades
 from sqlalchemy import select
@@ -72,7 +74,10 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     @app.route("/")
     @login_required
     def home():
-        return render_template("home.html")
+        sites = historicalSites.list_all_sites()
+        # Serializar los sitios para JavaScript
+        sites_json = json.dumps([site.to_dict() for site in sites])
+        return render_template("home.html", sites=sites_json)
 
     @app.get("/private")
     def private():

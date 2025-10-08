@@ -70,3 +70,27 @@ class Site(db.Model):
         if self.location:
             return db.session.scalar(func.ST_X(self.location))
         return None
+
+    def to_dict(self):
+        """Convierte el objeto Site a un diccionario serializable"""
+        # Obtener coordenadas una sola vez para evitar múltiples queries
+        lat = self.latitude
+        lng = self.longitude
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description_short": self.description_short,
+            "description": self.description,
+            "city": self.city,
+            "province": self.province,
+            "latitude": lat,
+            "longitude": lng,
+            "conservation_status": self.conservation_status,
+            "year_declared": self.year_declared,
+            "category": self.category,
+            "registration_date": (
+                self.registration_date.isoformat() if self.registration_date else None
+            ),
+            "visibility": self.visibility,
+        }
