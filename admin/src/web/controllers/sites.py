@@ -130,6 +130,18 @@ def list_sites():
     )
 
 
+@historical_sites_bp.route("/deleted", methods=["GET"])
+@login_required
+@permission_required(UserPermission.SITE_LIST)
+def list_deleted_sites():
+    # Obtener todos los sitios marcados como eliminados (sin paginación)
+    sites = historicalSites.get_deleted_sites()
+
+    return render_template(
+        "historicalSites/list_deleted_sites.html",
+        sites=sites,
+    )
+
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
 @login_required
 @permission_required(UserPermission.SITE_LIST)

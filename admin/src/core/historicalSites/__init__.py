@@ -299,3 +299,11 @@ def get_site_logs(site_id: int):
         return logs
     except Exception:
         return []
+
+
+def get_deleted_sites():
+    """Retorna todos los sitios marcados como eliminados (deleted == True)."""
+    try:
+        return Site.query.filter(Site.deleted == True).all()
+    except Exception:
+        return []

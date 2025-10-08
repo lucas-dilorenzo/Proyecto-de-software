@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+  <h1 style="margin-top: 3%;">
+    <i class="bi bi-geo"></i>
+    Sitios eliminados
+  </h1>
+{% endblock %}
+
+{% block body %}
+  <div class="card shadow-sm border-0 rounded-0 bg-white">
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Ciudad</th>
+            <th>Provincia</th>
+            <th>Fecha registro</th>
+            <th>Visible</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for site in sites %}
+            <tr>
+              <td title="{{ site.name }}">{{ site.name }}</td>
+              <td>{{ site.city }}</td>
+              <td>{{ site.province }}</td>
+              <td>
+                {% if site.registration_date %}
+                  {{ site.registration_date.strftime('%d/%m/%Y') }}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>{% if site.visibility %}Sí{% else %}No{% endif %}</td>
+              <td>
+                <a href="{{ url_for('sites.show_site', site_id=site.id) }}" class="btn btn-icon" title="Ver Sitio">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{{ url_for('sites.show_site_history', site_id=site.id) }}" class="btn btn-icon" title="Ver Historial">
+                  <i class="bi bi-clock-history"></i>
+                </a>
+              </td>
+            </tr>
+          {% else %}
+            <tr>
+              <td colspan="6" class="text-center">No hay sitios eliminados.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
