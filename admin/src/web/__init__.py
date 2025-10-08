@@ -127,50 +127,53 @@ def create_app(env: str = "production", static_folder: str = "../../static") -> 
     @app.before_request
     def admin_maintenance_guard():
         path = request.path
-        
+
         # Rutas que siempre están permitidas
         exempt_paths = [
-            "/auth/login", 
-            "/auth/logout", 
-            "/static/", 
+            "/auth/login",
+            "/auth/logout",
+            "/static/",
             "/admin/maintenance",
-            "/_dev/"
+            "/_dev/",
         ]
-        
+
         # No bloquear rutas permitidas
         if any(path.startswith(exempt) for exempt in exempt_paths):
             return
-            
+
         # Comprobar si es SYS_ADMIN
         user_is_sys_admin = is_sys_admin(session)
-        
+
         # Permitir acceso a SYS_ADMIN al panel de feature flags incluso en mantenimiento
         if path.startswith("/admin/feature-flags") and user_is_sys_admin:
             return
-            
+
         # Obtener el flag de mantenimiento
         flag = FeatureFlag.get("admin_maintenance_mode")
         maintenance_active = flag and flag.value_bool
-        
+
         if maintenance_active:
             # Configurar mensaje para la UI
             g.maintenance_message = flag.message
             session["maintenance_message"] = flag.message
-                
+
             # IMPORTANTE: Bloquear TODAS las rutas administrativas excepto /auth/login
             # Las rutas públicas (/sites, /, etc.) siguen permitidas
             # Revisar si es una ruta que necesita ser protegida
             protected_routes = [
                 "/admin/",  # Rutas de admin tradicionales
                 "/users/",  # Usuarios
-                "/tags/",   # Tags
+                "/tags/",  # Tags
                 "/sites/",  # Añadido: Ruta principal de sitios
                 "/sites/admin/",  # Gestión de sitios específica
-                "/historicalsites/admin/"  # Otra posible ruta de sitios
+                "/historicalsites/admin/",  # Otra posible ruta de sitios
             ]
-            
+
             # Bloquear acceso si es ruta protegida y no es SysAdmin
-            if any(path.startswith(route) for route in protected_routes) and not user_is_sys_admin:
+            if (
+                any(path.startswith(route) for route in protected_routes)
+                and not user_is_sys_admin
+            ):
                 return redirect(url_for("maintenance.admin"))
         else:
             # Limpiar mensaje si no hay mantenimiento
