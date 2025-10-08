@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Sistema en mantenimiento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='maintenance.css') }}">
+</head>
+
+<body>
+    <main class="card">
+        <h1>Estamos en mantenimiento</h1>
+
+        <div class="message">
+            <p>{{ message or "Estamos realizando mejoras en el sistema administrativo. Volveremos en breve." }}</p>
+        </div>
+
+        <a href="/auth/login" class="login-link">Acceso administrador</a>
+
+        <div class="status">Código 503 — Servicio temporalmente no disponible</div>
+    </main>
+</body>
+
+</html>

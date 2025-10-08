@@ -2,6 +2,7 @@ from select import select
 
 # from core.database import db
 from src.core.database import db
+from src.core.featureFlags.flag import FeatureFlag
 from src.core import historicalSites
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
@@ -14,6 +15,8 @@ from werkzeug.security import generate_password_hash
 def run():
     print("Seeding database with initial data...")
 
+    feature_flags_seed()
+    print("Feature flags creados o actualizados.")
     tags_data = [
         {
             "name": "Patrimonio Mundial",
@@ -532,7 +535,7 @@ def users():
             apellido="Local",
             password_hash=generate_password_hash("admin123"),
             activo=True,
-            rol=UserRole.ADMIN,
+            rol=UserRole.SYS_ADMIN,
         )
         db.session.add(admin)
         print("Admin creado: admin@example.com / admin123")
@@ -607,3 +610,21 @@ def roles():
                 perm.roles.append(r)
         db.session.add(perm)
     db.session.commit()
+
+
+def feature_flags_seed():
+    """Crea los feature flags predeterminados si no existen."""
+    defaults = [
+        ("admin_maintenance_mode", False, ""),
+        ("portal_maintenance_mode", False, ""),
+        ("reviews_enabled", True, ""),
+    ]
+    changed = False
+    for k, v, m in defaults:
+        existing = FeatureFlag.query.get(k)
+        if not existing:
+            db.session.add(FeatureFlag(key=k, value_bool=v, message=m))
+            changed = True
+    if changed:
+        db.session.commit()
+    print("Feature flags creados o actualizados.")

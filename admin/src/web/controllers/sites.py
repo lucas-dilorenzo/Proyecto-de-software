@@ -48,7 +48,10 @@ def list_sites():
         visibility = None
     else:
         # si cualquiera de los valores es truthy, lo tomamos como True
-        visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
+        visibility = any(
+            v.lower() in ("1", "true", "on", "yes") for v in visibility_list
+        )
+    # support both 'search_text' and legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
     # parametros para ordenamiento
@@ -58,9 +61,8 @@ def list_sites():
     # Pasar los parámetros de ordenamiento al servicio
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
-        per_page=5,
-        order=order_dir,
-        order_by=order_by,
+        per_page=25,
+        order="asc",
         city=city,
         province=province,
         tags=tags,
@@ -75,7 +77,7 @@ def list_sites():
     all_provinces = historicalSites.get_all_provinces()
 
     # determinar si hay filtros activos para mostrar el botón Limpiar
-    visibility_present = 'visibility' in request.args
+    visibility_present = "visibility" in request.args
     has_filters = any(
         [
             stringBusqueda,
@@ -220,19 +222,20 @@ def create_site():
             formulario = request.form
             visibility_ = True if formulario.get("visibility") is not None else False
             # crear el sitio
-            site = historicalSites.create_site(
-                name=formulario.get("name"),
-                description_short=formulario.get("description_short"),
-                description=formulario.get("description"),
-                city=formulario.get("city"),
-                province=formulario.get("province"),
-                location=formulario.get("location"),
-                conservation_status=formulario.get("conservation_status"),
-                year_declared=formulario.get("year_declared"),
-                category=formulario.get("category"),
-                registration_date=formulario.get("registration_date"),
-                visibility=visibility_,
-            )
+            if historicalSites.get_site_by_name(formulario.get("name")) is None:
+                site = historicalSites.create_site(
+                    name=formulario.get("name"),
+                    description_short=formulario.get("description_short"),
+                    description=formulario.get("description"),
+                    city=formulario.get("city"),
+                    province=formulario.get("province"),
+                    location=formulario.get("location"),
+                    conservation_status=formulario.get("conservation_status"),
+                    year_declared=formulario.get("year_declared"),
+                    category=formulario.get("category"),
+                    registration_date=formulario.get("registration_date"),
+                    visibility=visibility_,
+                )
 
             # Asignar tags seleccionados (si los hay)
             try:
@@ -267,7 +270,9 @@ def create_site():
             )
 
     # GET
-    return render_template("historicalSites/create_site.html", tags=tags, visibility=True)
+    return render_template(
+        "historicalSites/create_site.html", tags=tags, visibility=True
+    )
 
 
 @historical_sites_bp.route("/<int:site_id>/edit", methods=["GET", "POST"])
@@ -291,12 +296,12 @@ def edit_site(site_id):
             year_declared=formulario.get("year_declared"),
             category=formulario.get("category"),
             registration_date=formulario.get("registration_date"),
-            visibility=formulario.get("visibility") == "on",
+            visibility=formulario.get("visibility") == "true",
         )
 
         # Procesar tags seleccionados; si no se envían tags, vaciar la relación
         try:
-            selected_tag_ids = request.form.getlist('tags')
+            selected_tag_ids = request.form.getlist("tags")
             tag_objs = []
             for t in selected_tag_ids:
                 try:

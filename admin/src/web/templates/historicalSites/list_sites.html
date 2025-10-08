@@ -14,8 +14,23 @@
 {% endblock %}
 
 {% block body %}
+  <!-- Botones en la misma fila -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
+      <i class="bi bi-funnel"></i> Filtros avanzados
+    </button>
+    <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn rounded-0" 
+      style="background-color: #dc3545; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
+        Eliminados <i class="bi bi-geo small"></i>
+    </a>
+    <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
+    style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
+      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
+    </a>
+  </div>
+
   <!-- Filtros -->
-    <div class="card shadow-sm border-0 rounded-0 bg-white">
+    <div id="advanced-filters" class="card shadow-sm border-0 rounded-0 bg-white" style="display: none;">
         <div class="card-body">
             <div class="row">
                 <form method="get" class="row g-2 mb-4">
@@ -94,17 +109,6 @@
             </div>
         </div>
     </div>
-
-    <div class="d-flex justify-content-end align-items-center" style="margin-top: 1rem;">
-      <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn rounded-0" 
-      style="background-color: #dc3545; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0;">
-        Eliminados <i class="bi bi-geo small"></i>
-      </a> 
-    <a href="{{ url_for('sites.download_csv_sites') }}" class="btn rounded-0" 
-    style="background-color: #0b5e2e; color: #fff; border: none; width: 15%; text-align: center; border-radius: 0; margin-left: 1%;">
-      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
-    </a>
-  </div>
 
   <table class="table table-striped">
     <thead>
@@ -281,6 +285,22 @@
           searchPlaceholderValue: 'Buscar tags',
           shouldSort: false,
           maxItemCount: 20,
+        });
+      }
+
+      // Toggle para mostrar/ocultar filtros avanzados
+      const toggleButton = document.getElementById('toggle-filters');
+      const filtersContainer = document.getElementById('advanced-filters');
+      
+      if (toggleButton && filtersContainer) {
+        toggleButton.addEventListener('click', function() {
+          if (filtersContainer.style.display === 'none') {
+            filtersContainer.style.display = 'block';
+            toggleButton.innerHTML = '<i class="bi bi-funnel-fill"></i> Ocultar filtros';
+          } else {
+            filtersContainer.style.display = 'none';
+            toggleButton.innerHTML = '<i class="bi bi-funnel"></i> Filtros avanzados';
+          }
         });
       }
     });

@@ -29,6 +29,10 @@ def login():
             if not user:
                 flash("Usuario no encontrado.", "danger")
                 return render_template("auth/login.html", email=email)
+            
+            if not user.activo:
+                flash("Usuario bloqueado.", "danger")
+                return render_template("auth/login.html", email=email)
 
             if user and check_password_hash(user.password_hash, password):
                 session["user"] = user.id

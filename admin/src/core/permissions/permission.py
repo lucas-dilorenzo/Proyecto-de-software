@@ -25,12 +25,7 @@ class Permission(db.Model):
 
     | Función        | Descripción                                    | Rol             |
     |:-------------- |:---------------------------------------------- |:--------------- |
-    | `user_create`  | Crear usuarios                                 | Administrador   |
-    | `user_list`    | Listar y ver usuarios                          | Administrador   |
-    | `user_update`  | Modificar usuarios                             | Administrador   |
-    | `user_delete`  | Eliminar usuarios                              | Administrador   |
-    | `user_role`    | Cambiar el rol de un usuario                   | Administrador   |
-    | `user_block`   | Bloquear y desbloquear usuarios                | Administrador   |
+    | `user_module`  | Gestionar usuarios                             | Administrador   |
     | `site_create`  | Crear sitios                                   | Editor          |
     | `site_list`    | Listar y ver sitios                            | Usuario público |
     | `site_update`  | Modificar sitios                               | Editor          |
@@ -38,7 +33,7 @@ class Permission(db.Model):
     | `site_tags`    | Gestionar etiquetas de sitio                   | Editor          |
     | `site_export`  | Exportar información de sitios en formato CSV  | Administrador   |
     | `site_history` | Ver el historial de modificaciones de un sitio | Editor          |
-    | `flags`        | Ver y modificar las feature flags              | SysAdmin        |
+    | `system_flags` | Ver y modificar las feature flags              | SysAdmin        |
     """
 
     __tablename__ = "permissions"
@@ -59,12 +54,7 @@ class UserPermission(tuple[str, list[UserRole]], Enum):
     Enum de permisos posibles.
     """
 
-    USER_CREATE = ("user_create", [UserRole.ADMIN])
-    USER_LIST = ("user_list", [UserRole.ADMIN])
-    USER_UPDATE = ("user_update", [UserRole.ADMIN])
-    USER_DELETE = ("user_delete", [UserRole.ADMIN])
-    USER_ROLE = ("user_role", [UserRole.ADMIN])
-    USER_BLOCK = ("user_block", [UserRole.ADMIN])
+    USER_MODULE = ("user_module", [UserRole.ADMIN])
     SITE_CREATE = ("site_create", [UserRole.EDITOR, UserRole.ADMIN])
     SITE_LIST = ("site_list", [UserRole.PUBLIC, UserRole.EDITOR, UserRole.ADMIN])
     SITE_UPDATE = ("site_update", [UserRole.EDITOR, UserRole.ADMIN])
@@ -72,4 +62,4 @@ class UserPermission(tuple[str, list[UserRole]], Enum):
     SITE_TAGS = ("site_tags", [UserRole.EDITOR, UserRole.ADMIN])
     SITE_EXPORT = ("site_export", [UserRole.ADMIN])
     SITE_HISTORY = ("site_history", [UserRole.EDITOR, UserRole.ADMIN])
-    FLAGS = ("flags", [UserRole.SYS_ADMIN])
+    SYSTEM_FLAGS = ("system_flags", [UserRole.SYS_ADMIN])

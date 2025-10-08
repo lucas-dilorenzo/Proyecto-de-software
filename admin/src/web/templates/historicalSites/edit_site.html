@@ -235,41 +235,35 @@
 </div>
 
 <script>
-  // Inicializar mapa (si existe location lo intento parsear)
-  var initialLat = -34.6037;
-  var initialLng = -58.3816;
-  try {
-    if ("{{ site.location }}") {
-      var loc = "{{ site.location }}".split("+");
-      if (loc.length === 2) {
-        initialLat = parseFloat(loc[0]);
-        initialLng = parseFloat(loc[1]);
-        document.getElementById('lat').value = initialLat;
-        document.getElementById('lng').value = initialLng;
-      }
-    }
-  } catch (e) {}
+  // Obtener coordenadas del sitio histórico
+  var lat = {{ site.latitude }};
+  var lng = {{ site.longitude }};
+  console.log("Coordenadas iniciales - Latitud: " + lat + ", Longitud: " + lng);
+  // Inicializar mapa centrado en las coordenadas del sitio
+  var map = L.map("map").setView([lat, lng], 15);
 
-  var map = L.map("map").setView([initialLat, initialLng], 13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
-
+  document.getElementById("location").value = lng + " " + lat
   var marker;
-  if (document.getElementById('lat').value && document.getElementById('lng').value) {
-    marker = L.marker([document.getElementById('lat').value, document.getElementById('lng').value]).addTo(map);
-  }
-
+  marker = L.marker([lat, lng]).addTo(map);
+  // Evento click en mapa
   map.on("click", function (e) {
     var lat = e.latlng.lat;
     var lng = e.latlng.lng;
+
     if (marker) {
       map.removeLayer(marker);
     }
     marker = L.marker([lat, lng]).addTo(map);
+
+    // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    document.getElementById("location").value = lat + "+" + lng;
+    // Formato correcto: "longitud latitud" (compatible con seeds y PostGIS)
+    document.getElementById("location").value = lng + " " + lat;
+    console.log("Latitud: " + lat + ", Longitud: " + lng);
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
