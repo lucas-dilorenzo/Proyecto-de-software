@@ -1,4 +1,4 @@
-from datetime import datetime, timezone  # Importar timezone explícitamente
+from datetime import datetime, timezone
 from src.core.database import db
 
 
