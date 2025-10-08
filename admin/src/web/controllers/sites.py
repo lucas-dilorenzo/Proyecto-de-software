@@ -3,6 +3,7 @@ from src.web.auth import permission_required
 from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
 from src.core.historicalSites.tags import get_all_tags
+from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 from flask import (
     Blueprint,
     Response,
@@ -399,15 +400,21 @@ def get_categories():
     Returns:
         dict: Diccionario con las categorías como pares key:value
     """
-    categories = {
-        "monumento_nacional": "Monumento Nacional",
-        "sitio_historico": "Sitio Histórico",
-        "bien_cultural": "Bien Cultural",
-        "patrimonio_mundial": "Patrimonio Mundial",
-        "monumento_historico_nacional": "Monumento Histórico Nacional",
-        "lugar_historico_nacional": "Lugar Histórico Nacional",
-    }
-    return categories
+    return {category.code: category.label for category in SiteCategory}
+
+
+def get_category_label(key):
+    """
+    Función que devuelve el label de una categoría dado su clave.
+
+    Args:
+        key (str): Clave de la categoría.
+
+    Returns:
+        str: Valor legible de la categoría, o None si no existe.
+    """
+    category_dict = {category.code: category.label for category in SiteCategory}
+    return category_dict.get(key)
 
 
 def get_conservation_statuses():
@@ -417,15 +424,21 @@ def get_conservation_statuses():
     Returns:
         dict: Diccionario con los estados de conservación como pares key:value
     """
-    statuses = {
-        "excelente": "Excelente",
-        "bueno": "Bueno",
-        "regular": "Regular",
-        "malo": "Malo",
-        "critico": "Crítico",
-        "en_restauracion": "En restauración",
-    }
-    return statuses
+    return {status.code: status.label for status in ConservationStatus}
+
+
+def get_conservation_status(key):
+    """
+    Función que devuelve el label de un estado de conservación dado su clave.
+
+    Args:
+        key (str): Clave del estado de conservación.
+
+    Returns:
+        str: Valor legible del estado, o None si no existe.
+    """
+    status_dict = {status.code: status.label for status in ConservationStatus}
+    return status_dict.get(key)
 
 
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV

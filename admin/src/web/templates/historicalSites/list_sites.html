@@ -180,7 +180,7 @@
             {% endif %}
           </td>
           <!-- <td>{{ site.conservation_status }}</td> -->
-          <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ site.conservation_status }}">{{ site.conservation_status }}</td>
+          <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ get_conservation_status_label(site.conservation_status) }}">{{ get_conservation_status_label(site.conservation_status) }}</td>
           <td>
             {% if site.visibility %}
               Sí

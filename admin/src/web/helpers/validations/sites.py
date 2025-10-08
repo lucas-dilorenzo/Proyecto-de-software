@@ -9,6 +9,7 @@ from wtforms import (
 )
 from wtforms.validators import InputRequired, Length, NumberRange, Optional, Regexp
 from datetime import date
+from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 
 
 class SiteForm(FlaskForm):
@@ -81,15 +82,7 @@ class SiteForm(FlaskForm):
     # Estado de conservación
     conservation_status = SelectField(
         "Estado de conservación",
-        choices=[
-            ("", "Seleccione un estado"),
-            ("excelente", "Excelente"),
-            ("bueno", "Bueno"),
-            ("regular", "Regular"),
-            ("malo", "Malo"),
-            ("critico", "Crítico"),
-            ("en_restauracion", "En restauración"),
-        ],
+        choices=ConservationStatus.choices(),
         validators=[Optional()],
     )
 
@@ -109,15 +102,7 @@ class SiteForm(FlaskForm):
     # Categoría
     category = SelectField(
         "Categoría",
-        choices=[
-            ("", "Seleccione una categoría"),
-            ("monumento_nacional", "Monumento Nacional"),
-            ("sitio_historico", "Sitio Histórico"),
-            ("bien_cultural", "Bien Cultural"),
-            ("patrimonio_mundial", "Patrimonio Mundial"),
-            ("monumento_historico_nacional", "Monumento Histórico Nacional"),
-            ("lugar_historico_nacional", "Lugar Histórico Nacional"),
-        ],
+        choices=SiteCategory.choices(),
         validators=[Optional()],
     )
 
