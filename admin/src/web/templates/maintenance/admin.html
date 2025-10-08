@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <title>Administración en mantenimiento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container" style="max-width:680px;margin:48px auto;">
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning text-dark">
+                <h3 class="mb-0">Administración en mantenimiento</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">{{ message or "Estamos realizando tareas de mantenimiento. Volvé a intentar más tarde."
+                    }}</p>
+                <p>Si eres administrador del sistema, puedes <a href="/auth/login">iniciar sesión</a> para acceder.</p>
+                <p><small class="text-muted">Código de estado: 503 - Servicio temporalmente no disponible</small></p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
