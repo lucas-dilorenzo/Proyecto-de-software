@@ -245,9 +245,9 @@
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
-
+  document.getElementById("location").value = lng + " " + lat
   var marker;
-
+  marker = L.marker([lat, lng]).addTo(map);
   // Evento click en mapa
   map.on("click", function (e) {
     var lat = e.latlng.lat;
