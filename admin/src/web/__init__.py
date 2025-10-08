@@ -126,41 +126,56 @@ def create_app(env: str = "production", static_folder: str = "../../static") -> 
     # ---------- Guard global: Admin Maintenance Mode ----------
     @app.before_request
     def admin_maintenance_guard():
-        path = request.path or ""
-
-        # Solo nos interesa aplicar mantenimiento en admin/auth
-        if not (path.startswith("/admin") or path.startswith("/auth")):
+        path = request.path
+        
+        # Rutas que siempre están permitidas
+        exempt_paths = [
+            "/auth/login", 
+            "/auth/logout", 
+            "/static/", 
+            "/admin/maintenance",
+            "/_dev/"
+        ]
+        
+        # No bloquear rutas permitidas
+        if any(path.startswith(exempt) for exempt in exempt_paths):
             return
-
-        ff = FeatureFlag.get("admin_maintenance_mode")
-        if not ff or not ff.value_bool:
-            g.admin_banner = None
-            return  # sin mantenimiento
-
-        # Banner opcional para mostrar en layout si querés
-        g.admin_banner = ff.message
-
-        # SIEMPRE permitir login y estáticos
-        if path.startswith("/auth/login") or path.startswith("/static"):
-            return
-
-        # Permitir el panel de FF SOLO a SYS_ADMIN aún en mantenimiento
-        user_is_sys_admin = is_sys_admin(session)  # Nombre diferente para la variable
+            
+        # Comprobar si es SYS_ADMIN
+        user_is_sys_admin = is_sys_admin(session)
+        
+        # Permitir acceso a SYS_ADMIN al panel de feature flags incluso en mantenimiento
         if path.startswith("/admin/feature-flags") and user_is_sys_admin:
             return
-
-        # Bloquear el resto del admin
-        return redirect(url_for("maintenance.admin"))
-
-        # Si hay un mensaje de mantenimiento activo, hacerlo disponible para todas las plantillas
-        maintenance_flag = FeatureFlag.get("admin_maintenance_mode")
-        if maintenance_flag and maintenance_flag.value_bool:
-            g.maintenance_message = maintenance_flag.message
-            # También lo hacemos disponible para el template a través de session
-            session["maintenance_message"] = maintenance_flag.message
+            
+        # Obtener el flag de mantenimiento
+        flag = FeatureFlag.get("admin_maintenance_mode")
+        maintenance_active = flag and flag.value_bool
+        
+        if maintenance_active:
+            # Configurar mensaje para la UI
+            g.maintenance_message = flag.message
+            session["maintenance_message"] = flag.message
+                
+            # IMPORTANTE: Bloquear TODAS las rutas administrativas excepto /auth/login
+            # Las rutas públicas (/sites, /, etc.) siguen permitidas
+            # Revisar si es una ruta que necesita ser protegida
+            protected_routes = [
+                "/admin/",  # Rutas de admin tradicionales
+                "/users/",  # Usuarios
+                "/tags/",   # Tags
+                "/sites/",  # Añadido: Ruta principal de sitios
+                "/sites/admin/",  # Gestión de sitios específica
+                "/historicalsites/admin/"  # Otra posible ruta de sitios
+            ]
+            
+            # Bloquear acceso si es ruta protegida y no es SysAdmin
+            if any(path.startswith(route) for route in protected_routes) and not user_is_sys_admin:
+                return redirect(url_for("maintenance.admin"))
         else:
-            # Limpiar mensaje de sesión anterior si el modo mantenimiento está inactivo
-            session.pop("maintenance_message", None)
+            # Limpiar mensaje si no hay mantenimiento
+            if "maintenance_message" in session:
+                session.pop("maintenance_message")
             g.maintenance_message = None
 
     # -------------------------
