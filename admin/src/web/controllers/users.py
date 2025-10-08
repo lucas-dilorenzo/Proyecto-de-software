@@ -217,3 +217,16 @@ def delete_user(id: int):
     users.delete_user(user)
     flash("Usuario eliminado.", "info")
     return redirect(url_for("users.list_users"))
+
+
+@users_bp.get("/<int:id>")
+@login_required
+@permission_required(UserPermission.USER_LIST)
+def show_user(id: int):
+    """
+    Muestra la ficha de un usuario.
+    """
+    user = users.get_user_by_id(id)
+    if not user:
+        abort(404)
+    return render_template("users/show.html", user=user)

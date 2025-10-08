@@ -162,7 +162,7 @@ Bootstrap y estilos propios. #}
           <i class="bi bi-person-circle me-1" style="color: white"></i> Cuenta
         </a>
         <ul class="dropdown-menu dropdown-menu-end">
-          <li><a class="dropdown-item" href="#">Ver Perfil</a></li>
+          <li><a class="dropdown-item" href="{{ url_for('users.show_user', id=session.user) }}">Ver Perfil</a></li>
           <li>
             <a class="dropdown-item" href="{{ url_for('auth.logout') }}"
               >Cerrar Sesión</a
