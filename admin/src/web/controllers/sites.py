@@ -12,7 +12,7 @@ from flask import (
     url_for,
     abort,
     flash,
-    session
+    session,
 )
 import csv
 import json
@@ -144,6 +144,7 @@ def list_deleted_sites():
         sites=sites,
     )
 
+
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
 @login_required
 @permission_required(UserPermission.SITE_LIST)
@@ -215,7 +216,7 @@ def show_site_history(site_id):
 def create_site():
     # cargar tags para el formulario (se usa tanto en GET como en caso de validación fallida)
     tags = get_all_tags()
-    
+
     if request.method == "POST":
         form = SiteForm()
         if form.validate_on_submit():
@@ -282,45 +283,54 @@ def edit_site(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         abort(404)
-    if request.method == "POST":
-        formulario = request.form
-        historicalSites.update_site(
-            site_id,
-            name=formulario.get("name"),
-            description_short=formulario.get("description_short"),
-            description=formulario.get("description"),
-            city=formulario.get("city"),
-            province=formulario.get("province"),
-            location=formulario.get("location"),
-            conservation_status=formulario.get("conservation_status"),
-            year_declared=formulario.get("year_declared"),
-            category=formulario.get("category"),
-            registration_date=formulario.get("registration_date"),
-            visibility=formulario.get("visibility") == "true",
-        )
-
-        # Procesar tags seleccionados; si no se envían tags, vaciar la relación
-        try:
-            selected_tag_ids = request.form.getlist("tags")
-            tag_objs = []
-            for t in selected_tag_ids:
-                try:
-                    tid = int(t)
-                except Exception:
-                    continue
-                tag = historicalSites.tags.get_tag_by_id(tid)
-                if tag:
-                    tag_objs.append(tag)
-            # asignar (incluso lista vacía para limpiar tags)
-            site = historicalSites.get_site_by_id(site_id)
-            historicalSites.asignar_tags_a_sitio(site, tag_objs)
-        except Exception as e:
-            flash(f"No se pudieron actualizar los tags: {e}", "warning")
-
-        return redirect(url_for("sites.list_sites"))
-
     # cargar tags para el formulario de edición
     all_tags = historicalSites.tags.get_all_tags()
+    if request.method == "POST":
+        form = SiteForm()
+        if form.validate_on_submit():
+            formulario = request.form
+            historicalSites.update_site(
+                site_id,
+                name=formulario.get("name"),
+                description_short=formulario.get("description_short"),
+                description=formulario.get("description"),
+                city=formulario.get("city"),
+                province=formulario.get("province"),
+                location=formulario.get("location"),
+                conservation_status=formulario.get("conservation_status"),
+                year_declared=formulario.get("year_declared"),
+                category=formulario.get("category"),
+                registration_date=formulario.get("registration_date"),
+                visibility=formulario.get("visibility") == "true",
+            )
+
+            # Procesar tags seleccionados; si no se envían tags, vaciar la relación
+            try:
+                selected_tag_ids = request.form.getlist("tags")
+                tag_objs = []
+                for t in selected_tag_ids:
+                    try:
+                        tid = int(t)
+                    except Exception:
+                        continue
+                    tag = historicalSites.tags.get_tag_by_id(tid)
+                    if tag:
+                        tag_objs.append(tag)
+                # asignar (incluso lista vacía para limpiar tags)
+                site = historicalSites.get_site_by_id(site_id)
+                historicalSites.asignar_tags_a_sitio(site, tag_objs)
+            except Exception as e:
+                flash(f"No se pudieron actualizar los tags: {e}", "warning")
+
+            return redirect(url_for("sites.list_sites"))
+        else:
+            if form.errors:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        flash(f"Error en el campo {field}: {error}", "danger")
+            # preservar estado del checkbox de visibilidad
+            visibility_ = True if request.form.get("visibility") is not None else False
+            return redirect(url_for("sites.edit_site", site_id=site.id))
     return render_template("historicalSites/edit_site.html", site=site, tags=all_tags)
 
 
@@ -333,12 +343,12 @@ def delete_site(site_id):
         return "Site not found", 404
 
     if request.method == "GET":
-        #eliminado=site.id
+        # eliminado=site.id
         try:
             historicalSites.delete_site(site_id)
             flash(f"Sitio {site.name} eliminado correctamente.", "success")
         except Exception as e:
-            flash(f"No se pudo eliminar el sitio: {e}", "danger") 
+            flash(f"No se pudo eliminar el sitio: {e}", "danger")
         return redirect(url_for("sites.list_sites"))
 
 
@@ -348,7 +358,7 @@ def delete_site(site_id):
 def download_csv_sites():
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
-     
+
     if sites is None:
         return "No sites found", 404
 
@@ -371,7 +381,6 @@ def download_csv_sites():
             f"{normalizar(site.category)},"
             f"{normalizar(site.registration_date)},"
             f"{normalizar(tags_str)}\n"
-
         )
 
     return Response(
