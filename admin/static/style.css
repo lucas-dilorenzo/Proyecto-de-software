@@ -73,22 +73,21 @@
   /* Sidebar debajo del header */
   #sidebar {
     position: fixed;
-    /* top: 60px; respeta el header */
+    top: 60px; /* respeta el header */
     left: 0;
     height: calc(100vh - 60px);
     width: 250px;
     color: #333 !important; 
     background-color: white;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-    /* padding-top: 1rem; */
     transition: all 0.3s;
     z-index: 1000;
   }
 
   /* Sidebar colapsado */
-  /* #sidebar.collapsed {
+  #sidebar.collapsed {
     width: 80px;
-  } */
+  }
 
   .logo-navbar {
     height: 90%; /* Ajusta la altura al 90% del contenedor (navbar) */
@@ -119,9 +118,13 @@
     white-space: nowrap;
   }
 
-  /* #sidebar.collapsed .nav-link span {
+  #sidebar.collapsed .nav-link span {
     display: none;
-  } */
+  }
+
+  #sidebar.collapsed .profile-info {
+    display: none;
+  }
 
   #sidebar.collapsed ~ #content {
     margin-left: 80px;
@@ -161,6 +164,11 @@
 
   .profile-info {
     padding: 1rem;
+  }
+
+  /* Mobile backdrop oculto por defecto en desktop */
+  #mobile-backdrop {
+    display: none;
   }
 
   /* Responsive */

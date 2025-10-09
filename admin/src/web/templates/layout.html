@@ -181,66 +181,8 @@ Bootstrap y estilos propios. #}
       {% endif %}
     </nav>
 
-    <!-- Sidebar de navegación lateral -->
-    <div id="sidebar">
-      {% if is_authenticated(session) %}
-      <!-- Información del perfil -->
-      <div class="profile-info text-white" style="background-color: #555">
-        <p class="mb-1"><strong>Perfil:</strong> {{session.role.value}}</p>
-        <p class="mb-0">
-          <strong>Usuario:</strong> {{get_user(session.user).nombre}}
-        </p>
-      </div>
-      <ul class="nav flex-column">
-        <li class="nav-item">
-          <a href="{{ url_for('sites.list_sites') }}" class="nav-link">
-            <i class="bi bi-house-fill me-2"></i>
-            <span>Gestión de sitios históricos</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="{{ url_for('tags.list_tags') }}" class="nav-link">
-            <i class="bi bi-tags-fill"></i>
-            <span>Gestión de Tags</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="bi bi-file-earmark me-2"></i>
-            <span>Validación de propuestas</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="bi bi-chat me-2"></i>
-            <span>Moderación de reseñas</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link">
-            <i class="bi bi-people me-2"></i>
-            <span>Gestión de usuarios</span>
-          </a>
-        </li>
-        {% if is_sys_admin(session) %}
-        <li class="nav-item">
-          <a href="{{ url_for('feature_flags.index') }}" class="nav-link">
-            <i class="bi bi-toggles me-2"></i>
-            <span>Gestión de Feature Flags</span>
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-      <hr class="bg-light" style="margin: 0 0" />
-      <li class="nav-item" style="background-color: #e0eff4">
-        <a href="{{ url_for('auth.logout') }}" class="nav-link">
-          <i class="bi bi-arrow-left me-2"></i>
-          <span>CERRAR SESION</span>
-        </a>
-      </li>
-      <hr class="bg-light" style="margin: 0 0" />
-      {% endif %}
-    </div>
+    <!-- Mobile backdrop -->
+    <div id="mobile-backdrop"></div>
 
     <!-- Sidebar de navegación lateral -->
     <div id="sidebar">
@@ -293,12 +235,14 @@ Bootstrap y estilos propios. #}
         {% endif %}
       </ul>
       <hr class="bg-light" style="margin: 0 0" />
-      <li class="nav-item" style="background-color: #e0eff4">
-        <a href="{{ url_for('auth.logout') }}" class="nav-link">
-          <i class="bi bi-arrow-left me-2"></i>
-          <span>CERRAR SESION</span>
-        </a>
-      </li>
+      <ul class="nav flex-column">
+        <li class="nav-item" style="background-color: #e0eff4">
+          <a href="{{ url_for('auth.logout') }}" class="nav-link">
+            <i class="bi bi-arrow-left me-2"></i>
+            <span>CERRAR SESION</span>
+          </a>
+        </li>
+      </ul>
       <hr class="bg-light" style="margin: 0 0" />
       {% endif %}
     </div>
