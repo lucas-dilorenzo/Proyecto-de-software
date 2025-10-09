@@ -101,22 +101,11 @@ poetry run flask --app app:create_app seed-roles
 poetry run flask --app app:create_app seed-users
 ```
 
-O puedes usar el script automatizado:
 
-
-```bash
-./setup.sh
-```
-
-Si ves un error de permisos (por ejemplo, "Permission denied"), primero otorga permisos de ejecución al script con:
+O puedes usar el comando todo-en-uno:
 
 ```bash
-chmod +x setup.sh
-```
-Luego vuelve a ejecutar:
-
-```bash
-./setup.sh
+flask rearmar-db
 ```
 
 El comando `seed-db` carga los sitios históricos y crea el usuario administrador inicial (`admin@example.com` / `admin123`).
