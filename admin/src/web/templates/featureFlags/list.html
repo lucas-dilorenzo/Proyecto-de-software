@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+
+{% block title %}Feature Flags{% endblock %}
+
+{% block body %}
+<div class="container">
+    <h2>Feature Flags</h2>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Administración de Feature Flags</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Última modificación</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flag in flags %}
+                        <tr>
+                            <td>{{ flag.key }}</td>
+                            <td>{{ flag.message }}</td>
+                            <td>
+                                <span class="badge {% if flag.value_bool %}bg-success{% else %}bg-danger{% endif %}">
+                                    {{ "ON" if flag.value_bool else "OFF" }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if flag.updated_at %}
+                                {{ flag.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                                {% if flag.updated_by %}
+                                <br><small class="text-muted">por {{ flag.updated_by.email }}</small>
+                                {% endif %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if flag.value_bool %}
+                                <!-- Botón para desactivar -->
+                                <form method="POST" action="{{ url_for('feature_flags.update') }}">
+                                    <input type="hidden" name="key" value="{{ flag.key }}">
+                                    <input type="hidden" name="value_bool" value="off">
+                                    <input type="hidden" name="message" value="{{ flag.message }}">
+                                    <button class="btn btn-sm btn-danger">Desactivar</button>
+                                </form>
+                                {% else %}
+                                <!-- Para flags de mantenimiento, usamos un botón que abre el modal -->
+                                {% if flag.key in ['admin_maintenance_mode', 'portal_maintenance_mode'] %}
+                                <button class="btn btn-sm btn-success" data-bs-toggle="modal"
+                                    data-bs-target="#messageModal{{ loop.index }}">
+                                    Activar
+                                </button>
+
+                                <!-- Modal para ingresar mensaje -->
+                                <div class="modal fade" id="messageModal{{ loop.index }}" tabindex="-1"
+                                    aria-labelledby="messageModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <form method="POST" action="{{ url_for('feature_flags.update') }}">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="messageModalLabel">Mensaje de
+                                                        mantenimiento</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <input type="hidden" name="key" value="{{ flag.key }}">
+                                                    <input type="hidden" name="value_bool" value="on">
+                                                    <div class="mb-3">
+                                                        <label for="message" class="form-label">Ingrese un mensaje de
+                                                            mantenimiento (obligatorio):</label>
+                                                        <textarea class="form-control" name="message" rows="3"
+                                                            maxlength="200" required>{{ flag.message }}</textarea>
+                                                        <div class="form-text">Máximo 200 caracteres</div>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary">Guardar y
+                                                        activar</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <!-- Para flags regulares, botón normal -->
+                                <form method="POST" action="{{ url_for('feature_flags.update') }}">
+                                    <input type="hidden" name="key" value="{{ flag.key }}">
+                                    <input type="hidden" name="value_bool" value="on">
+                                    <input type="hidden" name="message" value="{{ flag.message }}">
+                                    <button class="btn btn-sm btn-success">Activar</button>
+                                </form>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No hay feature flags definidos</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

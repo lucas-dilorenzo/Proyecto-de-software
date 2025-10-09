@@ -22,6 +22,8 @@
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
 />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script
   src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
@@ -34,26 +36,24 @@
     margin-top: 10px;
   }
 </style>
-{% endblock %}
-
-{% block title %} Crear Sitio Histórico {% endblock %} 
-
-{% block titulo_body %}
-  <h1 style="margin-top: 2%">
-    <i class="bi bi-geo"></i>
-    <i class="bi bi-plus-circle"></i>
-    Nuevo Sitio Histórico
-  </h1>
-{% endblock %} 
-
-{% block body %}
+{% endblock %} {% block title %} Crear Sitio Histórico {% endblock %} {% block
+titulo_body %}
+<h1 style="margin-top: 2%">
+  <i class="bi bi-geo"></i>
+  <i class="bi bi-plus-circle"></i>
+  Nuevo Sitio Histórico
+</h1>
+{% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
-  <div class="card-body">
-    <form method="POST" action="{{ url_for('sites.create_site') }}">
+  <div class="card-body">        
+    <form method="POST" action="{{ url_for('sites.create_site') }}")
       <div class="row">
         <!-- Primera columna -->
         <div class="col-md-6">
           <div class="mb-3">
+            <label for="name" class="form-label">
+              <i class="bi bi-type me-1"></i>Nombre
+            </label>
             <input
               type="text"
               class="form-control"
@@ -65,9 +65,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="description_short" class="form-label">
-                  <i class="bi bi-card-text me-1"></i>Descripción Corta
-                </label> -->
+            <label for="description_short" class="form-label">
+              <i class="bi bi-card-text me-1"></i>Descripción Corta
+            </label>
             <input
               type="text"
               class="form-control"
@@ -79,9 +79,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="city" class="form-label">
-                  <i class="bi bi-geo-alt me-1"></i>Ciudad
-                </label> -->
+            <label for="city" class="form-label">
+              <i class="bi bi-geo-alt me-1"></i>Ciudad
+            </label>
             <input
               type="text"
               class="form-control"
@@ -93,9 +93,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="province" class="form-label">
-                  <i class="bi bi-map me-1"></i>Provincia
-                </label> -->
+            <label for="province" class="form-label">
+              <i class="bi bi-map me-1"></i>Provincia
+            </label>
             <input
               type="text"
               class="form-control"
@@ -126,10 +126,9 @@
         <!-- Segunda columna -->
         <div class="col-md-6">
           <div class="mb-3">
-            <!-- <label for="conservation_status" class="form-label">
-                  <i class="bi bi-shield-check me-1"></i>Estado de
-                  Conservación
-                </label> -->
+            <label for="conservation_status" class="form-label">
+              <i class="bi bi-shield-check me-1"></i>Estado de Conservación
+            </label>
             <select
               class="form-select"
               id="conservation_status"
@@ -146,9 +145,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="year_declared" class="form-label">
-                  <i class="bi bi-calendar-event me-1"></i>Año de Declaración
-                </label> -->
+            <label for="year_declared" class="form-label">
+              <i class="bi bi-calendar-event me-1"></i>Año de Declaración
+            </label>
             <input
               type="number"
               class="form-control"
@@ -162,9 +161,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="category" class="form-label">
-                  <i class="bi bi-tags me-1"></i>Categoría
-                </label> -->
+            <label for="category" class="form-label">
+              <i class="bi bi-tags me-1"></i>Categoría
+            </label>
             <select class="form-select" id="category" name="category" required>
               <option value="" disabled selected>
                 Selecciona una categoría
@@ -176,9 +175,9 @@
           </div>
 
           <div class="mb-3">
-            <!-- <label for="registration_date" class="form-label">
-                  <i class="bi bi-calendar3 me-1"></i>Fecha de Registro
-                </label> -->
+            <label for="registration_date" class="form-label">
+              <i class="bi bi-calendar3 me-1"></i>Fecha de Registro
+            </label>
             <input
               type="date"
               class="form-control"
@@ -238,12 +237,7 @@
               </div>
             </div>
           </div> -->
-      <select
-        name="tags"
-        id="tags"
-        class="form-select form-select-sm"
-        multiple
-      >
+      <select name="tags" id="tags" class="form-select form-select-sm" multiple>
         {% for tag in tags %}
         <option value="{{ tag.id }}">{{ tag.name }}</option>
         {% endfor %}
@@ -251,8 +245,8 @@
 
       <!-- MAPA -->
       <!-- Inputs ocultos para guardar coordenadas -->
-      <input type="hidden" id="lat" name="lat" />
-      <input type="hidden" id="lng" name="lng" />
+      <input type="hidden" id="lat" name="lat" required />
+      <input type="hidden" id="lng" name="lng" required />
 
       <label style="margin-top: auto"
         >Selecciona la ubicación en el mapa:</label
@@ -264,7 +258,7 @@
       <!-- Botones de acción -->
       <div class="card-actions p-3 d-flex justify-content-end">
         <div class="col-2">
-          <button type="submit" class="btn btn-azul">
+          <button type="submit" class="btn btn-azul" onclick="return validateForm()">
             Crear <i class="bi bi-caret-right small"></i>
           </button>
         </div>
@@ -301,9 +295,30 @@
     // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    document.getElementById("location").value = lat + "+" + lng;
+    // Formato correcto: "longitud latitud" (compatible con seeds y PostGIS)
+    document.getElementById("location").value = lng + " " + lat;
+    console.log("Latitud: " + lat + ", Longitud: " + lng);
   });
+
+  // Función de validación del formulario
+  function validateForm() {
+    var lat = document.getElementById("lat").value;
+    var lng = document.getElementById("lng").value;
+    
+    if (!lat || !lng) {
+      Swal.fire({
+        title: '¡Ubicación requerida!',
+        text: 'Por favor, selecciona una ubicación en el mapa antes de crear el sitio.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#3085d6'
+      });
+      return false;
+    }
+    return true;
+  }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {

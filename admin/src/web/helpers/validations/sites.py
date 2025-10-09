@@ -9,6 +9,7 @@ from wtforms import (
 )
 from wtforms.validators import InputRequired, Length, NumberRange, Optional, Regexp
 from datetime import date
+from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 
 
 class SiteForm(FlaskForm):
@@ -73,7 +74,7 @@ class SiteForm(FlaskForm):
     location = StringField(
         "Ubicación",
         validators=[
-            Optional(),
+            InputRequired(message="La ubicación es obligatoria"),
             Length(max=200, message="La ubicación no puede exceder 200 caracteres"),
         ],
     )
@@ -81,15 +82,7 @@ class SiteForm(FlaskForm):
     # Estado de conservación
     conservation_status = SelectField(
         "Estado de conservación",
-        choices=[
-            ("", "Seleccione un estado"),
-            ("excelente", "Excelente"),
-            ("bueno", "Bueno"),
-            ("regular", "Regular"),
-            ("malo", "Malo"),
-            ("critico", "Crítico"),
-            ("en_restauracion", "En restauración"),
-        ],
+        choices=ConservationStatus.choices(),
         validators=[Optional()],
     )
 
@@ -99,9 +92,9 @@ class SiteForm(FlaskForm):
         validators=[
             Optional(),
             NumberRange(
-                min=1500,
+                min=1,
                 max=date.today().year,
-                message=f"El año debe estar entre 1500 y {date.today().year}",
+                message=f"El año debe estar entre 1 y {date.today().year}",
             ),
         ],
     )
@@ -109,15 +102,7 @@ class SiteForm(FlaskForm):
     # Categoría
     category = SelectField(
         "Categoría",
-        choices=[
-            ("", "Seleccione una categoría"),
-            ("monumento_nacional", "Monumento Nacional"),
-            ("sitio_historico", "Sitio Histórico"),
-            ("bien_cultural", "Bien Cultural"),
-            ("patrimonio_mundial", "Patrimonio Mundial"),
-            ("monumento_historico_nacional", "Monumento Histórico Nacional"),
-            ("lugar_historico_nacional", "Lugar Histórico Nacional"),
-        ],
+        choices=SiteCategory.choices(),
         validators=[Optional()],
     )
 
@@ -157,3 +142,31 @@ class SiteForm(FlaskForm):
         if field.data:
             if field.data > date.today():
                 raise ValueError("La fecha de registro no puede ser futura")
+
+    def validate_year_declared_vs_registration(self):
+        """Validación que compara year_declared con registration_date"""
+        if self.year_declared.data and self.registration_date.data:
+            registration_year = self.registration_date.data.year
+            if self.year_declared.data > registration_year:
+                raise ValueError(
+                    "El año de declaración no puede ser mayor que el año de la fecha de registro"
+                )
+
+    def validate(self, extra_validators=None):
+        """Método de validación principal que incluye validaciones de múltiples campos"""
+        # Ejecutar validaciones básicas primero
+        rv = FlaskForm.validate(self, extra_validators)
+
+        # Si hay errores básicos, no continuar con validaciones complejas
+        if not rv:
+            return False
+
+        # Ejecutar validaciones personalizadas de múltiples campos
+        try:
+            self.validate_year_declared_vs_registration()
+        except ValueError as e:
+            # Agregar el error al campo year_declared
+            self.year_declared.errors.append(str(e))
+            return False
+
+        return True

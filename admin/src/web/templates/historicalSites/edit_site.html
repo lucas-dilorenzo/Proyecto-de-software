@@ -56,45 +56,61 @@
         <!-- Primera columna -->
         <div class="col-md-6">
           <div class="mb-3">
+            <label for="name" class="form-label">
+              <i class="bi bi-type me-1"></i>Nombre
+            </label>
             <input
               type="text"
               class="form-control"
               id="name"
               name="name"
               required
+              placeholder="Ingrese el nombre del sitio"
               value="{{ site.name }}"
             />
           </div>
 
           <div class="mb-3">
+            <label for="description_short" class="form-label">
+              <i class="bi bi-card-text me-1"></i>Descripción Corta
+            </label>
             <input
               type="text"
               class="form-control"
               id="description_short"
               name="description_short"
               required
+              placeholder="Descripción breve del sitio"
               value="{{ site.description_short }}"
             />
           </div>
 
           <div class="mb-3">
+            <label for="city" class="form-label">
+              <i class="bi bi-geo-alt me-1"></i>Ciudad
+            </label>
             <input
               type="text"
               class="form-control"
               id="city"
               name="city"
               required
+              placeholder="Ingrese la ciudad"
               value="{{ site.city }}"
             />
           </div>
 
           <div class="mb-3">
+            <label for="province" class="form-label">
+              <i class="bi bi-map me-1"></i>Provincia
+            </label>
             <input
               type="text"
               class="form-control"
               id="province"
               name="province"
               required
+              placeholder="Ingrese la provincia"
               value="{{ site.province }}"
             />
           </div>
@@ -115,6 +131,9 @@
         <!-- Segunda columna -->
         <div class="col-md-6">
           <div class="mb-3">
+            <label for="conservation_status" class="form-label">
+              <i class="bi bi-shield-check me-1"></i>Estado de Conservación
+            </label>
             <select
               class="form-select"
               id="conservation_status"
@@ -129,6 +148,9 @@
           </div>
 
           <div class="mb-3">
+            <label for="year_declared" class="form-label">
+              <i class="bi bi-calendar-event me-1"></i>Año de Declaración
+            </label>
             <input
               type="number"
               class="form-control"
@@ -137,11 +159,15 @@
               required
               min="1800"
               max="2024"
+              placeholder="Año en que fue declarado"
               value="{{ site.year_declared }}"
             />
           </div>
 
           <div class="mb-3">
+            <label for="category" class="form-label">
+              <i class="bi bi-tags me-1"></i>Categoría
+            </label>
             <select class="form-select" id="category" name="category" required>
               <option value="" disabled>Selecciona una categoría</option>
               {% for key, value in get_sites_categories().items() %}
@@ -151,6 +177,9 @@
           </div>
 
           <div class="mb-3">
+            <label for="registration_date" class="form-label">
+              <i class="bi bi-calendar3 me-1"></i>Fecha de Registro
+            </label>
             <input
               type="date"
               class="form-control"
@@ -235,41 +264,35 @@
 </div>
 
 <script>
-  // Inicializar mapa (si existe location lo intento parsear)
-  var initialLat = -34.6037;
-  var initialLng = -58.3816;
-  try {
-    if ("{{ site.location }}") {
-      var loc = "{{ site.location }}".split("+");
-      if (loc.length === 2) {
-        initialLat = parseFloat(loc[0]);
-        initialLng = parseFloat(loc[1]);
-        document.getElementById('lat').value = initialLat;
-        document.getElementById('lng').value = initialLng;
-      }
-    }
-  } catch (e) {}
+  // Obtener coordenadas del sitio histórico
+  var lat = {{ site.latitude }};
+  var lng = {{ site.longitude }};
+  console.log("Coordenadas iniciales - Latitud: " + lat + ", Longitud: " + lng);
+  // Inicializar mapa centrado en las coordenadas del sitio
+  var map = L.map("map").setView([lat, lng], 15);
 
-  var map = L.map("map").setView([initialLat, initialLng], 13);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
-
+  document.getElementById("location").value = lng + " " + lat
   var marker;
-  if (document.getElementById('lat').value && document.getElementById('lng').value) {
-    marker = L.marker([document.getElementById('lat').value, document.getElementById('lng').value]).addTo(map);
-  }
-
+  marker = L.marker([lat, lng]).addTo(map);
+  // Evento click en mapa
   map.on("click", function (e) {
     var lat = e.latlng.lat;
     var lng = e.latlng.lng;
+
     if (marker) {
       map.removeLayer(marker);
     }
     marker = L.marker([lat, lng]).addTo(map);
+
+    // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    document.getElementById("location").value = lat + "+" + lng;
+    // Formato correcto: "longitud latitud" (compatible con seeds y PostGIS)
+    document.getElementById("location").value = lng + " " + lat;
+    console.log("Latitud: " + lat + ", Longitud: " + lng);
   });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>

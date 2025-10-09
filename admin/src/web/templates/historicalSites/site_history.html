@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block titulo_body %}
+  <h1>Historial- {{ site.name }}</h1>
+{% endblock %}
+
+{% block body %}
+  <div class="card shadow-sm border-0 rounded-0 bg-white">
+    <div class="card-body">
+      {% if logs %}
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Usuario</th>
+              <th>Acción</th>
+              <th>Detalles</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in logs %}
+              <tr>
+                <td>{{ l.timestamp.strftime('%d/%m/%Y - %H:%M')}}</td>
+                <td>{{ l.user.nombre or '-' }}</td>
+                <td>{{ l.action }}</td>
+                <td>
+                  {% if l.parsed_changes %}
+                    <ul class="mb-0">
+                      {% for field, old, new in l.parsed_changes %}
+                        <li><strong>{{ field }}</strong>: {{ old or '-' }} &rarr; {{ new or '-' }}</li>
+                      {% endfor %}
+                    </ul>
+                  {% else %}
+                    {{ l.details or '-' }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No hay registros de historial para este sitio.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-2 justify-content-start" style="margin-top: 2%">
+    {% if not site.deleted %}
+    <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
+      <i class="bi bi-arrow-left small"></i> Volver
+    </a>
+    {% else %}
+    <a href="{{ url_for('sites.list_deleted_sites') }}" class="btn btn-azul">
+      <i class="bi bi-arrow-left small"></i> Volver
+    </a>
+    {% endif %}
+  </div>
+
+  </div>
+{% endblock %}

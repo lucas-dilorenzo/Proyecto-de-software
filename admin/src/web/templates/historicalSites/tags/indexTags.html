@@ -43,9 +43,34 @@
         <table class="table table-hover align-middle">
             <thead class="table-light">
                 <tr>
-                <th scope="col"> Nombre </th>
+                {# Nombre ordenable #}
+                {% set next_dir_name = 'asc' %}
+                {% if order_by == 'name' and order_dir == 'asc' %}
+                    {% set next_dir_name = 'desc' %}
+                {% endif %}
+                <th scope="col">
+                    <a href="{{ url_for('tags.list_tags', page=1, order_by='name', order_dir=next_dir_name, **(current_query or {})) }}">
+                        Nombre
+                        {% if order_by == 'name' %}
+                            <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+                        {% endif %}
+                    </a>
+                </th>
                 <th scope="col"> Slug </th>
                 <th scope="col"> Descripción </th>
+                {# Fecha creación ordenable #}
+                {% set next_dir_date = 'asc' %}
+                {% if order_by == 'created_at' and order_dir == 'asc' %}
+                    {% set next_dir_date = 'desc' %}
+                {% endif %}
+                <th scope="col">
+                    <a href="{{ url_for('tags.list_tags', page=1, order_by='created_at', order_dir=next_dir_date, **(current_query or {})) }}">
+                        Fecha creación
+                        {% if order_by == 'created_at' %}
+                            <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+                        {% endif %}
+                    </a>
+                </th>
                 <th scope="col">Acciones</th>
                 </tr>
             </thead>
@@ -55,6 +80,13 @@
                         <td>{{ tag.name }}</td>
                         <td>{{ tag.slug }}</td>
                         <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="{{ tag.description }}">{{ tag.description }}</td>
+                        <td>
+                            {% if tag.created_at %}
+                                {{ tag.created_at.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
                         <td>
                             <a href="{{ url_for('tags.show_tag', tag_id=tag.id) }}" class="btn btn-icon" title="Mostrar Tag" aria-label="Mostrar Tag">
                                 <i class="bi bi-eye"></i>
@@ -81,7 +113,7 @@
                         <nav aria-label="Paginación tags">
                             <ul class="pagination justify-content-end mb-0">
                                 <li class="page-item {% if not tags.has_prev %}disabled{% endif %}">
-                                    <a class="page-link" href="{% if tags.has_prev %}{{ url_for('tags.list_tags', page=tags.prev_num, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Previous" style="color:#004c82">
+                                    <a class="page-link" href="{% if tags.has_prev %}{{ url_for('tags.list_tags', page=tags.prev_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Previous" style="color:#004c82">
                                         <span aria-hidden="true">&laquo;</span>
                                     </a>
                                 </li>
@@ -90,14 +122,14 @@
                                         {% if page_num == tags.page %}
                                             <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
                                         {% else %}
-                                            <li class="page-item"><a class="page-link" href="{{ url_for('tags.list_tags', page=page_num, **(current_query or {})) }}">{{ page_num }}</a></li>
+                                            <li class="page-item"><a class="page-link" href="{{ url_for('tags.list_tags', page=page_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}">{{ page_num }}</a></li>
                                         {% endif %}
                                     {% else %}
                                         <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
                                     {% endif %}
                                 {% endfor %}
                                 <li class="page-item {% if not tags.has_next %}disabled{% endif %}">
-                                    <a class="page-link" href="{% if tags.has_next %}{{ url_for('tags.list_tags', page=tags.next_num, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Next" style="color:#004c82">
+                                    <a class="page-link" href="{% if tags.has_next %}{{ url_for('tags.list_tags', page=tags.next_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Next" style="color:#004c82">
                                         <span aria-hidden="true">&raquo;</span>
                                     </a>
                                 </li>

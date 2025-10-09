@@ -1,9 +1,14 @@
 # from core.database import db
 from src.core.database import db
 from src.core.historicalSites.site import Site
+from src.core.historicalSites.site import SiteLog
+from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
+from geoalchemy2 import WKTElement
+from src.core.historicalSites.site import SiteLog
+
 
 def create_site(**kwargs):
     """
@@ -25,7 +30,19 @@ def create_site(**kwargs):
     Returns:
         Site: The newly created Site object.
     """
-    site = Site(**kwargs)
+    site = Site(
+        name=kwargs.get("name"),
+        description_short=kwargs.get("description_short"),
+        description=kwargs.get("description"),
+        city=kwargs.get("city"),
+        province=kwargs.get("province"),
+        location=WKTElement(f"POINT({kwargs.get('location')})", srid=4326),
+        conservation_status=kwargs.get("conservation_status"),
+        year_declared=kwargs.get("year_declared"),
+        category=kwargs.get("category"),
+        registration_date=kwargs.get("registration_date"),
+        visibility=kwargs.get("visibility", True),
+    )
     db.session.add(site)
     db.session.commit()
     return site
@@ -78,6 +95,9 @@ def update_site(site_id, **kwargs):
     if not site:
         return None
     for key, value in kwargs.items():
+        if key == "location" and value is not None:
+            value = WKTElement(f"POINT({value})", srid=4326)
+            print(f"Updating location to: {value}")
         setattr(site, key, value)
     db.session.commit()
     return site
@@ -95,7 +115,8 @@ def delete_site(site_id: int):
     site = get_site_by_id(site_id)
     if not site:
         return False
-    db.session.delete(site)
+
+    site.deleted = True
     db.session.commit()
     return True
 
@@ -121,30 +142,12 @@ def get_sites_paginated_by_name(page: int = 1, per_page: int = 25, order: str = 
     return sites
 
 
-    # def get_sites_paginated_by_id(page: int = 1, per_page: int = 25, order: str = "asc"):
-    #     """
-    #     Retrieves a paginated list of historical sites from the database.
-    #     Args:
-    #         page (int): The page number to retrieve (default is 1).
-    #         per_page (int): The number of sites to display per page (default is 25).
-    #         order (str): The order in which to sort the sites by id ('asc' for ascending(default), 'desc' for descending; default is 'asc').
-    #     Returns:
-    #         sites: A query containing the paginated list of sites and pagination metadata.
-    #     """
-    #     if order == "desc":
-    #         sites = Site.query.order_by(Site.id.desc()).paginate(
-    #             page=page, per_page=per_page, error_out=False
-    #         )
-    #     else:
-    #         sites = Site.query.order_by(Site.id.asc()).paginate(
-    #             page=page, per_page=per_page, error_out=False
-    #         )
-    #     return sites
-
 def get_sites_paginated_by_id(
     page: int = 1,
     per_page: int = 25,
-    order: str = "asc",
+    # order: str = "asc",
+    order="asc",
+    order_by="name",
     city: str = None,
     province: str = None,
     tags: list = None,
@@ -157,7 +160,7 @@ def get_sites_paginated_by_id(
     """
     Retorna sitios paginados aplicando filtros opcionales.
     """
-    query = Site.query
+    query = Site.query.filter(Site.deleted == False)
 
     if city:
         city_q = city.strip()
@@ -249,14 +252,28 @@ def get_sites_paginated_by_id(
         except Exception:
             pass
 
-    # ordenar
-    if order == "desc":
-        query = query.order_by(Site.name.desc())
+    # Campos para ordenamiento
+    order_fields = {
+        "name": Site.name,
+        "city": Site.city,
+        "date": Site.registration_date,
+    }
+    field = order_fields.get(order_by, Site.name)
+
+    # Aplicar orden asc o desc
+    if order.lower() == "desc":
+        query = query.order_by(field.desc())
     else:
-        query = query.order_by(Site.name.asc())
+        query = query.order_by(field.asc())
+    # # ordenar
+    # if order == "desc":
+    #     query = query.order_by(Site.name.desc())
+    # else:
+    #     query = query.order_by(Site.name.asc())
 
     sites = query.paginate(page=page, per_page=per_page, error_out=False)
     return sites
+
 
 def asignar_tags_a_sitio(site: Site, tags: list):
     """
@@ -271,8 +288,30 @@ def asignar_tags_a_sitio(site: Site, tags: list):
     db.session.commit()
     return site
 
+
 def get_all_provinces():
     """
     Retorna una lista de todas las provincias.
     """
     return Site.query.with_entities(Site.province).distinct().all()
+
+
+def get_site_logs(site_id: int):
+    """Devuelve los logs de un sitio ordenados por fecha descendente, con usuario cargado."""
+    try:
+        logs = (
+            SiteLog.query.filter_by(site_id=site_id)
+            .order_by(SiteLog.timestamp.desc())
+            .all()
+        )
+        return logs
+    except Exception:
+        return []
+
+
+def get_deleted_sites():
+    """Retorna todos los sitios marcados como eliminados (deleted == True)."""
+    try:
+        return Site.query.filter(Site.deleted == True).all()
+    except Exception:
+        return []
