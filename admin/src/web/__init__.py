@@ -38,7 +38,12 @@ from src.web.controllers.users import users_bp
 from web.controllers.auth.authenticate import auth_bp
 from src.web.controllers.tags_controller import tags_bp
 from src.web.controllers.sites import historical_sites_bp
-from src.web.controllers.sites import get_categories, get_conservation_statuses
+from src.web.controllers.sites import (
+    get_categories,
+    get_category_label,
+    get_conservation_statuses,
+    get_conservation_status,
+)
 from src.web import helpers
 from src.web.helpers import login_required
 from src.web.auditoria import site_events
@@ -126,6 +131,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.jinja_env.globals.update(get_user=helpers.get_user_by_id)
     app.jinja_env.globals.update(get_sites_categories=get_categories)
     app.jinja_env.globals.update(get_conservation_status=get_conservation_statuses)
+    app.jinja_env.globals.update(get_conservation_status_label=get_conservation_status)
+    app.jinja_env.globals.update(get_category_label=get_category_label)
     app.jinja_env.globals.update(is_sys_admin=is_sys_admin)
 
     # ---------- Guard global: Admin Maintenance Mode ----------
@@ -207,7 +214,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def seed_roles():
         seeds.roles()
 
-    
     # -------------------------
     # script para rearmar la db
     # -------------------------
@@ -219,14 +225,13 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
         en vez de invocar las funciones registradas como comandos CLI
         para evitar problemas con el contexto o el registro de comandos.
         """
-        #before seeding, we remove events to avoid errors
+        # before seeding, we remove events to avoid errors
         from sqlalchemy import event, inspect
         from src.core.historicalSites.site import Site, SiteLog
         from src.web.auditoria.site_events import after_insert, after_update
 
         event.remove(Site, "after_insert", after_insert)
         event.remove(Site, "after_update", after_update)
-
 
         # resetear la base
         database.reset_db()

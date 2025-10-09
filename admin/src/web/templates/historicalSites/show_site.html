@@ -100,7 +100,7 @@ block titulo_body %}
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
                 <i class="bi bi-tags me-2"></i>Categoría
               </label>
-              <p>{{ site.category }}</p>
+              <p>{{ get_category_label(site.category) }}</p>
 
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
                 <i class="bi bi-clock-history me-2"></i>Fecha de registro
@@ -110,7 +110,9 @@ block titulo_body %}
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
                 <i class="bi bi-shield-check me-2"></i>Estado de conservación
               </label>
-              <p>{{ site.conservation_status }}</p>
+              <p>
+                {{ get_conservation_status_label(site.conservation_status) }}
+              </p>
             </div>
           </div>
         </div>

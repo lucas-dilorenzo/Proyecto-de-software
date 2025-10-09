@@ -2,11 +2,12 @@
 from src.core.database import db
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.site import SiteLog
+from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 from sqlalchemy import or_, func
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
-from src.core.historicalSites.site import SiteLog 
+from src.core.historicalSites.site import SiteLog
 
 
 def create_site(**kwargs):
@@ -255,7 +256,7 @@ def get_sites_paginated_by_id(
     order_fields = {
         "name": Site.name,
         "city": Site.city,
-        "date": Site.registration_date,  
+        "date": Site.registration_date,
     }
     field = order_fields.get(order_by, Site.name)
 
@@ -298,7 +299,11 @@ def get_all_provinces():
 def get_site_logs(site_id: int):
     """Devuelve los logs de un sitio ordenados por fecha descendente, con usuario cargado."""
     try:
-        logs = SiteLog.query.filter_by(site_id=site_id).order_by(SiteLog.timestamp.desc()).all()
+        logs = (
+            SiteLog.query.filter_by(site_id=site_id)
+            .order_by(SiteLog.timestamp.desc())
+            .all()
+        )
         return logs
     except Exception:
         return []
