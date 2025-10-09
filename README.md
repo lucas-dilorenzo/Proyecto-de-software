@@ -110,37 +110,6 @@ flask rearmar-db
 
 El comando `seed-db` carga los sitios históricos y crea el usuario administrador inicial (`admin@example.com` / `admin123`).
 
----
-
-### Módulo de Usuarios (Admin)
-
-Accesible solo para **rol Administrador**.
-
-- **Login de desarrollo (setea rol en sesión):**
-  ```
-  http://127.0.0.1:5000/_dev/login_as_admin
-  ```
-
-- **Ver rol actual en sesión:**
-  ```
-  http://127.0.0.1:5000/_dev/whoami
-  ```
-
-- **Listado de usuarios:**
-  ```
-  http://127.0.0.1:5000/admin/users
-  ```
-
-Funcionalidades:
-- CRUD completo (crear, listar, editar, eliminar).
-- Filtros: email / activo (SI|NO) / rol.
-- Orden por fecha de creación (asc/desc).
-- Paginación server-side (máx 25 registros).
-- Validaciones cliente y servidor.
-- Feedback con mensajes flash.
-
----
-
 ### Calculadora
 
 La calculadora no requiere configuración adicional, solo Python.
@@ -196,7 +165,6 @@ python3 --version
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Cómo Ejecutar las Aplicaciones](#cómo-ejecutar-las-aplicaciones)
 - [Comandos útiles (Admin)](#comandos-útiles-admin)
-- [Módulo de Usuarios (Admin)](#módulo-de-usuarios-admin)
 - [Calculadora](#calculadora)
 - [Ejecutar Tests](#ejecutar-tests)
 - [Solución de Problemas](#solución-de-problemas)
