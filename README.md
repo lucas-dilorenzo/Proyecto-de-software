@@ -12,6 +12,7 @@ Antes de comenzar, asegúrate de tener instalado en tu sistema:
 
 - **Python 3.12 o superior**
 - **Poetry** (para gestión de dependencias del módulo Admin)
+- **PostgreSQL 17** con extensión **PostGIS**
 
 ### Instalación de Poetry
 
@@ -65,36 +66,45 @@ cd admin
 ```bash
 poetry env activate
 ```
-Esto te dará el comando específico para activar el entorno virtual en tu sistema. por ejemplo: 
+Esto te dará el comando específico para activar el entorno virtual en tu sistema. Por ejemplo:
 ```
 source /Users/lucas/Desktop/PROYECTO/code/admin/.venv/bin/activate
 ```
-Copiamos y pegamos esa linea completa y nos levantara el entrono virtual.
+Copia y pega esa línea completa para activar el entorno virtual.
 
 3. Levantar la aplicación (modo desarrollo):
 ```bash
-poetry run flask run --debug
+flask run --debug
 ```
 
 4. Abrir en el navegador: [http://127.0.0.1:5000](http://127.0.0.1:5000)
 
 ---
 
-
 ### Comandos útiles (Admin)
 
 - **Resetear la base de datos y poblarla con datos iniciales:**
 
-Si ya activaste el entorno virtual de Poetry, puedes usar:
+Si ya activaste el entorno virtual, puedes usar:
 ```bash
 flask reset-db    # Borra y recrea todas las tablas de la base de datos
 flask seed-db     # Carga los datos semilla (sitios históricos y admin)
+flask seed-roles  # Carga los roles
+flask seed-users  # Carga los usuarios
 ```
 
 O bien, sin activar el entorno virtual manualmente:
 ```bash
 poetry run flask --app app:create_app reset-db
 poetry run flask --app app:create_app seed-db
+poetry run flask --app app:create_app seed-roles
+poetry run flask --app app:create_app seed-users
+```
+
+O puedes usar el script automatizado:
+
+```bash
+./setup.sh
 ```
 
 El comando `seed-db` carga los sitios históricos y crea el usuario administrador inicial (`admin@example.com` / `admin123`).
