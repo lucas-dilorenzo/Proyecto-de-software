@@ -260,14 +260,14 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # -----------------------------------
     # Ruta auxiliar de DEV: login
     # -----------------------------------
-    @app.get("/_dev/login")
-    def login_as_admin():
-        """
-        SOLO DESARROLLO:
-        Setea en sesión el rol dado para poder probar el módulo de usuarios.
-        """
-        session["role"] = request.args.get("role", UserRole.SYS_ADMIN.name)
-        flash("Sesión DEV iniciada.", "success")
-        return redirect(url_for("home"))
+    # @app.get("/_dev/login")
+    # def login_as_admin():
+    #     """
+    #     SOLO DESARROLLO:
+    #     Setea en sesión el rol dado para poder probar el módulo de usuarios.
+    #     """
+    #     session["role"] = request.args.get("role", UserRole.SYS_ADMIN.name)
+    #     flash("Sesión DEV iniciada.", "success")
+    #     return redirect(url_for("home"))
 
     return app
