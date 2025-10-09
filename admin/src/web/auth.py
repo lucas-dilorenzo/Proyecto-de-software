@@ -24,6 +24,9 @@ def permission_required(permission: UserPermission):
         @wraps(fn)
         def wrapper(*args, **kwargs):
             user_role = session.get("role")
+            if user_role is None:
+                flash("No estás logueado.", "warning")
+                return abort(401)
             if not check_permission(UserRole(user_role), permission):
                 flash("No tenés permisos para acceder a este módulo.", "danger")
                 return abort(401)
