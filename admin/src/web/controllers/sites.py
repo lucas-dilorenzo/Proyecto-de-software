@@ -63,7 +63,8 @@ def list_sites():
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
         per_page=25,
-        order="asc",
+        order=order_dir,
+        order_by=order_by,
         city=city,
         province=province,
         tags=tags,
