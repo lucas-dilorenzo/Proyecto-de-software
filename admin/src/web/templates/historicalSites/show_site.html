@@ -113,6 +113,15 @@ block titulo_body %}
               <p>
                 {{ get_conservation_status_label(site.conservation_status) }}
               </p>
+
+              <label class="form-label fw-semibold fs-5 mb-2 text-primary">
+                <i class="bi bi-shield-check me-2"></i>Tags
+              </label>
+              <p>
+                {% for tag in site.tags %}
+                  <span class="badge bg-light text-dark me-1">{{ tag.name }}</span>
+                {% endfor %}
+              </p>
             </div>
           </div>
         </div>
