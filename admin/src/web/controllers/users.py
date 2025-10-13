@@ -181,13 +181,6 @@ def update_user(id: int):
             flash(e, "danger")
         return redirect(url_for("users.edit_user", id=id))
 
-    # if data.get("email") and data["email"] != user.email:
-    #     dup = db.session.execute(
-    #         select(User).where(User.email == data["email"])
-    #     ).scalar_one_or_none()
-    #     if dup:
-    #         flash("El email ya está en uso.", "warning")
-    #         return redirect(url_for("users.edit_user", id=id))
     if data.get("email") and data["email"] != user.email:
         if not users.validate_email_unique(data["email"], user_id=user.id):
             flash("El email ya está en uso.", "warning")

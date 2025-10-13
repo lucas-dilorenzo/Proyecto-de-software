@@ -1,5 +1,6 @@
 from src.core.historicalSites.tags.tag import Tag  # noqa: F401
 from src.core.database import db
+from sqlalchemy import func
 
 def get_tags_paginated(busqueda, page=1, per_page=3, order_by='name', order_dir='asc'):
     query = Tag.query
@@ -29,8 +30,14 @@ def get_all_tags():
 # Args: name (str): El nombre del tag a buscar.
 # Return: Tag: El objeto Tag si se encuentra, de lo contrario None.
 def get_tag_by_name(name: str):
-    query = db.session.query(Tag).filter_by(name=name).first()
-    return query
+    if not name:
+        return None
+    # Comparación case-insensitive para evitar duplicados por diferencia de mayúsculas/minúsculas
+    try:
+        lowered = name.strip().lower()
+    except Exception:
+        lowered = name
+    return db.session.query(Tag).filter(func.lower(Tag.name) == lowered).first()
 
 # Busca un tag por su ID
 # Args: id (int): El ID del tag a buscar.
