@@ -387,7 +387,7 @@ def download_csv_sites():
         )
 
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"sitios_{timestamp}.csv"
+        filename = f"sitios_{timestamp}"
 
     return Response(
         csv_data,
