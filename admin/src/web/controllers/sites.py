@@ -4,6 +4,7 @@ from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
 from src.core.historicalSites.tags import get_all_tags
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
+from datetime import datetime
 from flask import (
     Blueprint,
     Response,
@@ -384,11 +385,14 @@ def download_csv_sites():
             f"{normalizar(tags_str)}\n"
         )
 
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"sitios_{timestamp}.csv"
+
     return Response(
         csv_data,
         mimetype="text/csv",
         headers={
-            "Content-disposition": "attachment; filename=sitios_<YYYYMMDD_HHMM>.csv"
+            "Content-disposition": f"attachment; filename={filename}.csv"
         },
     )
 
