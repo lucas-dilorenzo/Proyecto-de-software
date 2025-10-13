@@ -77,7 +77,7 @@ def new_tag():
 @login_required
 def edit_tag(tag_id):
     # obtener el tag o 404
-    tag = Tag.query.get_or_404(tag_id)
+    # tag = Tag.query.get_or_404(tag_id)
 
     errors = {}
     if request.method == "POST":
