@@ -392,9 +392,7 @@ def download_csv_sites():
     return Response(
         csv_data,
         mimetype="text/csv",
-        headers={
-            "Content-disposition": f"attachment; filename={filename}.csv"
-        },
+        headers={"Content-disposition": f"attachment; filename={filename}.csv"},
     )
 
 

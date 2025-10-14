@@ -197,39 +197,111 @@ Bootstrap y estilos propios. #}
       <ul class="nav flex-column">
         <li class="nav-item">
           <a href="{{ url_for('sites.list_sites') }}" class="nav-link">
-            <i class="bi bi-geo me-2"></i>
-            <span>Gestión de sitios históricos</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-geo me-2"></i>
+            </div>
+            <div>
+              <span>Gestión de sitios históricos</span>
+            </div>
           </a>
         </li>
         <li class="nav-item">
           <a href="{{ url_for('tags.list_tags') }}" class="nav-link">
-            <i class="bi bi-tags-fill"></i>
-            <span>Gestión de Tags</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-tags-fill"></i>
+            </div>
+            <div>
+              <span>Gestión de Tags</span>
+            </div>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link">
-            <i class="bi bi-list-check"></i>
-            <span>Validación de propuestas</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-list-check"></i>
+            </div>
+            <div>
+              <span>Validación de propuestas</span>
+            </div>
           </a>
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link">
-            <i class="bi bi-chat me-2"></i>
-            <span>Moderación de reseñas</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-chat me-2"></i>
+            </div>
+            <div>
+              <span>Moderación de reseñas</span>
+            </div>
           </a>
         </li>
         <li class="nav-item">
           <a href="{{ url_for('users.list_users') }}" class="nav-link">
-            <i class="bi bi-people me-2"></i>
-            <span>Gestión de usuarios</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-people me-2"></i>
+            </div>
+            <div>
+              <span>Gestión de usuarios</span>
+            </div>
           </a>
         </li>
         {% if is_sys_admin(session) %}
         <li class="nav-item">
           <a href="{{ url_for('feature_flags.index') }}" class="nav-link">
-            <i class="bi bi-toggles me-2"></i>
-            <span>Gestión de Feature Flags</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-toggles me-2"></i>
+            </div>
+            <div>
+              <span>Gestión de Feature Flags</span>
+            </div>
           </a>
         </li>
         {% endif %}
@@ -238,8 +310,20 @@ Bootstrap y estilos propios. #}
       <ul class="nav flex-column">
         <li class="nav-item" style="background-color: #e0eff4">
           <a href="{{ url_for('auth.logout') }}" class="nav-link">
-            <i class="bi bi-arrow-left me-2"></i>
-            <span>CERRAR SESION</span>
+            <div
+              style="
+                width: 24px;
+                height: 24px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <i class="bi bi-arrow-left me-2"></i>
+            </div>
+            <div>
+              <span>CERRAR SESION</span>
+            </div>
           </a>
         </li>
       </ul>
