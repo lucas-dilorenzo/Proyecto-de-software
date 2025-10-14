@@ -29,7 +29,7 @@ def login():
             if not user:
                 flash("Usuario no encontrado.", "danger")
                 return render_template("auth/login.html", email=email)
-            
+
             if not user.activo:
                 flash("Usuario bloqueado.", "danger")
                 return render_template("auth/login.html", email=email)
@@ -43,7 +43,9 @@ def login():
                 flash("Credenciales inválidas. Intenta de nuevo.", "danger")
                 return render_template("auth/login.html", email=email)
         else:
-            flash("Error en el formulario. Intenta de nuevo.", "danger")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"{getattr(form, field).label.text}: {error}", "danger")
             return render_template("auth/login.html")
 
     return render_template("auth/login.html")

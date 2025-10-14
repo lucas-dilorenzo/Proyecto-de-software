@@ -12,5 +12,6 @@ class FormularioInicioSesion(FlaskForm):
         ],
     )
     password = PasswordField(
-        "password", validators=[InputRequired(message="El campo de contraseña vacío.")]
+        "Contraseña",
+        validators=[InputRequired(message="El campo de contraseña está vacío.")],
     )
