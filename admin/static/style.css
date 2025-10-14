@@ -134,6 +134,22 @@
     display: none;
   }
 
+  /* Ajustar solo el elemento con background cuando está colapsado */
+  #sidebar.collapsed .nav-item[style*="background-color"] {
+    width: 60px;
+    overflow: hidden;
+  }
+
+  #sidebar.collapsed .nav-link {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Centrar solo el contenido cuando está colapsado */
+  #sidebar.collapsed .nav-link > div:first-child {
+    margin: 0 auto;
+  }
+
   #sidebar.collapsed ~ #content {
     margin-left: 60px;
   }
