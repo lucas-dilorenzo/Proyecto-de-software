@@ -16,7 +16,7 @@
  #content {
     background-color: #f9f9f9;
     margin-top: 60px; /* respeta el header */
-    margin-left: 250px; /* respeta el sidebar */
+    margin-left: 220px; /* respeta el sidebar con margen mínimo */
     padding: 1rem;
     transition: margin-left 0.3s;
     min-height: calc(100vh - 60px);
@@ -76,17 +76,22 @@
     top: 60px; /* respeta el header */
     left: 0;
     height: calc(100vh - 60px);
-    width: 250px;
+    width: auto;
+    min-width: 200px;
+    max-width: 300px;
     color: #333 !important; 
     background-color: white;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
     z-index: 1000;
+    padding-right: 0.2rem;
   }
 
   /* Sidebar colapsado */
   #sidebar.collapsed {
     width: 80px;
+    min-width: 80px;
+    padding-right: 0;
   }
 
   .logo-navbar {
@@ -114,8 +119,10 @@
     color: #404142 !important; 
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 14px;
   }
 
   #sidebar.collapsed .nav-link span {
@@ -255,7 +262,17 @@
 }
 
 #sidebar .nav-link {
-  padding: 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
+  padding: 0.75rem 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
+}
+
+/* Mejorar la alineación de iconos y texto */
+#sidebar .nav-link > div:first-child {
+  flex-shrink: 0;
+}
+
+#sidebar .nav-link > div:last-child {
+  flex-grow: 1;
+  min-width: 0;
 }
 
 /* Estilos específicos para el botón de cerrar sesión */
