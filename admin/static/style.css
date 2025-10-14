@@ -154,6 +154,17 @@
     margin-left: 60px;
   }
 
+  /* Asegurar que los mensajes flash respeten el layout del sidebar */
+  .flash-container {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Cuando el sidebar está colapsado, reducir el margen de los mensajes */
+  #sidebar.collapsed ~ #content .flash-container .alert {
+    margin-left: 5px; /* Menos margen cuando el sidebar está colapsado */
+  }
+
   /* #toggle-btn {
     background-color: white !important;  fondo azul 
     color: #404142  !important;                texto e icono blanco 
@@ -244,6 +255,11 @@
     }
 
     #content {
+      margin-left: 0 !important;
+    }
+
+    /* En móvil, eliminar el margen izquierdo de los mensajes flash */
+    .flash-container .alert {
       margin-left: 0 !important;
     }
 
@@ -405,6 +421,8 @@ i.small {
 }
 .flash-container .alert{
   margin: 0;
+  /* Ajustar margen para que no se superponga con el sidebar expandido */
+  margin-left: 10px;
 }
 
 /* Make pagination active page show colored text (#004c82) with transparent background */
