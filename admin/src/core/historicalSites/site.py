@@ -99,15 +99,18 @@ class Site(db.Model):
             "visibility": self.visibility,
         }
 
+
 class SiteLog(db.Model):
-    __tabletName__= "sites_log"
+    __tabletName__ = "sites_log"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     site_id = db.Column(db.Integer, db.ForeignKey("sites.id"), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     action = db.Column(db.String, nullable=False)
-    timestamp = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
-    details = db.Column(db.JSON, nullable=True) 
+    timestamp = db.Column(
+        db.DateTime, nullable=False, default=db.func.current_timestamp()
+    )
+    details = db.Column(db.JSON, nullable=True)
     site = relationship("Site", backref="logs")
     user = relationship("User")
 
