@@ -19,12 +19,14 @@ tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 @tags_bp.before_request
 @permission_required(UserPermission.SITE_TAGS)
 def bp_guard():
+    """Blueprint guard to check permissions before each request."""
     pass
 
 
 @tags_bp.route("/", methods=["GET"])
 @login_required
 def list_tags():
+    """Lista y busca tags con paginación"""
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
     per_page = 25
@@ -50,6 +52,7 @@ def list_tags():
 @tags_bp.route("/new", methods=["GET", "POST"])
 @login_required
 def new_tag():
+    """Crear un nuevo tag"""
     errors = {}
     if request.method == "POST":
         name = request.form.get("name")
@@ -88,6 +91,7 @@ def new_tag():
 @tags_bp.route("/<int:tag_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_tag(tag_id):
+    """Editar un tag existente"""
     # obtener el tag o 404
     tag = Tag.query.get_or_404(tag_id)
 
@@ -148,6 +152,7 @@ def edit_tag(tag_id):
 @tags_bp.route("/<int:tag_id>", methods=["GET"])
 @login_required
 def show_tag(tag_id):
+    """Mostrar detalles de un tag"""
     tag = get_tag_by_id(tag_id)
     if not tag:
         return "Tag not found", 404
@@ -157,6 +162,7 @@ def show_tag(tag_id):
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
 @login_required
 def delete_tag(tag_id):
+    """Eliminar un tag"""
     tag = get_tag_by_id(tag_id)
     # Si el tag tiene sitios asociados -> devolver error en AJAX
     if tag.sites:

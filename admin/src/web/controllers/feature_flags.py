@@ -19,6 +19,7 @@ def _is_sys_admin() -> bool:
 @feature_flags_bp.get("/")
 @login_required
 def index():
+    """Lista todas las Feature Flags"""
     # Verificar permisos
     if not _is_sys_admin():
         return ("Acceso denegado", 403)
@@ -30,6 +31,7 @@ def index():
 
 @feature_flags_bp.post("/update")
 def update():
+    """Actualiza el estado de una Feature Flag"""
     # Verificar permisos
     if not _is_sys_admin():
         return ("Acceso denegado", 403)

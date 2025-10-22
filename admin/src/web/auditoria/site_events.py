@@ -17,6 +17,9 @@ except ImportError:
 
 # 🔹 Helper para obtener el user_id desde la sesión
 def get_current_user_id():
+    """Retrieve the current user's ID from the session.
+    Returns:
+        int or None: The user ID if available, None otherwise."""
     if session is None:
         return
     user = session.get("user")
@@ -28,6 +31,11 @@ def get_current_user_id():
 # -------------------- EVENTOS SQLALCHEMY -------------------- #
 @event.listens_for(Site, "after_insert")
 def after_insert(mapper, connection, target):
+    """Log the creation of a new Site.
+    Args:
+        mapper: The mapper.
+        connection: The database connection.
+        target (Site): The Site instance that was created."""
     user_id = get_current_user_id()
     if not user_id:
         return
@@ -45,6 +53,11 @@ def after_insert(mapper, connection, target):
 
 @event.listens_for(Site, "after_update")
 def after_update(mapper, connection, target):
+    """Log modifications made to a Site.
+    Args:
+        mapper: The mapper.
+        connection: The database connection.
+        target (Site): The Site instance that was modified."""
     user_id = get_current_user_id()
     if not user_id:
         return

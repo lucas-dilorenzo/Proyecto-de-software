@@ -29,6 +29,7 @@ historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def list_sites():
+    """Lista los sitios históricos con paginación y filtros"""
     # if not authenticated(session):
     # abort(401)
 
@@ -139,6 +140,7 @@ def list_sites():
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def list_deleted_sites():
+    """Lista los sitios históricos eliminados (soft delete)"""
     # Obtener todos los sitios marcados como eliminados (sin paginación)
     sites = historicalSites.get_deleted_sites()
 
@@ -152,6 +154,7 @@ def list_deleted_sites():
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def show_site(site_id):
+    """Muestra los detalles de un sitio histórico"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
@@ -162,6 +165,7 @@ def show_site(site_id):
 @login_required
 # @permission_required(UserPermission.SITE_HISTORY)
 def show_site_history(site_id):
+    """Muestra el historial de cambios de un sitio histórico"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
@@ -217,6 +221,7 @@ def show_site_history(site_id):
 @login_required
 @permission_required(UserPermission.SITE_CREATE)
 def create_site():
+    """Crea un nuevo sitio histórico"""
     # cargar tags para el formulario (se usa tanto en GET como en caso de validación fallida)
     tags = get_all_tags()
 
@@ -283,6 +288,7 @@ def create_site():
 @login_required
 @permission_required(UserPermission.SITE_UPDATE)
 def edit_site(site_id):
+    """Edita un sitio histórico existente"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         abort(404)
@@ -341,6 +347,7 @@ def edit_site(site_id):
 @login_required
 @permission_required(UserPermission.SITE_DELETE)
 def delete_site(site_id):
+    """Elimina un sitio histórico (soft delete)"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
@@ -359,6 +366,7 @@ def delete_site(site_id):
 @login_required
 @permission_required(UserPermission.SITE_EXPORT)
 def download_csv_sites():
+    """Descarga un archivo CSV con la lista de sitios históricos"""
     # Logic to download the list of sites
     sites = historicalSites.list_all_sites()
 
@@ -446,6 +454,7 @@ def get_conservation_status(key):
 
 # USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
 def normalizar(valor):
+    """Normaliza un valor para evitar errores en CSV (reemplaza comas por guiones)."""
     if valor is not None:
         valor = str(valor).replace(",", "-")
     else:
