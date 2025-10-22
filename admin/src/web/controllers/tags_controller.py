@@ -1,5 +1,13 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags_paginated
+from src.core.historicalSites.tags import (
+    get_tag_by_name,
+    get_tag_by_id,
+    create_tag,
+    update_tag,
+    delete_tag as delete_tag_helper,
+    crear_slug,
+    get_tags_paginated,
+)
 from src.core.historicalSites.tags.tag import Tag
 from src.core.permissions.permission import UserPermission
 from src.web.auth import permission_required
@@ -7,37 +15,44 @@ from src.web.helpers import login_required
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
+
 @tags_bp.before_request
 @permission_required(UserPermission.SITE_TAGS)
 def bp_guard():
+    """Blueprint guard to check permissions before each request."""
     pass
 
 
 @tags_bp.route("/", methods=["GET"])
 @login_required
 def list_tags():
+    """Lista y busca tags con paginación"""
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
     per_page = 25
-    order_by = request.args.get('order_by', 'name', type=str)
-    order_dir = request.args.get('order_dir', 'asc', type=str)
+    order_by = request.args.get("order_by", "name", type=str)
+    order_dir = request.args.get("order_dir", "asc", type=str)
 
     # Solo llama a la capa de servicios
-    tags_paginated = get_tags_paginated(busqueda, page, per_page, order_by=order_by, order_dir=order_dir)
+    tags_paginated = get_tags_paginated(
+        busqueda, page, per_page, order_by=order_by, order_dir=order_dir
+    )
 
     return render_template(
         "historicalSites/tags/indexTags.html",
         tags=tags_paginated,
         busqueda=busqueda,
-        current_query={'stringBusqueda': busqueda},
+        current_query={"stringBusqueda": busqueda},
         order_by=order_by,
         order_dir=order_dir,
     )
+
 
 # Ruta para crear un nuevo tag
 @tags_bp.route("/new", methods=["GET", "POST"])
 @login_required
 def new_tag():
+    """Crear un nuevo tag"""
     errors = {}
     if request.method == "POST":
         name = request.form.get("name")
@@ -76,8 +91,9 @@ def new_tag():
 @tags_bp.route("/<int:tag_id>/edit", methods=["GET", "POST"])
 @login_required
 def edit_tag(tag_id):
+    """Editar un tag existente"""
     # obtener el tag o 404
-    # tag = Tag.query.get_or_404(tag_id)
+    tag = Tag.query.get_or_404(tag_id)
 
     errors = {}
     if request.method == "POST":
@@ -125,22 +141,30 @@ def edit_tag(tag_id):
             )
 
     # Esto seria el GET
-    return render_template("historicalSites/tags/editTag.html", tag=tag, name=tag.name, description=tag.description)
+    return render_template(
+        "historicalSites/tags/editTag.html",
+        tag=tag,
+        name=tag.name,
+        description=tag.description,
+    )
 
 
 @tags_bp.route("/<int:tag_id>", methods=["GET"])
 @login_required
 def show_tag(tag_id):
+    """Mostrar detalles de un tag"""
     tag = get_tag_by_id(tag_id)
     if not tag:
         return "Tag not found", 404
     return render_template("historicalSites/tags/showTag.html", tag=tag)
 
+
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
 @login_required
 def delete_tag(tag_id):
+    """Eliminar un tag"""
     tag = get_tag_by_id(tag_id)
-    # Si el tag tiene sitios asociados -> devolver error en AJAX 
+    # Si el tag tiene sitios asociados -> devolver error en AJAX
     if tag.sites:
         msg = "No se puede eliminar el tag porque está asociado a uno o más sitios históricos."
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":
