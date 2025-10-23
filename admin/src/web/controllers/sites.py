@@ -366,19 +366,58 @@ def delete_site(site_id):
 @login_required
 @permission_required(UserPermission.SITE_EXPORT)
 def download_csv_sites():
-    """Descarga un archivo CSV con la lista de sitios históricos"""
-    # Logic to download the list of sites
-    sites = historicalSites.list_all_sites()
+    """Descarga un archivo CSV con la lista de sitios históricos respetando filtros activos"""
+    
+    # 🔹 Leer los mismos filtros que list_sites
+    stringBusqueda = request.args.get("stringBusqueda", type=str)
+    city = request.args.get("city")
+    province = request.args.get("province")
+    tags = request.args.getlist("tags")
+    conservation_status = request.args.get("conservation_status", type=str)
+    date_from = request.args.get("date_from", type=str)
+    date_to = request.args.get("date_to", type=str)
+    
+    visibility_list = request.args.getlist("visibility")
+    if not visibility_list:
+        visibility = None
+    else:
+        visibility = any(v.lower() in ("1", "true", "on", "yes") for v in visibility_list)
+    
+    search_text = request.args.get("search_text", type=str) or stringBusqueda
+    
+    order_by = request.args.get("order_by", default="name", type=str)
+    order_dir = request.args.get("order_dir", default="asc", type=str)
 
-    if sites is None:
-        return "No sites found", 404
+    # 🔹 Obtener sitios aplicando filtros (sin paginación, per_page grande o None)
+    # Nota: necesitas ajustar get_sites_paginated_by_id para soportar per_page=None o usar otro método
+    # Opción 1: obtener todos los sitios filtrados con per_page muy grande
+    sites_paginated = historicalSites.get_sites_paginated_by_id(
+        page=1,
+        per_page=9999,  # suficientemente grande para obtener todos
+        order=order_dir,
+        order_by=order_by,
+        city=city,
+        province=province,
+        tags=tags,
+        conservation_status=conservation_status,
+        date_from=date_from,
+        date_to=date_to,
+        visibility=visibility,
+        search_text=search_text,
+    )
+    
+    sites = sites_paginated.items  # obtener la lista de sitios
 
-    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro, Tags \n"
+    if not sites:
+        flash("No hay sitios que coincidan con los filtros aplicados.", "warning")
+        return redirect(url_for("sites.list_sites"))
+
+    # 🔹 Generar CSV
+    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro,Tags\n"
+    
     for site in sites:
-
         listado_tags = [tag.name for tag in site.tags]
         tags_str = " | ".join(listado_tags)
-        print(tags_str)
 
         csv_data += (
             f"{normalizar(site.name)},"
@@ -386,7 +425,7 @@ def download_csv_sites():
             f"{normalizar(site.description)},"
             f"{normalizar(site.city)},"
             f"{normalizar(site.province)},"
-            f"{normalizar(site.location)}),"
+            f"{normalizar(site.location)},"
             f"{normalizar(site.conservation_status)},"
             f"{normalizar(site.year_declared)},"
             f"{normalizar(site.category)},"
@@ -394,8 +433,8 @@ def download_csv_sites():
             f"{normalizar(tags_str)}\n"
         )
 
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"sitios_{timestamp}"
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"sitios_{timestamp}"
 
     return Response(
         csv_data,
