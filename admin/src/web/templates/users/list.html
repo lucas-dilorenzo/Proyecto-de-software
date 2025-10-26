@@ -90,17 +90,20 @@
                     </td>
                     <td>{{ u.created_at.strftime("%Y-%m-%d %H:%M") if u.created_at }}</td>
                     <td class="text-end">
+                        {% if u.rol != 'PUBLIC' %}
                         <!-- Botón para editar usuario -->
                         <a href="{{ url_for('users.edit_user', id=u.id) }}" class="btn btn-icon" title="Editar Usuario" aria-label="Editar Usuario">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <!-- <a class="btn btn-sm btn-primary" href="{{ url_for('users.edit_user', id=u.id) }}">Editar</a> -->
                         <!-- Botón para eliminar usuario (con confirmación) -->
                         <form method="POST" action="{{ url_for('users.delete_user', id=u.id) }}"
                             style="display:inline-block"
                             onsubmit="return confirm('¿Seguro que deseas eliminar este usuario?');">
                             <button class="btn btn-sm btn-outline-danger">X</button>
                         </form>
+                        {% else %}
+                        <span class="text-muted small">Usuario público</span>
+                        {% endif %}
                     </td>
                 </tr>
                 {% else %}
