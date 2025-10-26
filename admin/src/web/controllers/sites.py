@@ -63,7 +63,7 @@ def list_sites():
     # Pasar los parámetros de ordenamiento al servicio
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
-        per_page=25,
+        per_page=10,
         order=order_dir,
         order_by=order_by,
         city=city,

@@ -7,9 +7,11 @@
 {% endblock%}
 
 {% block titulo_acciones_body %}
-    <a href="{{ url_for('tags.new_tag') }}" class="btn btn-new">
-        Crear Tag <i class="bi bi-plus-circle small"></i>
-    </a>
+    {% if session['role'] != 'PUBLIC' %}
+        <a href="{{ url_for('tags.new_tag') }}" class="btn btn-new">
+            Crear Tag <i class="bi bi-plus-circle small"></i>
+        </a>
+    {% endif %}
 {% endblock %}
 
 {% block body %}
@@ -103,42 +105,40 @@
             </tbody>
         </table>
         <!-- Paginación -->
-        {% if tags.pages > 1 %}
-            <div class="card-footer">
-                <div class="row align-items-center">
-                    <div class="col text-start">
-                        <small> Página {{ tags.page }} de {{ tags.pages }}, total de tags: {{ tags.total }} </small>
-                    </div>
-                    <div class="col text-end">
-                        <nav aria-label="Paginación tags">
-                            <ul class="pagination justify-content-end mb-0">
-                                <li class="page-item {% if not tags.has_prev %}disabled{% endif %}">
-                                    <a class="page-link" href="{% if tags.has_prev %}{{ url_for('tags.list_tags', page=tags.prev_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Previous" style="color:#004c82">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                                {% for page_num in tags.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
-                                    {% if page_num %}
-                                        {% if page_num == tags.page %}
-                                            <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
-                                        {% else %}
-                                            <li class="page-item"><a class="page-link" href="{{ url_for('tags.list_tags', page=page_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}">{{ page_num }}</a></li>
-                                        {% endif %}
+        <div class="card-footer">
+            <div class="row align-items-center">
+                <div class="col text-start">
+                    <small> Página {{ tags.page }} de {{ tags.pages }}, total de tags: {{ tags.total }} </small>
+                </div>
+                <div class="col text-end">
+                    <nav aria-label="Paginación tags">
+                        <ul class="pagination justify-content-end mb-0">
+                            <li class="page-item {% if not tags.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{% if tags.has_prev %}{{ url_for('tags.list_tags', page=tags.prev_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Previous" style="color:#004c82">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {% for page_num in tags.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num == tags.page %}
+                                        <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
                                     {% else %}
-                                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                        <li class="page-item"><a class="page-link" href="{{ url_for('tags.list_tags', page=page_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}">{{ page_num }}</a></li>
                                     {% endif %}
-                                {% endfor %}
-                                <li class="page-item {% if not tags.has_next %}disabled{% endif %}">
-                                    <a class="page-link" href="{% if tags.has_next %}{{ url_for('tags.list_tags', page=tags.next_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Next" style="color:#004c82">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                                {% endif %}
+                            {% endfor %}
+                            <li class="page-item {% if not tags.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{% if tags.has_next %}{{ url_for('tags.list_tags', page=tags.next_num, order_by=order_by, order_dir=order_dir, **(current_query or {})) }}{% else %}#{% endif %}" aria-label="Next" style="color:#004c82">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
-        {% endif %}
+        </div>
 
     {% else %}
         <div class="col-11 mt-3">
