@@ -4,6 +4,8 @@ from wtforms.validators import InputRequired, Email
 
 
 class FormularioInicioSesion(FlaskForm):
+    """Formulario de inicio de sesión con validaciones para email y contraseña."""
+
     email = StringField(
         "email",
         validators=[
@@ -12,5 +14,6 @@ class FormularioInicioSesion(FlaskForm):
         ],
     )
     password = PasswordField(
-        "password", validators=[InputRequired(message="El campo de contraseña vacío.")]
+        "Contraseña",
+        validators=[InputRequired(message="El campo de contraseña está vacío.")],
     )

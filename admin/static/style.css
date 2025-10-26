@@ -16,7 +16,7 @@
  #content {
     background-color: #f9f9f9;
     margin-top: 60px; /* respeta el header */
-    margin-left: 250px; /* respeta el sidebar */
+    margin-left: 220px; /* respeta el sidebar con margen mínimo */
     padding: 1rem;
     transition: margin-left 0.3s;
     min-height: calc(100vh - 60px);
@@ -76,17 +76,23 @@
     top: 60px; /* respeta el header */
     left: 0;
     height: calc(100vh - 60px);
-    width: 250px;
+    width: auto;
+    min-width: 200px;
+    max-width: 300px;
     color: #333 !important; 
     background-color: white;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
     z-index: 1000;
+    padding-right: 0.2rem;
   }
 
   /* Sidebar colapsado */
   #sidebar.collapsed {
-    width: 80px;
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    padding-right: 0;
   }
 
   .logo-navbar {
@@ -114,8 +120,10 @@
     color: #404142 !important; 
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 14px;
   }
 
   #sidebar.collapsed .nav-link span {
@@ -126,8 +134,35 @@
     display: none;
   }
 
+  /* Ajustar solo el elemento con background cuando está colapsado */
+  #sidebar.collapsed .nav-item[style*="background-color"] {
+    width: 60px;
+    overflow: hidden;
+  }
+
+  #sidebar.collapsed .nav-link {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Centrar solo el contenido cuando está colapsado */
+  #sidebar.collapsed .nav-link > div:first-child {
+    margin: 0 auto;
+  }
+
   #sidebar.collapsed ~ #content {
-    margin-left: 80px;
+    margin-left: 60px;
+  }
+
+  /* Asegurar que los mensajes flash respeten el layout del sidebar */
+  .flash-container {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Cuando el sidebar está colapsado, reducir el margen de los mensajes */
+  #sidebar.collapsed ~ #content .flash-container .alert {
+    margin-left: 5px; /* Menos margen cuando el sidebar está colapsado */
   }
 
   /* #toggle-btn {
@@ -223,6 +258,11 @@
       margin-left: 0 !important;
     }
 
+    /* En móvil, eliminar el margen izquierdo de los mensajes flash */
+    .flash-container .alert {
+      margin-left: 0 !important;
+    }
+
     .btn.btn-azul,
     .btn.btn-new,
     .btn.btn-limpiar {
@@ -255,7 +295,17 @@
 }
 
 #sidebar .nav-link {
-  padding: 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
+  padding: 0.75rem 1rem; /* Aplica el padding solo al enlace para que el color lo cubra */
+}
+
+/* Mejorar la alineación de iconos y texto */
+#sidebar .nav-link > div:first-child {
+  flex-shrink: 0;
+}
+
+#sidebar .nav-link > div:last-child {
+  flex-grow: 1;
+  min-width: 0;
 }
 
 /* Estilos específicos para el botón de cerrar sesión */
@@ -371,6 +421,8 @@ i.small {
 }
 .flash-container .alert{
   margin: 0;
+  /* Ajustar margen para que no se superponga con el sidebar expandido */
+  margin-left: 10px;
 }
 
 /* Make pagination active page show colored text (#004c82) with transparent background */

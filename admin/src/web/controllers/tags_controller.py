@@ -8,15 +8,11 @@ from src.web.helpers.validations.tags import TagForm
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
+
 @tags_bp.before_request
 @permission_required(UserPermission.SITE_TAGS)
 def bp_guard():
-    """
-    Guarda de seguridad que se ejecuta antes de cada request del blueprint.
-    
-    Verifica que el usuario tenga permisos para gestionar tags de sitios.
-    Si no tiene permisos, la request es rechazada automáticamente.
-    """
+    """Blueprint guard to check permissions before each request."""
     pass
 
 
@@ -40,13 +36,15 @@ def list_tags():
     order_dir = request.args.get('order_dir', 'asc', type=str)
 
     # Solo llama a la capa de servicios
-    tags_paginated = get_tags_paginated(busqueda, page, per_page, order_by=order_by, order_dir=order_dir)
+    tags_paginated = get_tags_paginated(
+        busqueda, page, per_page, order_by=order_by, order_dir=order_dir
+    )
 
     return render_template(
         "historicalSites/tags/indexTags.html",
         tags=tags_paginated,
         busqueda=busqueda,
-        current_query={'stringBusqueda': busqueda},
+        current_query={"stringBusqueda": busqueda},
         order_by=order_by,
         order_dir=order_dir,
     )
@@ -136,6 +134,7 @@ def show_tag(tag_id):
         return "Tag not found", 404
     return render_template("historicalSites/tags/showTag.html", tag=tag)
 
+
 @tags_bp.route("/<int:tag_id>/delete", methods=["POST"])
 @login_required
 def delete_tag(tag_id):
@@ -149,7 +148,7 @@ def delete_tag(tag_id):
     - AJAX con error: JSON con mensaje de error (400/500).
     """
     tag = get_tag_by_id(tag_id)
-    # Si el tag tiene sitios asociados -> devolver error en AJAX 
+    # Si el tag tiene sitios asociados -> devolver error en AJAX
     if tag.sites:
         msg = "No se puede eliminar el tag porque está asociado a uno o más sitios históricos."
         if request.headers.get("X-Requested-With") == "XMLHttpRequest":

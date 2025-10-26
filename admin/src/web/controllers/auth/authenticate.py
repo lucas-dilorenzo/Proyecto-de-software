@@ -9,6 +9,10 @@ auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 @auth_bp.route("/login", methods=["GET", "POST"])
 def login():
+    """Handle user login.
+    Returns:
+        Redirects to home page on successful login or renders login template on failure.
+    """
     if is_authenticated(session):
         return redirect(url_for("home"))
     if request.method == "POST":
@@ -29,7 +33,7 @@ def login():
             if not user:
                 flash("Usuario no encontrado.", "danger")
                 return render_template("auth/login.html", email=email)
-            
+
             if not user.activo:
                 flash("Usuario bloqueado.", "danger")
                 return render_template("auth/login.html", email=email)
@@ -43,7 +47,9 @@ def login():
                 flash("Credenciales inválidas. Intenta de nuevo.", "danger")
                 return render_template("auth/login.html", email=email)
         else:
-            flash("Error en el formulario. Intenta de nuevo.", "danger")
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f"{getattr(form, field).label.text}: {error}", "danger")
             return render_template("auth/login.html")
 
     return render_template("auth/login.html")
@@ -51,11 +57,18 @@ def login():
 
 @auth_bp.route("/logout")
 def logout():
-    # del session["user"]
+    """Handle user logout.
+    Returns:
+        Redirects to home page after logging out."""
     session.clear()
     flash("La sesión se cerró correctamente.")
     return redirect(url_for("home"))
 
 
 def authenticated(session):
+    """Retrieve the authenticated user from the session.
+    Args:
+        session: The current session.
+    Returns:
+        The authenticated user or None if not found."""
     return session.get("user")

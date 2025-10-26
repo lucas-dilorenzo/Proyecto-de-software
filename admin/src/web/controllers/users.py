@@ -22,6 +22,7 @@ users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
 @users_bp.before_request
 @permission_required(UserPermission.USER_MODULE)
 def bp_guard():
+    """Blueprint guard to check permissions before each request."""
     pass
 
 
@@ -40,6 +41,7 @@ def _clamp_per_page(val) -> int:
 @login_required
 # @permission_required(UserPermission.USER_LIST)
 def list_users():
+    """Lista usuarios con filtros y paginación."""
     # Recuperar parámetros de filtrado
     email = (request.args.get("email") or "").strip()
     activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""

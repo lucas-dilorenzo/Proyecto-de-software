@@ -30,15 +30,30 @@ def create_site(**kwargs):
     Returns:
         Site: The newly created Site object.
     """
+
+    # Process location
+    location = kwargs.get("location")
+    if location is not None:
+        location = WKTElement(f"POINT({location})", srid=4326)
+
+    # Process year_declared to ensure it's an integer
+    year_declared = kwargs.get("year_declared")
+    if year_declared is not None:
+        if isinstance(year_declared, str):
+            try:
+                year_declared = int(year_declared) if year_declared.strip() else None
+            except (ValueError, TypeError):
+                year_declared = None
+
     site = Site(
         name=kwargs.get("name"),
         description_short=kwargs.get("description_short"),
         description=kwargs.get("description"),
         city=kwargs.get("city"),
         province=kwargs.get("province"),
-        location=WKTElement(f"POINT({kwargs.get('location')})", srid=4326),
+        location=location,
         conservation_status=kwargs.get("conservation_status"),
-        year_declared=kwargs.get("year_declared"),
+        year_declared=year_declared,
         category=kwargs.get("category"),
         registration_date=kwargs.get("registration_date"),
         visibility=kwargs.get("visibility", True),
@@ -98,6 +113,13 @@ def update_site(site_id, **kwargs):
         if key == "location" and value is not None:
             value = WKTElement(f"POINT({value})", srid=4326)
             print(f"Updating location to: {value}")
+        elif key == "year_declared" and value is not None:
+            # Ensure year_declared is always an integer
+            if isinstance(value, str):
+                try:
+                    value = int(value) if value.strip() else None
+                except (ValueError, TypeError):
+                    value = None
         setattr(site, key, value)
     db.session.commit()
     return site
