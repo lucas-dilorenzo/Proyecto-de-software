@@ -50,6 +50,7 @@ def get_tag_by_id(id: int):
     query = db.session.query(Tag).filter_by(id=id).first()
     return query
 
+
 # Busca un tag por su slug
 # Args: slug (str): El slug del tag a buscar.
 # Return: Tag: El objeto Tag si se encuentra, de lo contrario None.
@@ -57,6 +58,7 @@ def get_tag_by_slug(slug: str):
     if not slug:
         return None
     return db.session.query(Tag).filter_by(slug=slug).first()
+
 
 # Crea un nuevo tag en la base de datos
 # Args: kwargs: Los datos del tag (name, slug, description).

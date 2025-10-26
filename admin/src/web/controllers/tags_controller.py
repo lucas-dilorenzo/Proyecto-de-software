@@ -1,5 +1,14 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
-from src.core.historicalSites.tags import get_tag_by_name, get_tag_by_id, create_tag, update_tag, delete_tag as delete_tag_helper, crear_slug, get_tags_paginated, get_tag_by_slug
+from src.core.historicalSites.tags import (
+    get_tag_by_name,
+    get_tag_by_id,
+    create_tag,
+    update_tag,
+    delete_tag as delete_tag_helper,
+    crear_slug,
+    get_tags_paginated,
+    get_tag_by_slug,
+)
 from src.core.historicalSites.tags.tag import Tag
 from src.core.permissions.permission import UserPermission
 from src.web.auth import permission_required
@@ -20,9 +29,9 @@ def bp_guard():
 @login_required
 def list_tags():
     """
-    Muestra la lista paginada de tags con funcionalidades de búsqueda y ordenamiento.    
+    Muestra la lista paginada de tags con funcionalidades de búsqueda y ordenamiento.
     Obtiene los parámetros de query string para filtrar, paginar y ordenar los tags.
-    
+
     Query Parameters:
         stringBusqueda (str, optional): para filtrar por nombre.
         page (int, optional): Número de página para paginación. Default: 1.
@@ -32,8 +41,8 @@ def list_tags():
     busqueda = request.args.get("stringBusqueda", "", type=str)
     page = request.args.get("page", 1, type=int)
     per_page = 10
-    order_by = request.args.get('order_by', 'name', type=str)
-    order_dir = request.args.get('order_dir', 'asc', type=str)
+    order_by = request.args.get("order_by", "name", type=str)
+    order_dir = request.args.get("order_dir", "asc", type=str)
 
     # Solo llama a la capa de servicios
     tags_paginated = get_tags_paginated(
@@ -49,26 +58,27 @@ def list_tags():
         order_dir=order_dir,
     )
 
+
 @tags_bp.route("/new", methods=["GET", "POST"])
 @login_required
 def new_tag():
     """
     Maneja la creación de un tag.
-  
+
     El slug se genera automáticamente a partir del nombre ingresado.
     Utiliza FlaskForm para validación.
-    
+
     - POST exitoso: Redirige a la vista de detalle del tag creado.
     - POST con errores: Re-renderiza el formulario con mensajes de error.
     """
     form = TagForm()
-    
+
     if form.validate_on_submit():
         # Si pasa la validación, creo el tag
         name = form.name.data
         description = form.description.data
         slug = crear_slug(name)
-        
+
         try:
             newTag = create_tag(name=name, slug=slug, description=description)
             flash("El tag se creó correctamente.", "success")
@@ -88,28 +98,28 @@ def edit_tag(tag_id):
 
     Args:
         tag_id (int): ID del tag.
-    
+
     - POST exitoso: Redirige a la lista de tags con mensaje de éxito.
     - POST con errores: Re-renderiza el formulario con mensajes de error.
     - El slug se regenera solo si el nombre cambia.
     """
 
     tag = get_tag_by_id(tag_id)
-    
+
     # Crear el form con el ID del tag para las validaciones de unicidad
     form = TagForm(tag_id=tag_id, obj=tag)
-    
+
     if form.validate_on_submit():
         # Si pasa la validación, actualizo el tag
         name = form.name.data
         description = form.description.data
-        
+
         try:
             if name != tag.name:
                 slug = crear_slug(name)
             else:
                 slug = tag.slug  # mantener el slug actual si no cambió el nombre
-                
+
             update_tag(tag_id=tag.id, name=name, slug=slug, description=description)
             flash("El tag se actualizó correctamente.", "success")
             return redirect(url_for("tags.list_tags"))
@@ -127,7 +137,7 @@ def show_tag(tag_id):
     Muestra los detalles de un tag específico.
     Args:
         tag_id (int): ID del tag a mostrar.
-    
+
     """
     tag = get_tag_by_id(tag_id)
     if not tag:
@@ -140,10 +150,10 @@ def show_tag(tag_id):
 def delete_tag(tag_id):
     """
     Elimina un tag, verificando que no esté asociado a sitios históricos.
-    
+
     Args:
         tag_id (int): ID del tag a eliminar.
-    
+
     - AJAX exitoso: JSON con mensaje de éxito (200).
     - AJAX con error: JSON con mensaje de error (400/500).
     """
