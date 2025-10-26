@@ -3,7 +3,16 @@ Controlador CRUD de usuarios para el módulo Admin.
 Incluye rutas protegidas para listar, crear, editar y eliminar usuarios.
 """
 
-from flask import Blueprint, request, render_template, redirect, url_for, flash, abort
+from flask import (
+    Blueprint,
+    request,
+    render_template,
+    redirect,
+    url_for,
+    flash,
+    abort,
+    session,
+)
 from sqlalchemy import select, desc, asc, func
 from werkzeug.security import generate_password_hash
 from src.web.auth import permission_required
@@ -22,7 +31,6 @@ users_bp = Blueprint("users", __name__, url_prefix="/admin/users")
 @users_bp.before_request
 @permission_required(UserPermission.USER_MODULE)
 def bp_guard():
-    """Blueprint guard to check permissions before each request."""
     pass
 
 
@@ -41,7 +49,6 @@ def _clamp_per_page(val) -> int:
 @login_required
 # @permission_required(UserPermission.USER_LIST)
 def list_users():
-    """Lista usuarios con filtros y paginación."""
     # Recuperar parámetros de filtrado
     email = (request.args.get("email") or "").strip()
     activo = (request.args.get("activo") or "").strip().upper()  # SI | NO | ""
@@ -76,17 +83,19 @@ def list_users():
 
 @users_bp.get("/new")
 @login_required
-# @permission_required(UserPermission.USER_CREATE)
 def new_user():
     """
     Muestra el formulario para crear un nuevo usuario.
     """
+    # 🔹 Filtrar roles disponibles según el rol del usuario actual
+    available_roles = _get_available_roles()
+
     return render_template(
         "users/form.html",
         user=None,
-        form={},  # Formulario vacío
-        errors={},  # Sin errores iniciales
-        roles=[r.value for r in UserRole],
+        form={},
+        errors={},
+        roles=available_roles,  # 🔹 Roles filtrados
         mode="create",
         action=url_for("users.create_user"),
     )
@@ -94,13 +103,9 @@ def new_user():
 
 @users_bp.post("/new")
 @login_required
-# @permission_required(UserPermission.USER_CREATE)
 def create_user():
     """
     Procesa el formulario de creación de usuario.
-    Si hay errores, los muestra y mantiene los datos ingresados.
-    Si el email ya existe, muestra advertencia.
-    Si todo es correcto, crea el usuario y redirige al listado.
     """
     data, errors = validate_user_payload(request.form)
     if errors:
@@ -109,7 +114,20 @@ def create_user():
             user=None,
             form=request.form,
             errors=errors,
-            roles=[r.value for r in UserRole],
+            roles=_get_available_roles(),  # 🔹 Roles filtrados
+            mode="create",
+            action=url_for("users.create_user"),
+        )
+
+    # 🔹 VALIDACIÓN BACKEND: evitar que ADMIN asigne SYS_ADMIN
+    if not _can_assign_role(data["rol"]):
+        flash("No tienes permisos para asignar ese rol.", "danger")
+        return render_template(
+            "users/form.html",
+            user=None,
+            form=request.form,
+            errors={"rol": "No tienes permisos para asignar ese rol"},
+            roles=_get_available_roles(),
             mode="create",
             action=url_for("users.create_user"),
         )
@@ -146,7 +164,6 @@ def create_user():
 
 @users_bp.get("/<int:id>/edit")
 @login_required
-# @permission_required(UserPermission.USER_UPDATE)
 def edit_user(id: int):
     """
     Muestra el formulario para editar un usuario existente.
@@ -154,10 +171,11 @@ def edit_user(id: int):
     user = users.get_user_by_id(id)
     if not user:
         abort(404)
+
     return render_template(
         "users/form.html",
         user=user,
-        roles=[r.value for r in UserRole],
+        roles=_get_available_roles(),  # 🔹 Roles filtrados
         mode="edit",
         action=url_for("users.update_user", id=id),
     )
@@ -165,13 +183,9 @@ def edit_user(id: int):
 
 @users_bp.post("/<int:id>/edit")
 @login_required
-# @permission_required(UserPermission.USER_UPDATE)
 def update_user(id: int):
     """
     Procesa el formulario de edición de usuario.
-    Si hay errores, redirige mostrando los mensajes.
-    Si el email ya existe en otro usuario, muestra advertencia.
-    Si todo es correcto, actualiza el usuario y redirige al listado.
     """
     user = users.get_user_by_id(id)
     if not user:
@@ -182,6 +196,19 @@ def update_user(id: int):
         for e in errors:
             flash(e, "danger")
         return redirect(url_for("users.edit_user", id=id))
+
+    # 🔹 VALIDACIÓN BACKEND: evitar que ADMIN asigne SYS_ADMIN
+    if data.get("rol") and not _can_assign_role(data["rol"]):
+        flash("No tienes permisos para asignar ese rol.", "danger")
+        return redirect(url_for("users.edit_user", id=id))
+
+    # 🔹 VALIDACIÓN: evitar que ADMIN modifique a otro SYS_ADMIN
+    if (
+        user.rol == UserRole.SYS_ADMIN.value
+        and session.get("role") != UserRole.SYS_ADMIN.value
+    ):
+        flash("No tienes permisos para editar a un SYS_ADMIN.", "danger")
+        return redirect(url_for("users.list_users"))
 
     if data.get("email") and data["email"] != user.email:
         if not users.validate_email_unique(data["email"], user_id=user.id):
@@ -210,7 +237,6 @@ def update_user(id: int):
 
 @users_bp.post("/<int:id>/delete")
 @login_required
-# @permission_required(UserPermission.USER_DELETE)
 def delete_user(id: int):
     """
     Elimina un usuario por su ID.
@@ -218,6 +244,15 @@ def delete_user(id: int):
     user = users.get_user_by_id(id)
     if not user:
         abort(404)
+
+    # 🔹 VALIDACIÓN: evitar que ADMIN elimine a SYS_ADMIN
+    if (
+        user.rol == UserRole.SYS_ADMIN.value
+        and session.get("role") != UserRole.SYS_ADMIN.value
+    ):
+        flash("No tienes permisos para eliminar a un SYS_ADMIN.", "danger")
+        return redirect(url_for("users.list_users"))
+
     users.delete_user(user)
     flash("Usuario eliminado.", "info")
     return redirect(url_for("users.list_users"))
@@ -234,3 +269,38 @@ def show_user(id: int):
     if not user:
         abort(404)
     return render_template("users/show.html", user=user)
+
+
+# 🔹 FUNCIONES HELPER
+
+
+def _get_available_roles():
+    """
+    Devuelve los roles que el usuario actual puede asignar.
+    SYS_ADMIN solo puede ser asignado por otro SYS_ADMIN.
+    """
+    current_role = session.get("role")
+
+    # Si el usuario es SYS_ADMIN, puede asignar todos los roles
+    if current_role == UserRole.SYS_ADMIN.value:
+        return [r.value for r in UserRole]
+
+    # Si es ADMIN, puede asignar todos EXCEPTO SYS_ADMIN
+    return [r.value for r in UserRole if r != UserRole.SYS_ADMIN]
+
+
+def _can_assign_role(role_value: str) -> bool:
+    """
+    Verifica si el usuario actual puede asignar el rol dado.
+    """
+    current_role = session.get("role")
+
+    # SYS_ADMIN puede asignar cualquier rol
+    if current_role == UserRole.SYS_ADMIN.value:
+        return True
+
+    # ADMIN NO puede asignar SYS_ADMIN
+    if role_value == UserRole.SYS_ADMIN.value:
+        return False
+
+    return True

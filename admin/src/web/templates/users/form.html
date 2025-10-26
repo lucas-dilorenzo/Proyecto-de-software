@@ -78,10 +78,11 @@ Template para crear o editar un usuario.
     {# Campo Rol (selección de roles disponibles) #}
     <div class="col-md-4">
         <label class="form-label">Rol</label>
-        <select name="rol" class="form-select {% if errors and errors.get('rol') %}is-invalid{% endif %}" required>
-            {% for rol in roles %}
-            <option value="{{ rol }}" {{ 'selected' if (form and form.get('rol')==rol) or (user and user.rol.value==rol)
-                }}>{{ rol }}</option>
+        <select name="rol" class="form-control" required>
+            {% for role in roles %}
+            <option value="{{ role }}" {% if user and user.rol==role %}selected{% endif %}>
+                {{ role }}
+            </option>
             {% endfor %}
         </select>
         {% if errors and errors.get('rol') %}
