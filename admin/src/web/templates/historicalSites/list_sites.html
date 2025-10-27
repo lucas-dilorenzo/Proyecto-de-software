@@ -35,8 +35,8 @@
     </a>
 
     {# --- Exportar CSV con los filtros y el orden actuales --- #}
+    {% if sites and sites.total and sites.total > 0 %}
     <form method="get" action="{{ url_for('sites.download_csv_sites') }}" class="d-inline">
-      {# current_query puede contener strings o listas (tags, visibility) #}
       {% for k, v in (current_query or {}).items() %}
       {% if v is iterable and v is not string %}
       {% for item in v %}
@@ -46,15 +46,20 @@
       <input type="hidden" name="{{ k }}" value="{{ v }}">
       {% endif %}
       {% endfor %}
-
       <input type="hidden" name="order_by" value="{{ order_by }}">
       <input type="hidden" name="order_dir" value="{{ order_dir }}">
-
       <button type="submit" class="btn rounded-0"
         style="background-color: #0b5e2e; color: #fff; border: none; text-align: center; border-radius: 0;">
         Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
       </button>
     </form>
+    {% else %}
+    <button type="button" class="btn rounded-0" disabled title="No hay resultados para exportar"
+      style="background-color: #94a3b8; color: #fff; border: none; text-align: center; border-radius: 0;">
+      Exportar CSV <i class="bi bi-file-earmark-spreadsheet small"></i>
+    </button>
+    {% endif %}
+
   </div>
 </div>
 

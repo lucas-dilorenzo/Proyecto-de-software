@@ -19,6 +19,9 @@ from flask import (
 import csv
 import json
 from src.web.helpers import login_required
+from urllib.parse import urlparse, parse_qs
+from werkzeug.datastructures import MultiDict
+
 
 # --------------------------------------------------------------------
 # Blueprint
@@ -422,23 +425,24 @@ def download_csv_sites():
     Si no vienen en query, intenta recuperarlos del referrer (fallback)."""
     from io import StringIO
 
-    # 1) Intentar leer filtros de la query actual
+    # 1) Tomar filtros de la query actual o del referrer si está vacío
     if request.args and len(request.args) > 0:
         parsed = _parse_list_filters(request.args)
+        ref = request.headers.get("Referer")
     else:
-        # 2) Fallback: parsear filtros desde el referrer (la URL del listado)
         ref = request.headers.get("Referer")
         if ref:
             q = parse_qs(urlparse(ref).query)  # dict: key -> [values]
-            # Convertir en MultiDict para que _parse_list_filters soporte get/getlist
-            md = MultiDict([(k, v) for k, vals in q.items() for v in vals])
+            md = MultiDict(
+                [(k, v) for k, vals in q.items() for v in vals]
+            )  # simula get/getlist
             parsed = _parse_list_filters(md)
         else:
             parsed = _parse_list_filters(request.args)  # sin filtros
 
-    # 3) Usar el MISMO servicio que el listado, sin paginar
+    # 2) Usar el MISMO servicio que el listado, sin paginar (per_page grande)
     page = 1
-    per_page = 1_000_000  # suficiente para volcar todo lo filtrado
+    per_page = 1_000_000
     sites_page = historicalSites.get_sites_paginated_by_id(
         page=page,
         per_page=per_page,
@@ -454,6 +458,11 @@ def download_csv_sites():
         search_text=parsed["search_text"],
     )
     sites = getattr(sites_page, "items", sites_page) or []
+
+    # 3) Freno: si no hay resultados, no exportar CSV
+    if not sites:
+        flash("No hay resultados para exportar con los filtros aplicados.", "warning")
+        return redirect(ref or url_for("sites.list_sites"))
 
     # 4) Construir CSV
     si = StringIO()
@@ -488,81 +497,6 @@ def download_csv_sites():
                 getattr(s, "city", "") or "",
                 getattr(s, "province", "") or "",
                 str(location_str),
-                status_label,
-                getattr(s, "year_declared", "") or "",
-                category_label,
-                getattr(s, "registration_date", "") or "",
-                tags_str,
-            ]
-        )
-
-    csv_str = "\ufeff" + si.getvalue()  # BOM para Excel
-    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return Response(
-        csv_str,
-        mimetype="text/csv; charset=utf-8",
-        headers={"Content-Disposition": f"attachment; filename=sitios_{ts}.csv"},
-    )
-
-    """Exporta CSV respetando los filtros actuales y excluyendo eliminados"""
-    from io import StringIO
-
-    f = _parse_list_filters(request.args)
-
-    # Traer exactamente lo que ve el usuario, sin paginar y excluyendo eliminados
-    sites = (
-        historicalSites.get_sites_filtered(
-            city=f["city"],
-            province=f["province"],
-            tags=f["tags"],
-            conservation_status=f["conservation_status"],
-            date_from=f["date_from"],
-            date_to=f["date_to"],
-            visibility=f["visibility"],
-            search_text=f["search_text"],
-            order_by=f["order_by"],
-            order_dir=f["order_dir"],
-            only_active=True,  # <- clave para NO exportar eliminados
-        )
-        or []
-    )
-
-    si = StringIO()
-    writer = csv.writer(si, quoting=csv.QUOTE_MINIMAL)
-    writer.writerow(
-        [
-            "Nombre",
-            "Descripción breve",
-            "Descripción completa",
-            "Ciudad",
-            "Provincia",
-            "Ubicación (lat,lon)",
-            "Estado de conservación",
-            "Año de declaración",
-            "Categoría",
-            "Fecha de registro",
-            "Tags",
-        ]
-    )
-
-    for s in sites:
-        tags_str = " | ".join([t.name for t in getattr(s, "tags", [])])
-        status_label = get_status_label(getattr(s, "conservation_status", None)) or ""
-        category_label = get_category_label(getattr(s, "category", None)) or ""
-
-        # location: si es un texto/POINT, casteo simple a str. Si luego querés (lat,lon), lo parseamos.
-        location_str = getattr(s, "location", "")
-        if location_str is None:
-            location_str = ""
-
-        writer.writerow(
-            [
-                getattr(s, "name", "") or "",
-                getattr(s, "description_short", "") or "",
-                getattr(s, "description", "") or "",
-                getattr(s, "city", "") or "",
-                getattr(s, "province", "") or "",
-                str(location_str) or "",
                 status_label,
                 getattr(s, "year_declared", "") or "",
                 category_label,
