@@ -25,8 +25,16 @@ class ProductionConfig(Config):
     DB_NAME = environ.get("DB_NAME")
     SQLALCHEMY_DATABASE_URI = environ.get("DATABASE_URL")
 
+    MINIO_ENDPOINT = environ.get("MINIO_ENDPOINT")
+    MINIO_ACCESS_KEY = environ.get("MINIO_ACCESS_KEY")
+    MINIO_SECRET_KEY = environ.get("MINIO_SECRET_KEY")
+    MINIO_SECURE = True
+    MNIO_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "grupo37")
+
 
 class DevelopmentConfig(Config):
+    """Development configuration."""
+
     DEBUG = True
 
     # Primero: soportar DATABASE_URL 12-factor
@@ -43,6 +51,11 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_DATABASE_URI = (
         f"{DB_SCHEME}://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
+
+    MINIO_ENDPOINT = environ.get("MINIO_ENDPOINT", "localhost:9000")
+    MINIO_ACCESS_KEY = environ.get("MINIO_ACCESS_KEY", "admin")
+    MINIO_SECRET_KEY = environ.get("MINIO_SECRET_KEY", "adminpassword")
+    MINIO_SECURE = False
 
     # Determinamos la URI final: si hay DATABASE_URL la usamos; si no, construimos desde las partes;
     # si ninguna de las dos está (caso equipo que quiere sqlite), caemos a SQLite local.
@@ -65,20 +78,6 @@ class DevelopmentConfig(Config):
         SQLALCHEMY_ENGINES = {"default": "sqlite:///dev.sqlite3"}
         # alternativa memoria:
         # SQLALCHEMY_ENGINES = {"default": "sqlite+pysqlite:///:memory:"}
-
-    # """Development configuration."""
-
-    # DEBUG = True
-    # DB_HOST = environ.get("DB_HOST", "localhost")
-    # DB_USER = environ.get("DB_USER", "postgres")
-    # DB_PASS = environ.get("DB_PASS", "12345")
-    # DB_NAME = environ.get("DB_NAME", "grupo37")
-    # DB_PORT = environ.get("DB_port", "5432")
-    # DB_SCHEME = environ.get("DB_SCHEME", "postgresql")
-    # SQLALCHEMY_ENGINES = {
-    #     'default': f"{DB_SCHEME}://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}",
-    # }
-    # # TEMPLATES_AUTO_RELOAD = True
 
 
 class TestingConfig(Config):

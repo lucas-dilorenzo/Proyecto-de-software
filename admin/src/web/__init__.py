@@ -50,6 +50,7 @@ from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
+from src.web.storage import storage
 
 """
     Crea la aplicación Flask.
@@ -71,6 +72,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
+
+    # Inicializar almacenamiento (MinIO)
+    storage.init_app(app)
 
     # Protección CSRF
     csrf = CSRFProtect(app)
