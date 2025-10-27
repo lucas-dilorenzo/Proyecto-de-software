@@ -63,6 +63,25 @@ block titulo_body %}
       >
         <div class="card-body">
           <div class="row">
+            <div class="col-md-12 text-center mb-4">
+              {% if site.main_image %}
+              <img
+                src="{{ image_url(site.main_image) }}"
+                alt="Imagen principal de {{ site.name }}"
+                class="img-fluid rounded"
+                style="max-height: 400px; object-fit: cover"
+              />
+              {% else %}
+              <img
+                src="{{ url_for('static', filename='no_image_available.png') }}"
+                alt="Imagen no disponible"
+                class="img-fluid rounded"
+                style="max-height: 400px; object-fit: cover"
+              />
+              {% endif %}
+            </div>
+          </div>
+          <div class="row">
             <div class="col-md-8">
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
                 <i class="bi bi-card-text me-2"></i>Descripción Corta
@@ -122,6 +141,29 @@ block titulo_body %}
                   <span class="badge bg-light text-dark me-1">{{ tag.name }}</span>
                 {% endfor %}
               </p>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label class="form-label fw-semibold fs-5 mb-2 text-primary">
+                <i class="bi bi-images me-2"></i>Imágenes Secundarias
+              </label>
+              <div class="d-flex flex-wrap">
+                {% if site.images %}
+                {% for image in site.images %}
+                <div class="me-2 mb-2">
+                  <img
+                    src="{{ image_url(image) }}"
+                    alt="Imagen secundaria de {{ site.name }}"
+                    class="img-fluid rounded"
+                    style="max-height: 200px; object-fit: cover"
+                  />
+                </div>                
+                {% endfor %}
+                {% else %}
+                <p>No hay imágenes secundarias disponibles.</p>                
+                {% endif %}
+              </div>
             </div>
           </div>
         </div>

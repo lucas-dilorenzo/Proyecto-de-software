@@ -51,7 +51,7 @@
 {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
   <div class="card-body">
-    <form method="POST" action="{{ url_for('sites.edit_site', site_id=site.id) }}">
+    <form method="POST" action="{{ url_for('sites.edit_site', site_id=site.id) }}" enctype="multipart/form-data">
       <div class="row">
         <!-- Primera columna -->
         <div class="col-md-6">
@@ -219,10 +219,10 @@
                 <div class="mb-2">
                   <img
                     id="main_image_preview"
-                    src="{{ url_for('static', filename=site.main_image) if site.main_image else '' }}"
+                    src="{{ image_url(site.main_image) if site.main_image else '' }}"
                     alt="Imagen principal"
                     class="img-fluid rounded"
-                    style="max-height:200px; width:100%; object-fit:cover; {{ 'display:none;' if not site.main_image else '' }}"
+                    style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.main_image else '' }}"
                   />
                 </div>
                 <input
@@ -255,13 +255,21 @@
                 <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview">
                   {% if site.images %}
                     {% for img in site.images %}
-                    <div class="border rounded" style="width:120px; height:80px; overflow:hidden;">
+                    <div class="border rounded position-relative" style="width:120px; height:80px; overflow:hidden;">
                       <img
-                        src="{{ url_for('static', filename=img) }}"
+                        src="{{ image_url(img) }}"
                         alt="Imagen secundaria"
                         class="img-fluid"
-                        style="object-fit:cover; width:100%; height:100%;"
+                        style="object-fit:contain; width:100%; height:100%;"
                       />
+                      <button 
+                        type="button" 
+                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1" 
+                        style="width:25px; height:25px; font-size:12px;"
+                        onclick="this.parentElement.remove()"
+                      >
+                        <i class="bi bi-x"></i>
+                      </button>
                     </div>
                     {% endfor %}
                   {% endif %}
@@ -282,29 +290,6 @@
               required
               rows="4"
             >{{ site.description }}</textarea>
-          </div>
-        </div>
-      </div>
-
-      <!-- Espacio para cargar imagenes -->
-      <div class="row">
-        <div class="col-12">
-          <div class="mb-4">
-            <label for="images" class="form-label">
-              <i class="bi bi-image me-1"></i>Imágenes del Sitio Histórico
-            </label>
-            <input
-              class="form-control"
-              type="file"
-              id="images"
-              name="images"
-              accept="image/*"
-              multiple
-            />
-            <div class="form-text">
-              Puedes subir múltiples imágenes. Los archivos seleccionados no se
-              mostrarán aquí, pero se cargarán al guardar el formulario.
-            </div>
           </div>
         </div>
       </div>
@@ -413,28 +398,48 @@
     const files = e.target.files;
     const previewContainer = document.getElementById('secondary_images_preview');
     
-    // Limpiar previews anteriores (mantener las existentes del servidor)
-    const newPreviews = previewContainer.querySelectorAll('.new-preview');
-    newPreviews.forEach(preview => preview.remove());
+    // NO limpiar las previews anteriores, solo agregar las nuevas
     
-    Array.from(files).forEach(file => {
+    // Verificar que hay archivos seleccionados
+    if (files.length === 0) return;
+    
+    // Procesar cada archivo
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
       const reader = new FileReader();
+      
       reader.onload = function(event) {
         const div = document.createElement('div');
-        div.className = 'border rounded new-preview';
+        div.className = 'border rounded position-relative new-preview';
         div.style.cssText = 'width:120px; height:80px; overflow:hidden;';
         
         const img = document.createElement('img');
         img.src = event.target.result;
         img.alt = 'Imagen secundaria nueva';
         img.className = 'img-fluid';
-        img.style.cssText = 'object-fit:cover; width:100%; height:100%;';
+        img.style.cssText = 'object-fit:contain; width:100%; height:100%;';
+        
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1';
+        deleteBtn.style.cssText = 'width:25px; height:25px; font-size:12px;';
+        deleteBtn.innerHTML = '<i class="bi bi-x"></i>';
+        deleteBtn.onclick = function() {
+          div.remove();
+          // Limpiar el input para permitir volver a seleccionar archivos
+          document.getElementById('secondary_images').value = '';
+        };
         
         div.appendChild(img);
+        div.appendChild(deleteBtn);
         previewContainer.appendChild(div);
       };
+      
       reader.readAsDataURL(file);
-    });
+    }
+    
+    // Limpiar el input para permitir agregar más imágenes después
+    this.value = '';
   });
 </script>
 {% endblock %}

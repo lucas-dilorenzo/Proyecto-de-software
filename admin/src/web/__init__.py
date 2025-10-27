@@ -138,6 +138,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.jinja_env.globals.update(get_conservation_status_label=get_conservation_status)
     app.jinja_env.globals.update(get_category_label=get_category_label)
     app.jinja_env.globals.update(is_sys_admin=is_sys_admin)
+    app.jinja_env.globals.update(image_url=helpers.get_image_url)
 
     # ---------- Guard global: Admin Maintenance Mode ----------
     @app.before_request

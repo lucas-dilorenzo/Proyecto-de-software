@@ -1,6 +1,6 @@
 from enum import Enum
 
-from flask import redirect, session, url_for
+from flask import redirect, session, url_for, current_app
 from src.core.users.user import UserRole
 from src.core import users
 from functools import wraps
@@ -48,3 +48,11 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+def get_image_url(object_name):
+    """Generate a presigned URL for accessing an image stored in MinIO."""
+    client = current_app.storage
+    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
+    url = client.presigned_get_object(bucket_name=bucket_name, object_name=object_name)
+    return url

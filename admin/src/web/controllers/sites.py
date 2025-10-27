@@ -376,12 +376,10 @@ def edit_site(site_id):
                     )
                     # Devolver en params el path del objeto subido
                     # (podrías guardar esto en la base de datos si es necesario)
-                    historicalSites.add_image_to_site(
-                        site_id, object_name, is_primary=True
-                    )
+                    historicalSites.add_image_to_site(site_id, object_name, main=True)
             if "secondary_images" in request.files:
                 client = current_app.storage
-                images = request.files.getlist("secondaty_images")
+                images = request.files.getlist("secondary_images")
                 for img in images:
                     if img and img.filename:
                         file = img
@@ -399,7 +397,7 @@ def edit_site(site_id):
                         # Devolver en params el path del objeto subido
                         # (podrías guardar esto en la base de datos si es necesario)
                         historicalSites.add_image_to_site(
-                            site_id, object_name, is_primary=False
+                            site_id, object_name, main=False
                         )
             historicalSites.update_site(
                 site_id,

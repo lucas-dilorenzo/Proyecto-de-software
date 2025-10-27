@@ -126,7 +126,7 @@ def update_site(site_id, **kwargs):
     return site
 
 
-def add_image_to_site(site_id, object_name, is_primary=False):
+def add_image_to_site(site_id, object_name, main=False):
     """
     Adds an image to a historical site by its ID.
     Args:
@@ -140,8 +140,8 @@ def add_image_to_site(site_id, object_name, is_primary=False):
     if not site:
         return None
 
-    if is_primary:
-        site.primary_image = object_name
+    if main:
+        site.main_image = object_name
     else:
         site.images.append(object_name)
     db.session.commit()
