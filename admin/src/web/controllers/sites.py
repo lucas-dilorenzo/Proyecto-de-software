@@ -4,6 +4,7 @@ from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
 from src.core.historicalSites.tags import get_all_tags
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
+from src.core import images
 from datetime import datetime
 from flask import (
     Blueprint,
@@ -389,23 +390,35 @@ def edit_site(site_id):
                         content_type=primary_img.content_type,
                     )
                     # Devolver en params el path del objeto subido
-                    # (podrías guardar esto en la base de datos si es necesario)
-                    historicalSites.add_image_to_site(site_id, object_name, main=True)
+                    titulo = request.form.get("main_image_title", "Imagen principal")
+                    descripcion = request.form.get(
+                        "main_image_description", "Imagen principal del sitio histórico"
+                    )
+                    images.create_image(
+                        site_id=site_id,
+                        url=object_name,
+                        order=0,
+                        titulo=titulo,
+                        descripcion=descripcion,
+                    )
+
             if "secondary_images" in request.files:
-                print("Uploading secondary images...")
                 client = current_app.storage
-                images = request.files.getlist("secondary_images")
-                print(
-                    "Secondary images to upload:",
-                    [img.filename for img in images if img and img.filename],
+                secondary_images = request.files.getlist("secondary_images")
+
+                # Obtener títulos y descripciones de las imágenes secundarias
+                secondary_titles = request.form.getlist("secondary_image_titles")
+                secondary_descriptions = request.form.getlist(
+                    "secondary_image_descriptions"
                 )
-                for img in images:
+
+                for idx, img in enumerate(secondary_images):
                     if img and img.filename:
                         file = img
                         size = fstat(file.fileno()).st_size
                         bucket_name = current_app.config["MINIO_BUCKET_NAME"]
-                        # ulid = file.filename  # Simplificado para este ejemplo
                         object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+
                         client.put_object(
                             bucket_name=bucket_name,
                             object_name=object_name,
@@ -413,10 +426,26 @@ def edit_site(site_id):
                             length=size,
                             content_type=img.content_type,
                         )
-                        print("Uploaded secondary image:", object_name)
-                        # Devolver en params el path del objeto subido
-                        historicalSites.add_image_to_site(
-                            site_id, object_name, main=False
+
+                        # Obtener título y descripción correspondiente al índice
+                        titulo = (
+                            secondary_titles[idx]
+                            if idx < len(secondary_titles)
+                            else f"Imagen secundaria {idx + 1}"
+                        )
+                        descripcion = (
+                            secondary_descriptions[idx]
+                            if idx < len(secondary_descriptions)
+                            else "Imagen secundaria del sitio histórico"
+                        )
+
+                        # Crear registro de imagen con order > 0 para secundarias
+                        images.create_image(
+                            site_id=site_id,
+                            url=object_name,
+                            order=idx + 1,  # Las secundarias tienen order >= 1
+                            titulo=titulo,
+                            descripcion=descripcion,
                         )
 
             # Tags
