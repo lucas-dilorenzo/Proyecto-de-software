@@ -62,12 +62,12 @@ block titulo_body %}
         style="padding: 1rem"
       >
         <div class="card-body">
-          {% if site.main_image %}
+          {% if site.images %}
           <div class="row">
             <div class="col-md-12 text-center mb-4">
               
               <img
-                src="{{ image_url(site.main_image) }}"
+                src="{{ image_url(site.images[0].url) }}"
                 alt="Imagen principal de {{ site.name }}"
                 class="img-fluid rounded"
                 style="max-height: 400px; object-fit: cover"
@@ -137,21 +137,23 @@ block titulo_body %}
               </p>
             </div>
           </div>
-          {% if site.images %}
+          {% if get_secondary_image_urls(site.id) %}
           <div class="row">
             <div class="col-md-12">
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
                 <i class="bi bi-images me-2"></i>Más Imágenes
               </label>
               <div class="d-flex flex-wrap">
-                {% for image in site.images %}
+                {% for image in get_secondary_image_urls(site.id) %}
                 <div class="me-2 mb-2">
                   <img
-                    src="{{ image_url(image) }}"
-                    alt="Imagen secundaria de {{ site.name }}"
+                    src="{{ image_url(image.url) }}"
+                    alt="{{ image.titulo }}"
                     class="img-fluid rounded"
                     style="max-height: 200px; object-fit: cover"
                   />
+                  <p class="text-center">{{ image.titulo }}</p>
+                  <p class="text-center">{{ image.descripcion }}</p>
                 </div>                
                 {% endfor %}                
           {% endif %}

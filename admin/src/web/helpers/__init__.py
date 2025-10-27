@@ -4,6 +4,7 @@ from flask import redirect, session, url_for, current_app
 from src.core.users.user import UserRole
 from src.core import users
 from functools import wraps
+from src.core import images
 
 
 def is_authenticated(session):
@@ -56,3 +57,20 @@ def get_image_url(object_name):
     bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
     url = client.presigned_get_object(bucket_name=bucket_name, object_name=object_name)
     return url
+
+
+def get_secondary_image_urls(site_id):
+    """Generate presigned URLs for accessing multiple images stored in MinIO."""
+    _images = images.get_secondary_images_by_site(site_id)
+    if not _images:
+        return None
+    # object_names = [image.url for image in _images]
+    # client = current_app.storage
+    # bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
+    # urls = []
+    # for object_name in object_names:
+    #     url = client.presigned_get_object(
+    #         bucket_name=bucket_name, object_name=object_name
+    #     )
+    #     urls.append(url)
+    return _images

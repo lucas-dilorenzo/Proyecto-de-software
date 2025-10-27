@@ -19,6 +19,8 @@ def create_image(
     image = Image(
         site_id=site_id, url=url, order=order, titulo=titulo, descripcion=descripcion
     )
+    db.session.add(image)
+    db.session.commit()
     return image
 
 

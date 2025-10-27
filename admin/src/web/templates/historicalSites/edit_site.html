@@ -17,13 +17,11 @@
   href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
   integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
   crossorigin=""
-/
->
+/>
 <link
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
-/
->
+/>
 <script
   src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
   integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
@@ -33,6 +31,12 @@
   #map {
     height: 400px;
     width: 100%;
+    margin-top: 10px;
+  }
+  .image-metadata {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
     margin-top: 10px;
   }
 </style>
@@ -124,7 +128,6 @@
               value="{{ site.location }}"
               hidden
             />
-            <br />
           </div>
         </div>
 
@@ -206,78 +209,8 @@
         </div>
       </div>
 
-      <!-- Descripción detallada en toda la fila -->
+      <!-- Descripción detallada -->
       <div class="row">
-        <div class="col-12"></div>
-          <div class="row">
-            <!-- Columna izquierda: Imagen principal -->
-            <div class="col-md-4">
-              <div class="mb-3">
-                <label for="main_image" class="form-label">
-                  <i class="bi bi-card-image me-1"></i>Imagen Principal
-                </label>
-                <div class="mb-2">
-                  <img
-                    id="main_image_preview"
-                    src="{{ image_url(site.main_image) if site.main_image else '' }}"
-                    alt="Imagen principal"
-                    class="img-fluid rounded"
-                    style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.main_image else '' }}"
-                  />
-                </div>
-                <input
-                  class="form-control"
-                  type="file"
-                  id="main_image"
-                  name="main_image"
-                  accept="image/*"
-                />
-                <div class="form-text">Sube la imagen principal (se mostrará como portada).</div>
-              </div>
-            </div>
-
-            <!-- Columna derecha: Imágenes secundarias -->
-            <div class="col-md-8">
-              <div class="mb-3">
-                <label for="secondary_images" class="form-label">
-                  <i class="bi bi-images me-1"></i>Imágenes Secundarias
-                </label>
-                <input
-                  class="form-control"
-                  type="file"
-                  id="secondary_images"
-                  name="secondary_images"
-                  accept="image/*"
-                  multiple
-                />
-                <div class="form-text">Puedes subir múltiples imágenes secundarias.</div>
-
-                <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview">
-                  {% if site.images %}
-                    {% for img in site.images %}
-                    <div class="border rounded position-relative" style="width:120px; height:80px; overflow:hidden;">
-                      <img
-                        src="{{ image_url(img) }}"
-                        alt="Imagen secundaria"
-                        class="img-fluid"
-                        style="object-fit:contain; width:100%; height:100%;"
-                      />
-                      <button 
-                        type="button" 
-                        class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1" 
-                        style="width:25px; height:25px; font-size:12px;"
-                        onclick="this.parentElement.remove()"
-                      >
-                        <i class="bi bi-x"></i>
-                      </button>
-                    </div>
-                    {% endfor %}
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
         <div class="col-12">
           <div class="mb-4">
             <label for="description" class="form-label">
@@ -294,17 +227,124 @@
         </div>
       </div>
 
-      <!-- Eleccion de tags -->
-      <select
-        name="tags"
-        id="tags"
-        class="form-select form-select-sm"
-        multiple
-      >
-        {% for tag in tags %}
-        <option value="{{ tag.id }}" {% if tag in site.tags %}selected{% endif %}>{{ tag.name }}</option>
-        {% endfor %}
-      </select>
+      <!-- Imágenes -->
+      <div class="row">
+        <!-- Imagen Principal -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label for="main_image" class="form-label">
+              <i class="bi bi-card-image me-1"></i>Imagen Principal
+            </label>
+            <div class="mb-2">
+              <img
+                id="main_image_preview"
+                src="{{ image_url(site.main_image) if site.main_image else '' }}"
+                alt="Imagen principal"
+                class="img-fluid rounded"
+                style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.main_image else '' }}"
+              />
+            </div>
+            <input
+              class="form-control"
+              type="file"
+              id="main_image"
+              name="main_image"
+              accept="image/*"
+            />
+            <div class="form-text">Sube la imagen principal (se mostrará como portada).</div>
+            
+            <!-- Metadatos imagen principal -->
+            <div class="image-metadata mt-2">
+              <div class="mb-2">
+                <label for="main_image_title" class="form-label small">Título de la imagen</label>
+                <input
+                  type="text"
+                  class="form-control form-control-sm"
+                  id="main_image_title"
+                  name="main_image_title"
+                  placeholder="Título descriptivo"
+                  value="Imagen principal"
+                />
+              </div>
+              <div class="mb-0">
+                <label for="main_image_description" class="form-label small">Descripción</label>
+                <textarea
+                  class="form-control form-control-sm"
+                  id="main_image_description"
+                  name="main_image_description"
+                  rows="2"
+                  placeholder="Descripción de la imagen"
+                >Imagen principal del sitio histórico</textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Imágenes Secundarias -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <label for="secondary_images" class="form-label">
+              <i class="bi bi-images me-1"></i>Imágenes Secundarias
+            </label>
+            <input
+              class="form-control"
+              type="file"
+              id="secondary_images"
+              name="secondary_images"
+              accept="image/*"
+              multiple
+            />
+            <div class="form-text">Puedes subir múltiples imágenes secundarias.</div>
+
+            <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview">
+              {% if site.images %}
+                {% for img in site.images %}
+                <div class="border rounded position-relative" style="width:120px; height:80px; overflow:hidden;">
+                  <img
+                    src="{{ image_url(img) }}"
+                    alt="Imagen secundaria"
+                    class="img-fluid"
+                    style="object-fit:contain; width:100%; height:100%;"
+                  />
+                  <button 
+                    type="button" 
+                    class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1" 
+                    style="width:25px; height:25px; font-size:12px;"
+                    onclick="this.parentElement.remove()"
+                  >
+                    <i class="bi bi-x"></i>
+                  </button>
+                </div>
+                {% endfor %}
+              {% endif %}
+            </div>
+
+            <!-- Contenedor para metadatos de imágenes secundarias -->
+            <div id="secondary_metadata_container" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="row">
+        <div class="col-12">
+          <div class="mb-3">
+            <label for="tags" class="form-label">
+              <i class="bi bi-tags me-1"></i>Tags
+            </label>
+            <select
+              name="tags"
+              id="tags"
+              class="form-select"
+              multiple
+            >
+              {% for tag in tags %}
+              <option value="{{ tag.id }}" {% if tag in site.tags %}selected{% endif %}>{{ tag.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
 
       <!-- MAPA -->
       <input type="hidden" id="lat" name="lat" />
@@ -332,37 +372,29 @@
 </div>
 
 <script>
-  // Obtener coordenadas del sitio histórico
+  // Mapa
   var lat = {{ site.latitude }};
   var lng = {{ site.longitude }};
-  console.log("Coordenadas iniciales - Latitud: " + lat + ", Longitud: " + lng);
-  // Inicializar mapa centrado en las coordenadas del sitio
   var map = L.map("map").setView([lat, lng], 15);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "© OpenStreetMap contributors",
   }).addTo(map);
-  document.getElementById("location").value = lng + " " + lat
-  var marker;
-  marker = L.marker([lat, lng]).addTo(map);
-  // Evento click en mapa
+  
+  document.getElementById("location").value = lng + " " + lat;
+  var marker = L.marker([lat, lng]).addTo(map);
+
   map.on("click", function (e) {
     var lat = e.latlng.lat;
     var lng = e.latlng.lng;
-
-    if (marker) {
-      map.removeLayer(marker);
-    }
+    if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lng]).addTo(map);
-
-    // Guardar valores en los inputs ocultos
     document.getElementById("lat").value = lat;
     document.getElementById("lng").value = lng;
-    // Formato correcto: "longitud latitud" (compatible con seeds y PostGIS)
     document.getElementById("location").value = lng + " " + lat;
-    console.log("Latitud: " + lat + ", Longitud: " + lng);
   });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -377,8 +409,7 @@
       });
     }
   });
-</script>
-<script>
+
   // Vista previa de imagen principal
   document.getElementById('main_image').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -393,32 +424,29 @@
     }
   });
 
-  // Vista previa de imágenes secundarias
-  // Mantener un array de archivos acumulados
+  // Manejo de imágenes secundarias con metadatos
   let selectedFiles = [];
 
   document.getElementById('secondary_images').addEventListener('change', function(e) {
     const files = e.target.files;
     const previewContainer = document.getElementById('secondary_images_preview');
+    const metadataContainer = document.getElementById('secondary_metadata_container');
     
-    // Verificar que hay archivos seleccionados
     if (files.length === 0) return;
     
-    // Agregar nuevos archivos al array
     for (let i = 0; i < files.length; i++) {
       selectedFiles.push(files[i]);
     }
     
-    // Actualizar el DataTransfer del input con todos los archivos
     updateInputFiles();
     
-    // Procesar cada archivo nuevo para la preview
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileIndex = selectedFiles.length - files.length + i;
       const reader = new FileReader();
       
       reader.onload = function(event) {
+        // Preview de imagen
         const div = document.createElement('div');
         div.className = 'border rounded position-relative new-preview';
         div.style.cssText = 'width:120px; height:80px; overflow:hidden;';
@@ -436,43 +464,75 @@
         deleteBtn.style.cssText = 'width:25px; height:25px; font-size:12px;';
         deleteBtn.innerHTML = '<i class="bi bi-x"></i>';
         deleteBtn.onclick = function() {
-          // Remover archivo del array
           const idx = parseInt(div.dataset.fileIndex);
           selectedFiles.splice(idx, 1);
           
-          // Actualizar índices de los elementos restantes
           document.querySelectorAll('.new-preview').forEach(el => {
             const elIdx = parseInt(el.dataset.fileIndex);
+            if (elIdx > idx) el.dataset.fileIndex = elIdx - 1;
+          });
+          
+          // Remover metadatos correspondientes
+          const metaDiv = document.querySelector(`[data-meta-index="${idx}"]`);
+          if (metaDiv) metaDiv.remove();
+          
+          // Reindexar metadatos
+          document.querySelectorAll('[data-meta-index]').forEach(el => {
+            const elIdx = parseInt(el.dataset.metaIndex);
             if (elIdx > idx) {
-              el.dataset.fileIndex = elIdx - 1;
+              el.dataset.metaIndex = elIdx - 1;
+              const inputs = el.querySelectorAll('input, textarea');
+              inputs.forEach(input => {
+                input.name = input.name.replace(/\[\d+\]/, `[${elIdx - 1}]`);
+              });
             }
           });
           
-          // Actualizar input
           updateInputFiles();
-          
-          // Remover preview
           div.remove();
         };
         
         div.appendChild(img);
         div.appendChild(deleteBtn);
         previewContainer.appendChild(div);
+
+        // Formulario de metadatos
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'image-metadata mb-2';
+        metaDiv.dataset.metaIndex = fileIndex;
+        metaDiv.innerHTML = `
+          <h6 class="small mb-2">Imagen ${fileIndex + 1}: ${file.name}</h6>
+          <div class="mb-2">
+            <label class="form-label small">Título</label>
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              name="secondary_image_titles"
+              placeholder="Título de la imagen"
+              value="Imagen secundaria ${fileIndex + 1}"
+            />
+          </div>
+          <div class="mb-0">
+            <label class="form-label small">Descripción</label>
+            <textarea
+              class="form-control form-control-sm"
+              name="secondary_image_descriptions"
+              rows="2"
+              placeholder="Descripción de la imagen"
+            >Imagen secundaria del sitio histórico</textarea>
+          </div>
+        `;
+        metadataContainer.appendChild(metaDiv);
       };
       
       reader.readAsDataURL(file);
     }
   });
 
-  // Función para actualizar el input con los archivos acumulados
   function updateInputFiles() {
     const input = document.getElementById('secondary_images');
     const dt = new DataTransfer();
-    
-    selectedFiles.forEach(file => {
-      dt.items.add(file);
-    });
-    
+    selectedFiles.forEach(file => dt.items.add(file));
     input.files = dt.files;
   }
 </script>

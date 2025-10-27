@@ -12,7 +12,7 @@ class Image(db.Model):
     titulo = db.Column(db.String, nullable=True)
     descripcion = db.Column(db.String, nullable=True)
 
-    site = relationship("Site", backref="images")
+    site = relationship("Site", back_populates="images")
 
     def __init__(
         self,

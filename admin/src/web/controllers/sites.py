@@ -447,6 +447,7 @@ def edit_site(site_id):
                             titulo=titulo,
                             descripcion=descripcion,
                         )
+                        print("Imagen secundaria subida y registrada:", object_name)
 
             # Tags
             try:
