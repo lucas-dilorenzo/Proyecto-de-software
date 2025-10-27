@@ -9,35 +9,28 @@
 
 {% block body %}
     <form method="POST" action="{{ url_for('tags.edit_tag', tag_id=tag.id) }}">
+        {{ form.hidden_tag() }}
         <div class="card shadow-sm border-0 rounded-0 bg-white">
             <div class="card-body">
 
                 <div class="mb-3">
-                <label for="name" class="form-label">Nombre</label>
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    class="form-control {% if errors and errors.name %}is-invalid{% endif %}"
-                    value="{{ name|default('') }}"
-                    required
-                >
-                {% if errors and errors.name %}
-                    <div class="invalid-feedback">{{ errors.name }}</div>
-                {% endif %}
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control " + ("is-invalid" if form.name.errors else "")) }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.name.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
                 <div class="mb-3">
-                <label for="description" class="form-label">Descripción</label>
-                <textarea
-                    id="description"
-                    name="description"
-                    class="form-control {% if errors and errors.description %}is-invalid{% endif %}"
-                    rows="3"
-                >{{ description|default('') }}</textarea>
-                {% if errors and errors.description %}
-                    <div class="invalid-feedback">{{ errors.description }}</div>
-                {% endif %}
+                    {{ form.description.label(class="form-label") }}
+                    {{ form.description(class="form-control " + ("is-invalid" if form.description.errors else ""), rows="3") }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}{{ error }}{% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
 
             </div>

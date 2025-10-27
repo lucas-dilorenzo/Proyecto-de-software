@@ -18,52 +18,136 @@ from flask import (
 )
 import csv
 import json
-import datetime
 from src.web.helpers import login_required
+from urllib.parse import urlparse, parse_qs
+from werkzeug.datastructures import MultiDict
 
 
+# --------------------------------------------------------------------
+# Blueprint
+# --------------------------------------------------------------------
 historical_sites_bp = Blueprint("sites", __name__, url_prefix="/sites")
 
 
+# --------------------------------------------------------------------
+# Helpers de filtros (comparten listado y CSV)
+# --------------------------------------------------------------------
+def _parse_list_filters(args):
+    city = args.get("city", type=str)
+    province = args.get("province", type=str)
+    tags = args.getlist("tags")  # ?tags=1&tags=2
+    conservation_status = args.get("conservation_status", type=str)
+    date_from = args.get("date_from", type=str)
+    date_to = args.get("date_to", type=str)
+
+    # visibility: None (no filtra), True/False
+    visibility_list = args.getlist("visibility")
+    if not visibility_list:
+        visibility = None
+    else:
+        visibility = any(
+            v.lower() in ("1", "true", "on", "yes") for v in visibility_list
+        )
+
+    # aceptar 'search_text' y el legacy 'stringBusqueda'
+    search_text = args.get("search_text") or args.get("stringBusqueda")
+
+    order_by = args.get("order_by") or "name"
+    order_dir = args.get("order_dir") or "asc"
+
+    return dict(
+        city=city,
+        province=province,
+        tags=tags,
+        conservation_status=conservation_status,
+        date_from=date_from,
+        date_to=date_to,
+        visibility=visibility,
+        search_text=search_text,
+        order_by=order_by,
+        order_dir=order_dir,
+    )
+
+
+# --------------------------------------------------------------------
+# Helpers de labels legibles para CSV
+# --------------------------------------------------------------------
+_CATEGORY_MAP = {category.code: category.label for category in SiteCategory}
+_STATUS_MAP = {status.code: status.label for status in ConservationStatus}
+
+
+def get_category_label(key):
+    if key is None:
+        return None
+    return _CATEGORY_MAP.get(key) or _CATEGORY_MAP.get(str(key)) or str(key)
+
+
+def get_status_label(key):
+    if key is None:
+        return None
+    return _STATUS_MAP.get(key) or _STATUS_MAP.get(str(key)) or str(key)
+
+
+# Lo importan desde src/web/__init__.py — mantengámoslo para compatibilidad
+def get_conservation_status(key):
+    """
+    Devuelve el label legible para un estado de conservación (código -> etiqueta).
+    """
+    if key is None:
+        return None
+    return _STATUS_MAP.get(key) or _STATUS_MAP.get(str(key)) or None
+
+
+# (opcional) utilidades que quizá uses en vistas/plantillas
+def get_categories():
+    return _CATEGORY_MAP
+
+
+def get_conservation_statuses():
+    return _STATUS_MAP
+
+
+# --------------------------------------------------------------------
+# Rutas
+# --------------------------------------------------------------------
 @historical_sites_bp.route("/", methods=["GET"])
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def list_sites():
-    # if not authenticated(session):
-    # abort(401)
-
-    # if not has_permission(session["user"].id, permission="asc_index"):
-    #     abort(403)
+    """Lista los sitios históricos con paginación y filtros"""
     page = request.args.get("page", 1, type=int)
-    # legacy search input name used in template
+
+    # legacy search input name usado en template
     stringBusqueda = request.args.get("stringBusqueda", type=str)
+
     # Leer filtros desde query params
     city = request.args.get("city")
     province = request.args.get("province")
-    tags = request.args.getlist("tags")  # puede venir como tags=1&tags=2
+    tags = request.args.getlist("tags")  # ?tags=1&tags=2
     conservation_status = request.args.get("conservation_status", type=str)
     date_from = request.args.get("date_from", type=str)
     date_to = request.args.get("date_to", type=str)
-    # Leer visibility como lista para distinguir ausencia (no se filtró) de false/true
+
+    # visibility como lista para distinguir ausencia (no se filtró) de false/true
     visibility_list = request.args.getlist("visibility")
     if not visibility_list:
         visibility = None
     else:
-        # si cualquiera de los valores es truthy, lo tomamos como True
         visibility = any(
             v.lower() in ("1", "true", "on", "yes") for v in visibility_list
         )
-    # support both 'search_text' and legacy 'stringBusqueda'
+
+    # soportar 'search_text' y legacy 'stringBusqueda'
     search_text = request.args.get("search_text", type=str) or stringBusqueda
 
-    # parametros para ordenamiento
+    # parámetros para ordenamiento
     order_by = request.args.get("order_by", default="name", type=str)
     order_dir = request.args.get("order_dir", default="asc", type=str)
 
-    # Pasar los parámetros de ordenamiento al servicio
+    # Pasar los parámetros al servicio (paginado)
     sites = historicalSites.get_sites_paginated_by_id(
         page=page,
-        per_page=25,
+        per_page=10,
         order=order_dir,
         order_by=order_by,
         city=city,
@@ -75,11 +159,12 @@ def list_sites():
         visibility=visibility,
         search_text=search_text,
     )
-    # Mando también la lista de tags y provincias para armar el formulario
+
+    # Datos para el formulario
     all_tags = historicalSites.tags.get_all_tags()
     all_provinces = historicalSites.get_all_provinces()
 
-    # determinar si hay filtros activos para mostrar el botón Limpiar
+    # determinar si hay filtros activos para mostrar "Limpiar"
     visibility_present = "visibility" in request.args
     has_filters = any(
         [
@@ -95,8 +180,10 @@ def list_sites():
         ]
     )
 
-    # construir un dict con los query params actuales excepto 'page' para reutilizar en paginado
+    # construir query actual (excepto page) para reutilizar en paginado/export
+
     current_query = {}
+    list_keys = {"tags", "visibility"}  # <-- ambos como lista
     for k in (
         "stringBusqueda",
         "city",
@@ -108,13 +195,9 @@ def list_sites():
         "visibility",
         "search_text",
     ):
-        v = request.args.getlist(k) if k == "tags" else request.args.get(k)
+        v = request.args.getlist(k) if k in list_keys else request.args.get(k)
         if v:
-            # si es lista de tags y tiene varios valores, dejalo como lista
             current_query[k] = v
-
-    # NOTA: no agregamos order_by/order_dir a current_query para evitar colisiones
-    # cuando la plantilla pasa **(current_query) y además especifica order_by/order_dir.
 
     return render_template(
         "historicalSites/list_sites.html",
@@ -139,19 +222,16 @@ def list_sites():
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def list_deleted_sites():
-    # Obtener todos los sitios marcados como eliminados (sin paginación)
+    """Lista los sitios históricos eliminados (soft delete)"""
     sites = historicalSites.get_deleted_sites()
-
-    return render_template(
-        "historicalSites/list_deleted_sites.html",
-        sites=sites,
-    )
+    return render_template("historicalSites/list_deleted_sites.html", sites=sites)
 
 
 @historical_sites_bp.route("/<int:site_id>", methods=["GET"])
 @login_required
 @permission_required(UserPermission.SITE_LIST)
 def show_site(site_id):
+    """Muestra los detalles de un sitio histórico"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
@@ -162,52 +242,36 @@ def show_site(site_id):
 @login_required
 # @permission_required(UserPermission.SITE_HISTORY)
 def show_site_history(site_id):
+    """Muestra el historial de cambios de un sitio histórico"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
 
-    # Obtener los logs asociados al sitio, ordenados por timestamp desc
-    # Obtener logs a través de la capa de servicios (respeta MVC)
     logs = historicalSites.get_site_logs(site_id)
 
-    # Normalizar el campo details para facilitar renderizado en la plantilla
+    # Normalizar 'details' para render
     for l in logs:
-        parsed = None
         if l.details is None:
-            parsed = None
-        else:
-            # puede venir como JSON o como string serializado
-            if isinstance(l.details, str):
-                try:
-                    normalizado = json.loads(l.details)
-                except Exception:
-                    # no json -> dejar el string tal cual
-                    normalizado = l.details
-            else:
-                # ya es un objeto (dict/list)
+            normalizado = None
+        elif isinstance(l.details, str):
+            try:
+                normalizado = json.loads(l.details)
+            except Exception:
                 normalizado = l.details
+        else:
+            normalizado = l.details
 
-        # Si normalizado es dict con el formato {field: {old:..., new:...}}, convertir a lista de tuplas
         display_changes = None
         if isinstance(normalizado, dict):
-            # cada key -> {old:..., new:...}
             display_changes = []
             for field, change in normalizado.items():
-                old = None
-                new = None
                 if isinstance(change, dict):
                     old = change.get("old")
                     new = change.get("new")
                 else:
-                    # si el value no sigue el formato esperado, representarlo como str
                     old = None
                     new = change
                 display_changes.append((field, old, new))
-        else:
-            # parsed no es dict -> no hay cambios estructurados
-            display_changes = None
-
-        # adjuntar al objeto log para usar en la plantilla
         setattr(l, "parsed_changes", display_changes)
 
     return render_template("historicalSites/site_history.html", site=site, logs=logs)
@@ -217,7 +281,7 @@ def show_site_history(site_id):
 @login_required
 @permission_required(UserPermission.SITE_CREATE)
 def create_site():
-    # cargar tags para el formulario (se usa tanto en GET como en caso de validación fallida)
+    """Crea un nuevo sitio histórico"""
     tags = get_all_tags()
 
     if request.method == "POST":
@@ -225,7 +289,7 @@ def create_site():
         if form.validate_on_submit():
             formulario = request.form
             visibility_ = True if formulario.get("visibility") is not None else False
-            # crear el sitio
+
             if historicalSites.get_site_by_name(formulario.get("name")) is None:
                 site = historicalSites.create_site(
                     name=formulario.get("name"),
@@ -241,7 +305,7 @@ def create_site():
                     visibility=visibility_,
                 )
 
-            # Asignar tags seleccionados (si los hay)
+            # Asignar tags seleccionados
             try:
                 selected_tag_ids = request.form.getlist("tags")
                 if selected_tag_ids:
@@ -257,9 +321,8 @@ def create_site():
                     if tag_objs:
                         historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:
-
-                # no fallar la creación por problemas de tags; loguear y seguir
                 flash(f"Sitio creado pero no se pudieron asignar tags: {e}", "warning")
+
             flash("Sitio creado correctamente.", "success")
             return redirect(url_for("sites.show_site", site_id=site.id))
         else:
@@ -267,7 +330,6 @@ def create_site():
                 for field, errors in form.errors.items():
                     for error in errors:
                         flash(f"Error en el campo {field}: {error}", "danger")
-            # preservar estado del checkbox de visibilidad
             visibility_ = True if request.form.get("visibility") is not None else False
             return render_template(
                 "historicalSites/create_site.html", tags=tags, visibility=visibility_
@@ -283,11 +345,13 @@ def create_site():
 @login_required
 @permission_required(UserPermission.SITE_UPDATE)
 def edit_site(site_id):
+    """Edita un sitio histórico existente"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         abort(404)
-    # cargar tags para el formulario de edición
+
     all_tags = historicalSites.tags.get_all_tags()
+
     if request.method == "POST":
         form = SiteForm()
         if form.validate_on_submit():
@@ -307,7 +371,7 @@ def edit_site(site_id):
                 visibility=formulario.get("visibility") == "true",
             )
 
-            # Procesar tags seleccionados; si no se envían tags, vaciar la relación
+            # Tags
             try:
                 selected_tag_ids = request.form.getlist("tags")
                 tag_objs = []
@@ -319,7 +383,6 @@ def edit_site(site_id):
                     tag = historicalSites.tags.get_tag_by_id(tid)
                     if tag:
                         tag_objs.append(tag)
-                # asignar (incluso lista vacía para limpiar tags)
                 site = historicalSites.get_site_by_id(site_id)
                 historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:
@@ -331,9 +394,8 @@ def edit_site(site_id):
                 for field, errors in form.errors.items():
                     for error in errors:
                         flash(f"Error en el campo {field}: {error}", "danger")
-            # preservar estado del checkbox de visibilidad
-            visibility_ = True if request.form.get("visibility") is not None else False
             return redirect(url_for("sites.edit_site", site_id=site.id))
+
     return render_template("historicalSites/edit_site.html", site=site, tags=all_tags)
 
 
@@ -341,12 +403,12 @@ def edit_site(site_id):
 @login_required
 @permission_required(UserPermission.SITE_DELETE)
 def delete_site(site_id):
+    """Elimina un sitio histórico (soft delete)"""
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
 
     if request.method == "GET":
-        # eliminado=site.id
         try:
             historicalSites.delete_site(site_id)
             flash(f"Sitio {site.name} eliminado correctamente.", "success")
@@ -359,97 +421,94 @@ def delete_site(site_id):
 @login_required
 @permission_required(UserPermission.SITE_EXPORT)
 def download_csv_sites():
-    # Logic to download the list of sites
-    sites = historicalSites.list_all_sites()
+    """Exporta CSV replicando EXACTAMENTE los filtros/orden del listado.
+    Si no vienen en query, intenta recuperarlos del referrer (fallback)."""
+    from io import StringIO
 
-    if sites is None:
-        return "No sites found", 404
+    # 1) Tomar filtros de la query actual o del referrer si está vacío
+    if request.args and len(request.args) > 0:
+        parsed = _parse_list_filters(request.args)
+        ref = request.headers.get("Referer")
+    else:
+        ref = request.headers.get("Referer")
+        if ref:
+            q = parse_qs(urlparse(ref).query)  # dict: key -> [values]
+            md = MultiDict(
+                [(k, v) for k, vals in q.items() for v in vals]
+            )  # simula get/getlist
+            parsed = _parse_list_filters(md)
+        else:
+            parsed = _parse_list_filters(request.args)  # sin filtros
 
-    csv_data = "Nombre,Descripción breve,Descripción completa,Ciudad,Provincia,Lugar,Estado de conservación,Año de declaración,Categoría,Fecha de registro, Tags \n"
-    for site in sites:
+    # 2) Usar el MISMO servicio que el listado, sin paginar (per_page grande)
+    page = 1
+    per_page = 1_000_000
+    sites_page = historicalSites.get_sites_paginated_by_id(
+        page=page,
+        per_page=per_page,
+        order=parsed["order_dir"],
+        order_by=parsed["order_by"],
+        city=parsed["city"],
+        province=parsed["province"],
+        tags=parsed["tags"],
+        conservation_status=parsed["conservation_status"],
+        date_from=parsed["date_from"],
+        date_to=parsed["date_to"],
+        visibility=parsed["visibility"],
+        search_text=parsed["search_text"],
+    )
+    sites = getattr(sites_page, "items", sites_page) or []
 
-        listado_tags = [tag.name for tag in site.tags]
-        tags_str = " | ".join(listado_tags)
-        print(tags_str)
+    # 3) Freno: si no hay resultados, no exportar CSV
+    if not sites:
+        flash("No hay resultados para exportar con los filtros aplicados.", "warning")
+        return redirect(ref or url_for("sites.list_sites"))
 
-        csv_data += (
-            f"{normalizar(site.name)},"
-            f"{normalizar(site.description_short)},"
-            f"{normalizar(site.description)},"
-            f"{normalizar(site.city)},"
-            f"{normalizar(site.province)},"
-            f"{normalizar(site.location)}),"
-            f"{normalizar(site.conservation_status)},"
-            f"{normalizar(site.year_declared)},"
-            f"{normalizar(site.category)},"
-            f"{normalizar(site.registration_date)},"
-            f"{normalizar(tags_str)}\n"
-        )
-
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"sitios_{timestamp}"
-
-    return Response(
-        csv_data,
-        mimetype="text/csv",
-        headers={
-            "Content-disposition": f"attachment; filename={filename}.csv"
-        },
+    # 4) Construir CSV
+    si = StringIO()
+    writer = csv.writer(si, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(
+        [
+            "Nombre",
+            "Descripción breve",
+            "Descripción completa",
+            "Ciudad",
+            "Provincia",
+            "Ubicación (lat,lon)",
+            "Estado de conservación",
+            "Año de declaración",
+            "Categoría",
+            "Fecha de registro",
+            "Tags",
+        ]
     )
 
+    for s in sites:
+        tags_str = " | ".join([t.name for t in getattr(s, "tags", [])])
+        status_label = get_status_label(getattr(s, "conservation_status", None)) or ""
+        category_label = get_category_label(getattr(s, "category", None)) or ""
+        location_str = getattr(s, "location", "") or ""
 
-def get_categories():
-    """
-    Función que devuelve las categorías de sitios históricos disponibles.
+        writer.writerow(
+            [
+                getattr(s, "name", "") or "",
+                getattr(s, "description_short", "") or "",
+                getattr(s, "description", "") or "",
+                getattr(s, "city", "") or "",
+                getattr(s, "province", "") or "",
+                str(location_str),
+                status_label,
+                getattr(s, "year_declared", "") or "",
+                category_label,
+                getattr(s, "registration_date", "") or "",
+                tags_str,
+            ]
+        )
 
-    Returns:
-        dict: Diccionario con las categorías como pares key:value
-    """
-    return {category.code: category.label for category in SiteCategory}
-
-
-def get_category_label(key):
-    """
-    Función que devuelve el label de una categoría dado su clave.
-
-    Args:
-        key (str): Clave de la categoría.
-
-    Returns:
-        str: Valor legible de la categoría, o None si no existe.
-    """
-    category_dict = {category.code: category.label for category in SiteCategory}
-    return category_dict.get(key)
-
-
-def get_conservation_statuses():
-    """
-    Función que devuelve los estados de conservación disponibles.
-
-    Returns:
-        dict: Diccionario con los estados de conservación como pares key:value
-    """
-    return {status.code: status.label for status in ConservationStatus}
-
-
-def get_conservation_status(key):
-    """
-    Función que devuelve el label de un estado de conservación dado su clave.
-
-    Args:
-        key (str): Clave del estado de conservación.
-
-    Returns:
-        str: Valor legible del estado, o None si no existe.
-    """
-    status_dict = {status.code: status.label for status in ConservationStatus}
-    return status_dict.get(key)
-
-
-# USAR ESTE NORMALIZADOR PARA INTENTAR EVITAR EL ERROR CSV
-def normalizar(valor):
-    if valor is not None:
-        valor = str(valor).replace(",", "-")
-    else:
-        valor = "-"
-    return valor
+    csv_str = "\ufeff" + si.getvalue()  # BOM para Excel
+    ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return Response(
+        csv_str,
+        mimetype="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=sitios_{ts}.csv"},
+    )

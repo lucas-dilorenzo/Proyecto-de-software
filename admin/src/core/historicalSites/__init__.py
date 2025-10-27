@@ -3,7 +3,8 @@ from src.core.database import db
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.site import SiteLog
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
-from sqlalchemy import or_, func
+from sqlalchemy import or_, func, and_
+from sqlalchemy.orm import aliased
 from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
@@ -30,15 +31,30 @@ def create_site(**kwargs):
     Returns:
         Site: The newly created Site object.
     """
+
+    # Process location
+    location = kwargs.get("location")
+    if location is not None:
+        location = WKTElement(f"POINT({location})", srid=4326)
+
+    # Process year_declared to ensure it's an integer
+    year_declared = kwargs.get("year_declared")
+    if year_declared is not None:
+        if isinstance(year_declared, str):
+            try:
+                year_declared = int(year_declared) if year_declared.strip() else None
+            except (ValueError, TypeError):
+                year_declared = None
+
     site = Site(
         name=kwargs.get("name"),
         description_short=kwargs.get("description_short"),
         description=kwargs.get("description"),
         city=kwargs.get("city"),
         province=kwargs.get("province"),
-        location=WKTElement(f"POINT({kwargs.get('location')})", srid=4326),
+        location=location,
         conservation_status=kwargs.get("conservation_status"),
-        year_declared=kwargs.get("year_declared"),
+        year_declared=year_declared,
         category=kwargs.get("category"),
         registration_date=kwargs.get("registration_date"),
         visibility=kwargs.get("visibility", True),
@@ -98,6 +114,13 @@ def update_site(site_id, **kwargs):
         if key == "location" and value is not None:
             value = WKTElement(f"POINT({value})", srid=4326)
             print(f"Updating location to: {value}")
+        elif key == "year_declared" and value is not None:
+            # Ensure year_declared is always an integer
+            if isinstance(value, str):
+                try:
+                    value = int(value) if value.strip() else None
+                except (ValueError, TypeError):
+                    value = None
         setattr(site, key, value)
     db.session.commit()
     return site
@@ -315,3 +338,78 @@ def get_deleted_sites():
         return Site.query.filter(Site.deleted == True).all()
     except Exception:
         return []
+
+
+def get_sites_filtered(
+    city=None,
+    province=None,
+    tags=None,  # lista de ids (str/int)
+    conservation_status=None,
+    date_from=None,  # 'YYYY-MM-DD'
+    date_to=None,  # 'YYYY-MM-DD'
+    visibility=None,  # None (no filtrar) | True | False
+    search_text=None,
+    order_by="name",  # name | city | registration_date
+    order_dir="asc",  # asc | desc
+    only_active=True,  # excluye eliminados
+):
+    q = Site.query
+
+    if only_active:
+        q = q.filter(Site.deleted == False)
+
+    if city:
+        q = q.filter(Site.city.ilike(f"%{city}%"))
+    if province:
+        q = q.filter(Site.province.ilike(f"%{province}%"))
+    if conservation_status:
+        q = q.filter(Site.conservation_status == conservation_status)
+    if visibility is not None:
+        q = q.filter(Site.visibility == bool(visibility))
+
+    # Rango por fecha de registro
+    if date_from:
+        q = q.filter(Site.registration_date >= date_from)
+    if date_to:
+        q = q.filter(Site.registration_date <= date_to)
+
+    # Texto libre: nombre, descripciones, ciudad, provincia
+    if search_text:
+        st = f"%{search_text}%"
+        q = q.filter(
+            or_(
+                Site.name.ilike(st),
+                Site.description_short.ilike(st),
+                Site.description.ilike(st),
+                Site.city.ilike(st),
+                Site.province.ilike(st),
+            )
+        )
+
+    # Tags (OR). Si querés AND, ver bloque comentado abajo.
+    if tags:
+        try:
+            tag_ids = [int(t) for t in tags if str(t).strip() != ""]
+        except Exception:
+            tag_ids = []
+        if tag_ids:
+            q = q.join(Site.tags).filter(Tag.id.in_(tag_ids)).distinct()
+
+        # === AND estricto (tiene TODOS los tags seleccionados) ===
+        # for tid in tag_ids:
+        #     alias_tag = aliased(Tag)
+        #     q = q.join(alias_tag, Site.tags).filter(alias_tag.id == tid)
+
+    # Orden seguro (whitelist)
+    order_map = {
+        "name": Site.name,
+        "city": Site.city,
+        "registration_date": Site.registration_date,
+    }
+    col = order_map.get(order_by, Site.name)
+    if str(order_dir).lower() == "desc":
+        q = q.order_by(col.desc())
+    else:
+        q = q.order_by(col.asc())
+
+    return q.all()
