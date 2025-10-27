@@ -30,7 +30,7 @@ class Site(db.Model):
     visibility = db.Column(db.Boolean, default=True)
     deleted = db.Column(db.Boolean, default=False)
     main_image = db.Column(db.String, nullable=True)
-    images = db.Column(db.JSON, nullable=True)
+    images = db.Column(db.JSON, nullable=True, default=list)
 
     tags = relationship("Tag", secondary=sites_tags, backref="sites")
 
@@ -64,7 +64,7 @@ class Site(db.Model):
         self.visibility = visibility
         self.deleted = deleted
         self.main_image = main_image
-        self.images = images
+        self.images = images if images is not None else []
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"

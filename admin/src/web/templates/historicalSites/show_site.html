@@ -62,25 +62,19 @@ block titulo_body %}
         style="padding: 1rem"
       >
         <div class="card-body">
+          {% if site.main_image %}
           <div class="row">
             <div class="col-md-12 text-center mb-4">
-              {% if site.main_image %}
+              
               <img
                 src="{{ image_url(site.main_image) }}"
                 alt="Imagen principal de {{ site.name }}"
                 class="img-fluid rounded"
                 style="max-height: 400px; object-fit: cover"
               />
-              {% else %}
-              <img
-                src="{{ url_for('static', filename='no_image_available.png') }}"
-                alt="Imagen no disponible"
-                class="img-fluid rounded"
-                style="max-height: 400px; object-fit: cover"
-              />
-              {% endif %}
             </div>
           </div>
+          {% endif %}
           <div class="row">
             <div class="col-md-8">
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
@@ -143,13 +137,13 @@ block titulo_body %}
               </p>
             </div>
           </div>
+          {% if site.images %}
           <div class="row">
             <div class="col-md-12">
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
-                <i class="bi bi-images me-2"></i>Imágenes Secundarias
+                <i class="bi bi-images me-2"></i>Más Imágenes
               </label>
               <div class="d-flex flex-wrap">
-                {% if site.images %}
                 {% for image in site.images %}
                 <div class="me-2 mb-2">
                   <img
@@ -159,10 +153,8 @@ block titulo_body %}
                     style="max-height: 200px; object-fit: cover"
                   />
                 </div>                
-                {% endfor %}
-                {% else %}
-                <p>No hay imágenes secundarias disponibles.</p>                
-                {% endif %}
+                {% endfor %}                
+          {% endif %}
               </div>
             </div>
           </div>

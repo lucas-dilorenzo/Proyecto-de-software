@@ -358,6 +358,20 @@ def edit_site(site_id):
         form = SiteForm()
         if form.validate_on_submit():
             formulario = request.form
+            historicalSites.update_site(
+                site_id,
+                name=formulario.get("name"),
+                description_short=formulario.get("description_short"),
+                description=formulario.get("description"),
+                city=formulario.get("city"),
+                province=formulario.get("province"),
+                location=formulario.get("location"),
+                conservation_status=formulario.get("conservation_status"),
+                year_declared=formulario.get("year_declared"),
+                category=formulario.get("category"),
+                registration_date=formulario.get("registration_date"),
+                visibility=formulario.get("visibility") == "true",
+            )
             if "main_image" in request.files:
                 primary_img = request.files["main_image"]
                 if primary_img and primary_img.filename:
@@ -378,8 +392,13 @@ def edit_site(site_id):
                     # (podrías guardar esto en la base de datos si es necesario)
                     historicalSites.add_image_to_site(site_id, object_name, main=True)
             if "secondary_images" in request.files:
+                print("Uploading secondary images...")
                 client = current_app.storage
                 images = request.files.getlist("secondary_images")
+                print(
+                    "Secondary images to upload:",
+                    [img.filename for img in images if img and img.filename],
+                )
                 for img in images:
                     if img and img.filename:
                         file = img
@@ -394,25 +413,11 @@ def edit_site(site_id):
                             length=size,
                             content_type=img.content_type,
                         )
+                        print("Uploaded secondary image:", object_name)
                         # Devolver en params el path del objeto subido
-                        # (podrías guardar esto en la base de datos si es necesario)
                         historicalSites.add_image_to_site(
                             site_id, object_name, main=False
                         )
-            historicalSites.update_site(
-                site_id,
-                name=formulario.get("name"),
-                description_short=formulario.get("description_short"),
-                description=formulario.get("description"),
-                city=formulario.get("city"),
-                province=formulario.get("province"),
-                location=formulario.get("location"),
-                conservation_status=formulario.get("conservation_status"),
-                year_declared=formulario.get("year_declared"),
-                category=formulario.get("category"),
-                registration_date=formulario.get("registration_date"),
-                visibility=formulario.get("visibility") == "true",
-            )
 
             # Tags
             try:

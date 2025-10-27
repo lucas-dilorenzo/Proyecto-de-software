@@ -9,6 +9,7 @@ from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
 from src.core.historicalSites.site import SiteLog
+from sqlalchemy.orm.attributes import flag_modified
 
 
 def create_site(**kwargs):
@@ -143,7 +144,12 @@ def add_image_to_site(site_id, object_name, main=False):
     if main:
         site.main_image = object_name
     else:
+        if site.images is None:
+            site.images = []
         site.images.append(object_name)
+
+        flag_modified(site, "images")
+
     db.session.commit()
     return site
 

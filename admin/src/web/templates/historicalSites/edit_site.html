@@ -394,24 +394,35 @@
   });
 
   // Vista previa de imágenes secundarias
+  // Mantener un array de archivos acumulados
+  let selectedFiles = [];
+
   document.getElementById('secondary_images').addEventListener('change', function(e) {
     const files = e.target.files;
     const previewContainer = document.getElementById('secondary_images_preview');
     
-    // NO limpiar las previews anteriores, solo agregar las nuevas
-    
     // Verificar que hay archivos seleccionados
     if (files.length === 0) return;
     
-    // Procesar cada archivo
+    // Agregar nuevos archivos al array
+    for (let i = 0; i < files.length; i++) {
+      selectedFiles.push(files[i]);
+    }
+    
+    // Actualizar el DataTransfer del input con todos los archivos
+    updateInputFiles();
+    
+    // Procesar cada archivo nuevo para la preview
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const fileIndex = selectedFiles.length - files.length + i;
       const reader = new FileReader();
       
       reader.onload = function(event) {
         const div = document.createElement('div');
         div.className = 'border rounded position-relative new-preview';
         div.style.cssText = 'width:120px; height:80px; overflow:hidden;';
+        div.dataset.fileIndex = fileIndex;
         
         const img = document.createElement('img');
         img.src = event.target.result;
@@ -425,9 +436,23 @@
         deleteBtn.style.cssText = 'width:25px; height:25px; font-size:12px;';
         deleteBtn.innerHTML = '<i class="bi bi-x"></i>';
         deleteBtn.onclick = function() {
+          // Remover archivo del array
+          const idx = parseInt(div.dataset.fileIndex);
+          selectedFiles.splice(idx, 1);
+          
+          // Actualizar índices de los elementos restantes
+          document.querySelectorAll('.new-preview').forEach(el => {
+            const elIdx = parseInt(el.dataset.fileIndex);
+            if (elIdx > idx) {
+              el.dataset.fileIndex = elIdx - 1;
+            }
+          });
+          
+          // Actualizar input
+          updateInputFiles();
+          
+          // Remover preview
           div.remove();
-          // Limpiar el input para permitir volver a seleccionar archivos
-          document.getElementById('secondary_images').value = '';
         };
         
         div.appendChild(img);
@@ -437,10 +462,19 @@
       
       reader.readAsDataURL(file);
     }
-    
-    // Limpiar el input para permitir agregar más imágenes después
-    this.value = '';
   });
+
+  // Función para actualizar el input con los archivos acumulados
+  function updateInputFiles() {
+    const input = document.getElementById('secondary_images');
+    const dt = new DataTransfer();
+    
+    selectedFiles.forEach(file => {
+      dt.items.add(file);
+    });
+    
+    input.files = dt.files;
+  }
 </script>
 {% endblock %}
 
