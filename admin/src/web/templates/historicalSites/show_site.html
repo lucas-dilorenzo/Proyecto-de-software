@@ -69,7 +69,7 @@ block titulo_body %}
               <img
                 src="{{ image_url(site.images[0].url) }}"
                 alt="Imagen principal de {{ site.name }}"
-                class="img-fluid rounded"
+                class="img-fluid rounded-3 border border-5 border-secondary"
                 style="max-height: 400px; object-fit: cover"
               />
             </div>
@@ -138,28 +138,36 @@ block titulo_body %}
             </div>
           </div>
           {% if get_secondary_image_urls(site.id) %}
-          <div class="row">
+          <div class="row mt-4">
             <div class="col-md-12">
-              <label class="form-label fw-semibold fs-5 mb-2 text-primary">
+              <label class="form-label fw-semibold fs-5 mb-3 text-primary">
                 <i class="bi bi-images me-2"></i>Más Imágenes
               </label>
-              <div class="d-flex flex-wrap">
+              <div class="row row-cols-1 row-cols-md-2 g-4">
                 {% for image in get_secondary_image_urls(site.id) %}
-                <div class="me-2 mb-2">
-                  <img
-                    src="{{ image_url(image.url) }}"
-                    alt="{{ image.titulo }}"
-                    class="img-fluid rounded"
-                    style="max-height: 200px; object-fit: cover"
-                  />
-                  <p class="text-center">{{ image.titulo }}</p>
-                  <p class="text-center">{{ image.descripcion }}</p>
-                </div>                
-                {% endfor %}                
-          {% endif %}
+                <div class="col">
+                  <div class="card h-100">
+                    <img
+                      src="{{ image_url(image.url) }}"
+                      class="card-img-top"
+                      alt="{{ image.titulo or 'Imagen del sitio' }}"
+                      style="height: 250px; object-fit: cover"
+                    />
+                    <div class="card-body">
+                      {% if image.titulo %}
+                      <h5 class="card-title">{{ image.titulo }}</h5>
+                      {% endif %}
+                      {% if image.descripcion %}
+                      <p class="card-text">{{ image.descripcion }}</p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
               </div>
             </div>
           </div>
+          {% endif %}
         </div>
       </div>
     </div>
