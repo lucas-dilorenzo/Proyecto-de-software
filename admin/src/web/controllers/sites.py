@@ -15,12 +15,14 @@ from flask import (
     abort,
     flash,
     session,
+    current_app,
 )
 import csv
 import json
 from src.web.helpers import login_required
 from urllib.parse import urlparse, parse_qs
 from werkzeug.datastructures import MultiDict
+from os import fstat
 
 
 # --------------------------------------------------------------------
@@ -356,6 +358,49 @@ def edit_site(site_id):
         form = SiteForm()
         if form.validate_on_submit():
             formulario = request.form
+            if "main_image" in request.files:
+                primary_img = request.files["main_image"]
+                if primary_img and primary_img.filename:
+                    file = primary_img
+                    size = fstat(file.fileno()).st_size
+                    bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                    # ulid = file.filename  # Simplificado para este ejemplo
+                    object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+                    client = current_app.storage
+                    client.put_object(
+                        bucket_name=bucket_name,
+                        object_name=object_name,
+                        data=file,
+                        length=size,
+                        content_type=primary_img.content_type,
+                    )
+                    # Devolver en params el path del objeto subido
+                    # (podrías guardar esto en la base de datos si es necesario)
+                    historicalSites.add_image_to_site(
+                        site_id, object_name, is_primary=True
+                    )
+            if "secondary_images" in request.files:
+                client = current_app.storage
+                images = request.files.getlist("secondaty_images")
+                for img in images:
+                    if img and img.filename:
+                        file = img
+                        size = fstat(file.fileno()).st_size
+                        bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                        # ulid = file.filename  # Simplificado para este ejemplo
+                        object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+                        client.put_object(
+                            bucket_name=bucket_name,
+                            object_name=object_name,
+                            data=file,
+                            length=size,
+                            content_type=img.content_type,
+                        )
+                        # Devolver en params el path del objeto subido
+                        # (podrías guardar esto en la base de datos si es necesario)
+                        historicalSites.add_image_to_site(
+                            site_id, object_name, is_primary=False
+                        )
             historicalSites.update_site(
                 site_id,
                 name=formulario.get("name"),

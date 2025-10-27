@@ -126,6 +126,28 @@ def update_site(site_id, **kwargs):
     return site
 
 
+def add_image_to_site(site_id, object_name, is_primary=False):
+    """
+    Adds an image to a historical site by its ID.
+    Args:
+        site_id (int): The unique identifier of the site to which the image will be added.
+        object_name (str): The name/path of the image object to be added.
+    Returns:
+        Site: The updated Site object with the new image added, or None if the site does not exist.
+    """
+
+    site = get_site_by_id(site_id)
+    if not site:
+        return None
+
+    if is_primary:
+        site.primary_image = object_name
+    else:
+        site.images.append(object_name)
+    db.session.commit()
+    return site
+
+
 def delete_site(site_id: int):
     """
     Deletes a historical site from the database by its ID.

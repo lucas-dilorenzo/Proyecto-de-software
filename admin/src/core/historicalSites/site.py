@@ -29,6 +29,8 @@ class Site(db.Model):
     registration_date = db.Column(db.Date, nullable=True)
     visibility = db.Column(db.Boolean, default=True)
     deleted = db.Column(db.Boolean, default=False)
+    primary_image = db.Column(db.String, nullable=True)
+    images = db.Column(db.JSON, nullable=True)
 
     tags = relationship("Tag", secondary=sites_tags, backref="sites")
 
@@ -46,6 +48,8 @@ class Site(db.Model):
         registration_date: date = None,
         visibility: bool = True,
         deleted: bool = False,
+        primary_image: str = None,
+        images: list = None,
     ):
         self.name = name
         self.description_short = description_short
@@ -59,6 +63,8 @@ class Site(db.Model):
         self.registration_date = registration_date
         self.visibility = visibility
         self.deleted = deleted
+        self.primary_image = primary_image
+        self.images = images
 
     def __repr__(self) -> str:
         return f"<Site(id={self.id}, name={self.name}, city={self.city}, province={self.province})>"
