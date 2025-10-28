@@ -238,10 +238,10 @@
             <div class="mb-2">
               <img
                 id="main_image_preview"
-                src="{{ image_url(site.images[0].url) if site.images else '' }}"
+                src="{{ image_url(get_main_image(site.id).url) if site.images else '' }}"
                 alt="Imagen principal"
                 class="img-fluid rounded"
-                style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.images[0] else '' }}"
+                style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not get_main_image(site.id) else '' }}"
               />
             </div>
             <input
@@ -263,7 +263,7 @@
                   id="main_image_title"
                   name="main_image_title"
                   placeholder="Título descriptivo"
-                  value="{% if site.images[0].titulo %}{{ site.images[0].titulo }}{% else %}Imagen principal{% endif %}"
+                  value="{% if site.images[0].titulo %}{{ get_main_image(site.id).titulo }}{% else %}Imagen principal{% endif %}"
                 />
               </div>
               <div class="mb-0">
@@ -274,7 +274,7 @@
                   name="main_image_description"
                   rows="2"
                   placeholder="Descripción de la imagen"
-                >{% if site.images[0].descripcion %}{{ site.images[0].descripcion }}{% else %}Imagen principal del sitio histórico{% endif %}</textarea>
+                >{% if site.images[0].descripcion %}{{ get_main_image(site.id).descripcion }}{% else %}Imagen principal del sitio histórico{% endif %}</textarea>
               </div>
             </div>
           </div>
@@ -291,13 +291,19 @@
             <div id="existing-secondary-images" class="mt-2 d-flex flex-wrap gap-2">
               {% if get_secondary_image_urls(site.id) %}
                 {% for img in get_secondary_image_urls(site.id) %}
-                <div class="border rounded position-relative secondary-image-item" 
+                <div class="border rounded position-relative secondary-image-item {% if img.order == 0 %}marked-as-main{% endif %}" 
                      style="width:120px; height:120px; overflow:hidden;"
                      draggable="true"
                      data-image-id="{{ img.id }}"
                      data-order="{{ img.order }}">
+                  {% if img.order == 0 %}
+                  <div class="position-absolute top-0 start-0 bg-warning text-dark px-2 main-badge" 
+                       style="font-size:10px; font-weight:bold; z-index:5;">
+                    PRINCIPAL
+                  </div>
+                  {% endif %}
                   <div class="drag-handle position-absolute top-0 start-0 bg-secondary text-white px-1" 
-                       style="font-size:10px; cursor:grab;">
+                       style="font-size:10px; cursor:grab; margin-top:{% if img.order == 0 %}20px{% else %}0{% endif %};">
                     ⋮⋮
                   </div>
                   <img
@@ -308,8 +314,23 @@
                   />
                   <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white px-1" 
                        style="font-size:10px; width:100%;">
-                    <small>Orden: <span class="order-display">{{ img.order }}</span></small>
+                    <small>Orden: <span class="order-display">{% if img.order == 0 %}0 (Principal){% else %}{{ img.order }}{% endif %}</span></small>
                   </div>
+                  
+                  <!-- Botón para marcar como principal -->
+                  <button 
+                    type="button" 
+                    class="btn {% if img.order == 0 %}btn-warning{% else %}btn-outline-warning{% endif %} btn-sm position-absolute mark-as-main-btn" 
+                    style="bottom:5px; right:5px; width:25px; height:25px; font-size:12px; z-index:10; padding:0;"
+                    onclick="markAsMainImage({{ img.id }}, this)"
+                    title="Marcar como imagen principal"
+                  >
+                    <span class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;">
+                      <i class="bi bi-star{% if img.order == 0 %}-fill{% endif %}"></i>
+                    </span>
+                  </button>
+                  
+                  <!-- Botón para eliminar -->
                   <button 
                     type="button" 
                     class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1" 
@@ -320,6 +341,7 @@
                       <i class="bi bi-x"></i>
                     </span>
                   </button>
+                  
                   <!-- Campo oculto para el nuevo orden -->
                   <input type="hidden" name="image_orders[{{ img.id }}]" value="{{ img.order }}" class="order-input">
                 </div>
@@ -567,6 +589,13 @@
   // Funciones para manejo de imágenes existentes
   function markImageForDeletion(imageId, btn) {
     const existingImageDiv = btn.closest('.secondary-image-item');
+    
+    // No permitir eliminar si está marcada como principal
+    if (existingImageDiv.classList.contains('marked-as-main')) {
+      alert('No puedes eliminar la imagen principal. Primero marca otra como principal.');
+      return;
+    }
+    
     existingImageDiv.classList.toggle('marked-for-deletion');
     
     const hiddenInput = document.getElementById('images-to-delete');
@@ -577,11 +606,70 @@
       input.name = 'images_to_delete';
       input.value = imageId;
       hiddenInput.appendChild(input);
+      // Cambiar opacidad para indicar que será eliminada
+      existingImageDiv.style.opacity = '0.5';
     } else {
       // Desmarcar
       const input = hiddenInput.querySelector(`input[value="${imageId}"]`);
       if (input) hiddenInput.removeChild(input);
+      existingImageDiv.style.opacity = '1';
     }
+  }
+
+  function markAsMainImage(imageId, btn) {
+    const clickedItem = btn.closest('.secondary-image-item');
+    const allItems = document.querySelectorAll('.secondary-image-item');
+    
+    // Remover marca de principal de todos los elementos
+    allItems.forEach(item => {
+      item.classList.remove('marked-as-main');
+      const badge = item.querySelector('.main-badge');
+      if (badge) badge.remove();
+      const markBtn = item.querySelector('.mark-as-main-btn');
+      if (markBtn) {
+        markBtn.innerHTML = '<i class="bi bi-star"></i>';
+        markBtn.classList.remove('btn-warning');
+        markBtn.classList.add('btn-outline-warning');
+      }
+    });
+    
+    // Marcar el elemento clickeado como principal
+    clickedItem.classList.add('marked-as-main');
+    
+    // Cambiar el botón a estado activo
+    btn.innerHTML = '<i class="bi bi-star-fill"></i>';
+    btn.classList.remove('btn-outline-warning');
+    btn.classList.add('btn-warning');
+    
+    // Agregar badge visual
+    const badge = document.createElement('div');
+    badge.className = 'position-absolute top-0 start-0 bg-warning text-dark px-2 main-badge';
+    badge.style.cssText = 'font-size:10px; font-weight:bold; z-index:5;';
+    badge.textContent = 'PRINCIPAL';
+    clickedItem.insertBefore(badge, clickedItem.firstChild);
+    
+    // Actualizar el campo oculto para indicar que esta imagen es la nueva principal
+    const orderInput = clickedItem.querySelector('.order-input');
+    if (orderInput) {
+      orderInput.value = 0;
+      clickedItem.dataset.order = 0;
+      clickedItem.querySelector('.order-display').textContent = '0 (Principal)';
+    }
+    
+    // Actualizar la vista previa de la imagen principal
+    const imgSrc = clickedItem.querySelector('img').src;
+    document.getElementById('main_image_preview').src = imgSrc;
+    
+    // Crear un campo oculto para indicar el cambio de imagen principal
+    let newMainInput = document.getElementById('new_main_image_id');
+    if (!newMainInput) {
+      newMainInput = document.createElement('input');
+      newMainInput.type = 'hidden';
+      newMainInput.id = 'new_main_image_id';
+      newMainInput.name = 'new_main_image_id';
+      document.querySelector('form').appendChild(newMainInput);
+    }
+    newMainInput.value = imageId;
   }
 
   // Drag and drop para reordenar imágenes secundarias
@@ -606,41 +694,60 @@
 
     existingImagesContainer.addEventListener('dragover', function(e) {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
+      const item = e.target.closest('.secondary-image-item');
+      if (item && item !== draggedItem) {
+        const rect = item.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top;
+        const middle = rect.height / 2;
+        
+        if (offsetY < middle) {
+          // Arrastrando hacia arriba
+          item.style.transform = 'translateY(-4px)';
+        } else {
+          // Arrastrando hacia abajo
+          item.style.transform = 'translateY(4px)';
+        }
+      }
+    });
+
+    existingImagesContainer.addEventListener('dragleave', function(e) {
+      const item = e.target.closest('.secondary-image-item');
+      if (item) {
+        item.style.transform = '';
+      }
     });
 
     existingImagesContainer.addEventListener('drop', function(e) {
       e.preventDefault();
-      
-      const dropTarget = e.target.closest('.secondary-image-item');
-      
-      if (dropTarget && draggedItem && dropTarget !== draggedItem) {
-        // Obtener los valores de orden actuales
-        const draggedOrderInput = draggedItem.querySelector('.order-input');
-        const targetOrderInput = dropTarget.querySelector('.order-input');
+      const item = e.target.closest('.secondary-image-item');
+      if (item && item !== draggedItem) {
+        const rect = item.getBoundingClientRect();
+        const offsetY = e.clientY - rect.top;
+        const middle = rect.height / 2;
         
-        if (draggedOrderInput && targetOrderInput) {
-          // Intercambiar los valores
-          const tempOrder = draggedOrderInput.value;
-          draggedOrderInput.value = targetOrderInput.value;
-          targetOrderInput.value = tempOrder;
-          
-          // Actualizar los displays visuales
-          draggedItem.querySelector('.order-display').textContent = draggedOrderInput.value;
-          dropTarget.querySelector('.order-display').textContent = targetOrderInput.value;
-          
-          // Actualizar data-order
-          draggedItem.dataset.order = draggedOrderInput.value;
-          dropTarget.dataset.order = targetOrderInput.value;
-          
-          // Opcional: Reorganizar visualmente en el DOM
-          const allItems = Array.from(existingImagesContainer.querySelectorAll('.secondary-image-item'));
-          allItems.sort((a, b) => parseInt(a.dataset.order) - parseInt(b.dataset.order));
-          allItems.forEach(item => existingImagesContainer.appendChild(item));
+        if (offsetY < middle) {
+          // Arrastrando hacia arriba
+          item.parentNode.insertBefore(draggedItem, item);
+        } else {
+          // Arrastrando hacia abajo
+          item.parentNode.insertBefore(draggedItem, item.nextSibling);
         }
+        
+        // Actualizar orden en el DOM
+        updateImageOrder();
       }
-      
-      draggedItem = null;
+    });
+  }
+
+  function updateImageOrder() {
+    const items = document.querySelectorAll('.secondary-image-item');
+    items.forEach((item, index) => {
+      const orderInput = item.querySelector('.order-input');
+      if (orderInput) {
+        orderInput.value = index;
+        item.dataset.order = index;
+        item.querySelector('.order-display').textContent = index === 0 ? '0 (Principal)' : index;
+      }
     });
   }
 </script>

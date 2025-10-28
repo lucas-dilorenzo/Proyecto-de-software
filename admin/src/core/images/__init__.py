@@ -99,7 +99,6 @@ def set_image_order(image: Image, new_order: int) -> None:
     ).first()
     if existing_image:
         existing_image.order = image.order
-        db.session.commit()
     image.order = new_order
     db.session.commit()
 

@@ -67,17 +67,17 @@ block titulo_body %}
             <div class="col-md-12 mb-4">
               <div class="card text-bg-dark">
                 <img
-                  src="{{ image_url(site.images[0].url) }}"
+                  src="{{ image_url(get_main_image(site.id).url) }}"
                   class="card-img"
                   alt="Imagen principal de {{ site.name }}"
                   style="max-height: 500px; object-fit: cover; filter: brightness(0.7);"
                 />
                 <div class="card-img-overlay d-flex flex-column justify-content-end">
-                  {% if site.images[0].titulo %}
-                  <h5 class="card-title fs-3 fw-bold text-white">{{ site.images[0].titulo }}</h5>
+                  {% if get_main_image(site.id).titulo %}
+                  <h5 class="card-title fs-3 fw-bold text-white">{{ get_main_image(site.id).titulo }}</h5>
                   {% endif %}
                   {% if site.images[0].descripcion %}
-                  <p class="card-text fs-5">{{ site.images[0].descripcion }}</p>
+                  <p class="card-text fs-5">{{ get_main_image(site.id).descripcion }}</p>
                   {% endif %}
                   <p class="card-text"><small>{{ site.name }}</small></p>
                 </div>

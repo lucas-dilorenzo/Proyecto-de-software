@@ -470,6 +470,22 @@ def edit_site(site_id):
             except Exception as e:
                 flash(f"No se pudieron actualizar los tags: {e}", "warning")
 
+                # Manejar cambio de imagen principal
+            new_main_image_id = request.form.get("new_main_image_id")
+            if new_main_image_id:
+                # La nueva imagen principal
+                new_main = images.get_image_by_id(int(new_main_image_id))
+                # # La antigua imagen principal
+                # old_main = images.get_image_by_id(int(new_main_image_id))
+
+                # if new_main and new_main.site_id == site.id:
+                #     if old_main and old_main.id != new_main.id:
+                #         # Intercambiar: la antigua principal pasa a secundaria
+                #         images.set_image_order(old_main, new_main.order)
+                #     # La nueva imagen pasa a ser principal (orden 0)
+                #     images.set_image_order(new_main, 0)
+                images.set_image_order(new_main, 0)
+
             # Manejar eliminación de imágenes
             images_to_delete = request.form.getlist("delete_images[]")
             for image_id in images_to_delete:

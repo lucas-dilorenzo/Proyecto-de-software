@@ -64,13 +64,12 @@ def get_secondary_image_urls(site_id):
     _images = images.get_secondary_images_by_site(site_id)
     if not _images:
         return None
-    # object_names = [image.url for image in _images]
-    # client = current_app.storage
-    # bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
-    # urls = []
-    # for object_name in object_names:
-    #     url = client.presigned_get_object(
-    #         bucket_name=bucket_name, object_name=object_name
-    #     )
-    #     urls.append(url)
     return _images
+
+
+def get_main_image_by_site(site_id):
+    """Generate presigned URL for accessing the main image stored in MinIO."""
+    _image = images.get_main_image_by_site(site_id)
+    if not _image:
+        return None
+    return _image

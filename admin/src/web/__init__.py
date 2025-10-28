@@ -139,6 +139,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.jinja_env.globals.update(get_category_label=get_category_label)
     app.jinja_env.globals.update(is_sys_admin=is_sys_admin)
     app.jinja_env.globals.update(image_url=helpers.get_image_url)
+    app.jinja_env.globals.update(get_main_image=helpers.get_main_image_by_site)
     app.jinja_env.globals.update(
         get_secondary_image_urls=helpers.get_secondary_image_urls
     )
