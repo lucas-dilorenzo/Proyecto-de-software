@@ -238,10 +238,10 @@
             <div class="mb-2">
               <img
                 id="main_image_preview"
-                src="{{ image_url(site.main_image) if site.main_image else '' }}"
+                src="{{ image_url(site.images[0].url) if site.images else '' }}"
                 alt="Imagen principal"
                 class="img-fluid rounded"
-                style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.main_image else '' }}"
+                style="max-height:200px; width:100%; object-fit:contain; {{ 'display:none;' if not site.images[0] else '' }}"
               />
             </div>
             <input
@@ -263,7 +263,7 @@
                   id="main_image_title"
                   name="main_image_title"
                   placeholder="Título descriptivo"
-                  value="Imagen principal"
+                  value="{% if site.images[0].titulo %}{{ site.images[0].titulo }}{% else %}Imagen principal{% endif %}"
                 />
               </div>
               <div class="mb-0">
@@ -274,7 +274,7 @@
                   name="main_image_description"
                   rows="2"
                   placeholder="Descripción de la imagen"
-                >Imagen principal del sitio histórico</textarea>
+                >{% if site.images[0].descripcion %}{{ site.images[0].descripcion }}{% else %}Imagen principal del sitio histórico{% endif %}</textarea>
               </div>
             </div>
           </div>
@@ -297,11 +297,11 @@
             <div class="form-text">Puedes subir múltiples imágenes secundarias.</div>
 
             <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview">
-              {% if site.images %}
-                {% for img in site.images %}
+              {% if get_secondary_image_urls(site.id) %}
+                {% for img in get_secondary_image_urls(site.id) %}
                 <div class="border rounded position-relative" style="width:120px; height:80px; overflow:hidden;">
                   <img
-                    src="{{ image_url(img) }}"
+                    src="{{ image_url(img.url) }}"
                     alt="Imagen secundaria"
                     class="img-fluid"
                     style="object-fit:contain; width:100%; height:100%;"
@@ -312,7 +312,9 @@
                     style="width:25px; height:25px; font-size:12px;"
                     onclick="this.parentElement.remove()"
                   >
-                    <i class="bi bi-x"></i>
+                    <span class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;">
+                      <i class="bi bi-x"></i>
+                    </span>
                   </button>
                 </div>
                 {% endfor %}
