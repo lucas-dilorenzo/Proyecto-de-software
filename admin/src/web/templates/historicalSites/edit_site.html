@@ -263,7 +263,7 @@
                   id="main_image_title"
                   name="main_image_title"
                   placeholder="Título descriptivo"
-                  value="{% if site.images[0].titulo %}{{ get_main_image(site.id).titulo }}{% else %}Imagen principal{% endif %}"
+                  value="{% if get_main_image(site.id).titulo %}{{ get_main_image(site.id).titulo }}{% else %}Imagen principal{% endif %}"
                 />
               </div>
               <div class="mb-0">
@@ -274,7 +274,7 @@
                   name="main_image_description"
                   rows="2"
                   placeholder="Descripción de la imagen"
-                >{% if site.images[0].descripcion %}{{ get_main_image(site.id).descripcion }}{% else %}Imagen principal del sitio histórico{% endif %}</textarea>
+                >{% if get_main_image(site.id).descripcion %}{{ get_main_image(site.id).descripcion }}{% else %}Imagen principal del sitio histórico{% endif %}</textarea>
               </div>
             </div>
           </div>
