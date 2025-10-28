@@ -34,6 +34,18 @@ def delete_image(image: Image) -> None:
     db.session.commit()
 
 
+def get_image_by_id(image_id: int) -> Image:
+    """Retrieve an image by its unique ID.
+    Args:
+        image_id (int): The ID of the image.
+
+    Returns:
+        Image: The Image instance with the specified ID.
+    """
+    image = Image.query.get(image_id)
+    return image if image else None
+
+
 def get_images_by_site(site_id: int) -> list:
     """Retrieve all images associated with a specific site.
     Args:

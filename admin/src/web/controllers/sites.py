@@ -470,6 +470,23 @@ def edit_site(site_id):
             except Exception as e:
                 flash(f"No se pudieron actualizar los tags: {e}", "warning")
 
+            # Manejar eliminación de imágenes
+            images_to_delete = request.form.getlist("delete_images[]")
+            for image_id in images_to_delete:
+                image = images.get_image_by_id(int(image_id))
+                if image and image.site_id == site.id:
+                    images.delete_image(image)
+
+            # Actualizar orden de imágenes existentes
+            image_orders = request.form.to_dict(flat=False)
+            for key, value in image_orders.items():
+                if key.startswith("image_orders["):
+                    image_id = int(key.replace("image_orders[", "").replace("]", ""))
+                    new_order = int(value[0])
+                    image = images.get_image_by_id(image_id)
+                    if image and image.site_id == site.id:
+                        images.set_image_order(image, new_order)
+
             return redirect(url_for("sites.list_sites"))
         else:
             if form.errors:
