@@ -427,6 +427,10 @@ def edit_site(site_id):
                             content_type=img.content_type,
                         )
 
+                        # Obtener el order máximo actual para las imágenes del sitio
+                        max_order = images.get_max_order_for_site(site_id) or 0
+                        new_order = max_order + idx + 1
+
                         # Obtener título y descripción correspondiente al índice
                         titulo = (
                             secondary_titles[idx]
@@ -439,11 +443,11 @@ def edit_site(site_id):
                             else "Imagen secundaria del sitio histórico"
                         )
 
-                        # Crear registro de imagen con order > 0 para secundarias
+                        # Crear registro de imagen con order incremental
                         images.create_image(
                             site_id=site_id,
                             url=object_name,
-                            order=idx + 1,  # Las secundarias tienen order >= 1
+                            order=new_order,
                             titulo=titulo,
                             descripcion=descripcion,
                         )

@@ -464,7 +464,7 @@
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1';
         deleteBtn.style.cssText = 'width:25px; height:25px; font-size:12px;';
-        deleteBtn.innerHTML = '<i class="bi bi-x"></i>';
+        deleteBtn.innerHTML = '<span class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;"><i class="bi bi-x"></i></span>';
         deleteBtn.onclick = function() {
           const idx = parseInt(div.dataset.fileIndex);
           selectedFiles.splice(idx, 1);

@@ -106,3 +106,12 @@ def edit_image_metadata(
     if descripcion is not None:
         image.descripcion = descripcion
     db.session.commit()
+
+
+def get_max_order_for_site(site_id):
+    """Obtiene el order máximo de las imágenes de un sitio"""
+
+    max_order = (
+        db.session.query(db.func.max(Image.order)).filter_by(site_id=site_id).scalar()
+    )
+    return max_order if max_order is not None else 0
