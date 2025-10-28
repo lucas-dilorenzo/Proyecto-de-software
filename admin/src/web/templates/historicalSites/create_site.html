@@ -46,7 +46,7 @@ titulo_body %}
 {% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
   <div class="card-body">        
-    <form method="POST" action="{{ url_for('sites.create_site') }}")
+    <form method="POST" action="{{ url_for('sites.create_site') }}" enctype="multipart/form-data"
       <div class="row">
         <!-- Primera columna -->
         <div class="col-md-6">
