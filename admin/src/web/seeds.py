@@ -1,4 +1,5 @@
 from select import select
+import random
 
 # from core.database import db
 from src.core.database import db
@@ -6,9 +7,11 @@ from src.core.featureFlags.flag import FeatureFlag
 from src.core import historicalSites
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
-from datetime import date
+from datetime import date, datetime, timezone
 from src.core.users.user import User, UserRole
 from src.core.permissions.permission import Permission, UserPermission, Role
+from src.core.reseñas.reseña import Reseña
+from src.core.reseñas.estadoReseña import estadoReseña
 from werkzeug.security import generate_password_hash
 
 
@@ -521,6 +524,9 @@ def run():
                     historicalSites.asignar_tags_a_sitio(existing_site, tag_objs)
             print(f"Site already exists: {site_data['name']}")
 
+    reseñas()
+    print("Reseñas de usuarios públicos creadas.")
+    
     print("Database seeding complete.")
 
 
@@ -610,6 +616,115 @@ def roles():
                 perm.roles.append(r)
         db.session.add(perm)
     db.session.commit()
+
+
+def reseñas():
+    """
+    Crea 30 reseñas de usuarios públicos en estado pendiente para sitios históricos.
+    
+    Las reseñas son distribuidas aleatoriamente entre sitios existentes y usuarios públicos,
+    con calificaciones y contenidos variados para simular reseñas reales.
+    """
+    # Obtener usuarios públicos existentes
+    usuarios_publicos = User.query.filter_by(rol=UserRole.PUBLIC, activo=True).all()
+    
+    if not usuarios_publicos:
+        print("No hay usuarios públicos activos. Creando reseñas de prueba...")
+        return
+    
+    # Obtener sitios históricos existentes
+    sitios = Site.query.filter_by(visibility=True, deleted=False).all()
+    
+    if not sitios:
+        print("No hay sitios históricos disponibles. Creando reseñas de prueba...")
+        return
+    
+    # Contenidos de ejemplo para las reseñas
+    contenidos_ejemplo = [
+        "Excelente lugar histórico, muy bien conservado y con una historia fascinante.",
+        "Un sitio impresionante que vale la pena visitar. La arquitectura es increíble.",
+        "Lugar muy interesante desde el punto de vista cultural e histórico.",
+        "Hermoso patrimonio, aunque le falta un poco más de información para los visitantes.",
+        "Una experiencia única visitando este sitio tan importante para nuestra historia.",
+        "El lugar está bien mantenido y la vista es espectacular. Muy recomendable.",
+        "Interesante desde el punto de vista arqueológico, aunque podría mejorarse la accesibilidad.",
+        "Un tesoro histórico que deberíamos preservar mejor. La visita fue muy educativa.",
+        "Lugar emblemático con mucha historia. La guía fue excelente y muy informativa.",
+        "Sitio histórico muy bien preservado, perfecto para una visita familiar.",
+        "La importancia histórica del lugar es innegable, aunque necesita mejor señalización.",
+        "Un lugar mágico lleno de historia y belleza natural. Definitivamente volvería.",
+        "Excelente conservación del patrimonio. La experiencia fue muy enriquecedora.",
+        "Lugar histórico fascinante con una arquitectura única. Muy bien mantenido.",
+        "Un sitio que conecta con nuestras raíces históricas. Muy emotiva la visita.",
+        "Increíble experiencia cultural. Los detalles arquitectónicos son impresionantes.",
+        "Un poco decepcionante la falta de mantenimiento en algunas áreas del sitio.",
+        "Perfecto para aprender historia de forma entretenida. Los niños se divirtieron mucho.",
+        "El recorrido es algo extenso pero vale la pena cada minuto. Muy educativo.",
+        "Las vistas desde este lugar histórico son simplemente espectaculares.",
+        "Buena organización del sitio, aunque los precios de entrada son algo elevados.",
+        "Un lugar que te transporta en el tiempo. La ambientación es excelente.",
+        "Esperaba más información histórica disponible. El sitio es hermoso pero falta contexto.",
+        "Fantástica conservación del patrimonio. Se nota el cuidado y dedicación del personal.",
+        "Visita obligatoria para cualquier amante de la historia y la cultura.",
+        "El sitio tiene un gran potencial turístico que debería ser mejor aprovechado.",
+        "Una joya arquitectónica que refleja la grandeza de nuestro pasado.",
+        "Buen lugar para visitar en familia, aunque falta más infraestructura para niños.",
+        "La importancia histórica es evidente, pero necesita modernizar la experiencia del visitante.",
+        "Lugar lleno de historia y tradición. La guía local conoce muchas anécdotas interesantes.",
+        "Excelente estado de conservación considerando la antigüedad del sitio.",
+        "Un tesoro cultural que merece mayor difusión y reconocimiento internacional.",
+        "La visita fue breve pero muy satisfactoria. Perfecto para una escapada de fin de semana.",
+        "Impresionante trabajo de restauración. Se nota la inversión en preservar el patrimonio.",
+        "Lugar ideal para fotografía histórica y arquitectónica. Muy pintoresco.",
+        "Buena experiencia general, aunque el horario de visitas es algo limitado.",
+        "Un sitio que combina perfectamente historia, cultura y belleza natural.",
+        "La entrada es accesible y el personal muy amable y conocedor del lugar.",
+        "Esperaba más actividades interactivas, pero la belleza del lugar compensa.",
+        "Un lugar que todo estudiante de historia debería conocer. Muy enriquecedor académicamente.",
+    ]
+    
+    reseñas_creadas = []
+    usuarios_sitios_usados = set()  # Para evitar reseñas duplicadas del mismo usuario al mismo sitio
+    
+    intentos = 0
+    while len(reseñas_creadas) < 30 and intentos < 100:  # Máximo 100 intentos para evitar loop infinito
+        usuario = random.choice(usuarios_publicos)
+        sitio = random.choice(sitios)
+        
+        # Verificar que este usuario no haya reseñado este sitio
+        clave_unica = (usuario.id, sitio.id)
+        if clave_unica in usuarios_sitios_usados:
+            intentos += 1
+            continue
+            
+        # Verificar en la base de datos que no exista ya una reseña de este usuario para este sitio
+        reseña_existente = Reseña.query.filter_by(user_id=usuario.id, site_id=sitio.id).first()
+        if reseña_existente:
+            intentos += 1
+            continue
+        
+        usuarios_sitios_usados.add(clave_unica)
+        
+        # Crear la reseña
+        nueva_reseña = Reseña(
+            calificacion=random.randint(3, 5),  # Calificaciones entre 3 y 5 estrellas
+            contenido=random.choice(contenidos_ejemplo),
+            user_id=usuario.id,
+            site_id=sitio.id,
+            estado=estadoReseña.PENDIENTE.code,  # Todas en estado pendiente
+            motivo_rechazo=None,
+            fecha_creacion=datetime.now(timezone.utc)
+        )
+        
+        reseñas_creadas.append(nueva_reseña)
+        intentos += 1
+    
+    if reseñas_creadas:
+        db.session.add_all(reseñas_creadas)
+        db.session.commit()
+        print(f"Se crearon {len(reseñas_creadas)} reseñas de prueba en estado pendiente.")
+    else:
+        print("No se pudieron crear reseñas (posiblemente por falta de combinaciones únicas usuario-sitio).")
 
 
 def feature_flags_seed():
