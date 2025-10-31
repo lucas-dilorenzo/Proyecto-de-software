@@ -50,6 +50,7 @@ from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
+from src.web.controllers.reseñas import reseñas_bp
 
 """
     Crea la aplicación Flask.
@@ -104,6 +105,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.register_blueprint(historical_sites_bp)
     app.register_blueprint(feature_flags_bp)
     app.register_blueprint(maintenance_bp)
+    app.register_blueprint(reseñas_bp)
+
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)
