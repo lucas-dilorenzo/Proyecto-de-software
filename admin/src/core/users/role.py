@@ -9,6 +9,7 @@ class Role(db.Model):
     la base de datos cuenta con los siguientes roles, definidos de forma estática:
     - **PUBLIC**: Usuario público.
     - **EDITOR**: Editor.
+    - **MODERATOR**: Moderador de reseñas.
     - **ADMIN**: Administrador.
     - **SYS_ADMIN**: Administrador del sistema (no asignable desde la interfaz).
     """

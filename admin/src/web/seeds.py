@@ -524,6 +524,12 @@ def run():
                     historicalSites.asignar_tags_a_sitio(existing_site, tag_objs)
             print(f"Site already exists: {site_data['name']}")
 
+    roles()
+    print("Roles y permisos creados.")
+    
+    users()
+    print("Usuarios de prueba creados.")
+    
     reseñas()
     print("Reseñas de usuarios públicos creadas.")
     
@@ -547,6 +553,22 @@ def users():
         print("Admin creado: admin@example.com / admin123")
     else:
         print("El admin ya existe.")
+    
+    # Crear moderador si no existe
+    moderator_exists = User.query.filter_by(email="moderador@example.com").first()
+    if not moderator_exists:
+        moderador = User(
+            email="moderador@example.com",
+            nombre="Moderador",
+            apellido="Principal",
+            password_hash=generate_password_hash("password123"),
+            activo=True,
+            rol=UserRole.MODERATOR,
+        )
+        db.session.add(moderador)
+        print("Moderador creado: moderador@example.com")
+    else:
+        print("El moderador ya existe.")
 
     # Crear 30 usuarios de prueba
     test_users = []
