@@ -1,0 +1,234 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Detalle de Reseña
+{% endblock %}
+
+{% block titulo_body %}
+  <h1 style="margin-top: 3%;">
+    <i class="bi bi-star"></i> Reseña de {{ review.user.apellido }}, {{ review.user.nombre }}
+  </h1>
+{% endblock%} 
+
+{% block titulo_acciones_body %}
+    <!-- Botones de acción según el estado y permisos -->
+    {% if review.estado == 'pendiente' %}
+        {% if session['role'] == 'MODERATOR' or session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
+        <!-- <div class="d-flex gap-2" style="margin-top: 6%;">
+            <button type="button" class="btn btn-success" onclick="aprobarReseña({{ review.id }})">
+                <i class="bi bi-check-circle"></i> Aprobar
+            </button>
+            <button type="button" class="btn btn-danger" onclick="rechazarReseña({{ review.id }})">
+                <i class="bi bi-x-circle"></i> Rechazar
+            </button>
+        </div> -->
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+{% block body %}
+    <div class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-11">
+                <div class="card shadow-sm border-0 rounded-0 bg-white" style="padding: 1rem;">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Columna principal con contenido -->
+                            <div class="col-md-8">
+                                <!-- Contenido de la reseña -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-chat-text me-2"></i>Contenido de la reseña
+                                    </label>
+                                    <div class="p-3 border rounded bg-light">
+                                        <p class="mb-0" style="font-size: 1.1rem; line-height: 1.6;">{{ review.contenido }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Sitio histórico reseñado -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-geo-alt me-2"></i>Sitio histórico
+                                    </label>
+                                    <div class="d-flex align-items-center">
+                                        <h6 class="mb-0 me-2">{{ review.site.name }}</h6>
+                                        <a href="{{ url_for('sites.show_site', site_id=review.site.id) }}" 
+                                        title="Ver sitio" style="color: #004c82; text-decoration: none;">
+                                            <i class="bi bi-eye-fill fs-5"></i>
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">{{ review.site.city }}, {{ review.site.province }}</small>
+                                </div>
+
+                                <!-- Información del usuario -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-person me-2"></i>Autor de la reseña
+                                    </label>
+                                    <div>
+                                        <div class="d-flex align-items-center">
+                                            <strong class="me-2">{{ review.user.apellido }}, {{ review.user.nombre }}</strong>
+                                            {% if session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
+                                            <a href="{{ url_for('users.show_user', id=review.user.id) }}" 
+                                            title="Ver perfil" style="color: #004c82; text-decoration: none;">
+                                                <i class="bi bi-person-fill fs-5"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ review.user.email }}</small>
+                                    </div>
+                                </div>
+
+                                <!-- Motivo de rechazo (solo si está rechazada) -->
+                                {% if review.estado == 'rechazada' and review.motivo_rechazo %}
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2 text-danger">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>Motivo de rechazo
+                                    </label>
+                                    <div class="alert alert-danger" role="alert">
+                                        <i class="bi bi-info-circle me-2"></i>{{ review.motivo_rechazo }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Columna lateral con metadatos -->
+                            <div class="col-md-4">
+                                <!-- Calificación -->
+                                <div class="mb-4">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-star me-2"></i>Calificación
+                                    </label>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% for i in range(review.calificacion) %}
+                                            <i class="bi bi-star-fill text-warning fs-4"></i>
+                                            {% endfor %}
+                                            {% for i in range(5 - review.calificacion) %}
+                                            <i class="bi bi-star text-muted fs-4"></i>
+                                            {% endfor %}
+                                        </div>
+                                        <span class="badge bg-primary fs-6">{{ review.calificacion }}/5</span>
+                                    </div>
+                                </div>
+
+                                <!-- Estado -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-flag me-2"></i>Estado
+                                    </label>
+                                    <div>
+                                        {% set badge_class = 'bg-secondary' %}
+                                        {% set icon_class = 'bi-question-circle' %}
+                                        {% if review.estado == 'aprobada' %}
+                                            {% set badge_class = 'bg-success' %}
+                                            {% set icon_class = 'bi-check-circle' %}
+                                        {% elif review.estado == 'rechazada' %}
+                                            {% set badge_class = 'bg-danger' %}
+                                            {% set icon_class = 'bi-x-circle' %}
+                                        {% elif review.estado == 'pendiente' %}
+                                            {% set badge_class = 'bg-warning text-dark' %}
+                                            {% set icon_class = 'bi-clock' %}
+                                        {% endif %}
+                                        <span class="badge {{ badge_class }} fs-6">
+                                            <i class="bi {{ icon_class }} me-1"></i>{{ review.estado|title }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Fecha de creación -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-calendar3 me-2"></i>Fecha de creación
+                                    </label>
+                                    <p>{{ review.fecha_creacion.strftime("%d/%m/%Y") }} <small class="text-muted">{{ review.fecha_creacion.strftime("%H:%M") }}</small></p>
+                                </div>
+
+                                <!-- ID de la reseña (para referencia técnica) -->
+                                <!-- <div class="mb-3">
+                                    <label class="form-label fw-semibold fs-5 mb-2" style="color: #004c82;">
+                                        <i class="bi bi-hash me-2"></i>ID de reseña
+                                    </label>
+                                    <code class="bg-light p-2 rounded d-block">#{{ review.id }}</code>
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-2 justify-content-start" style="margin-top: 2%;">
+        <a href="{{ url_for('reseñas.list_reseñas') }}" class="btn btn-azul">
+            <i class="bi bi-arrow-left small"></i> Volver
+        </a>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function aprobarReseña(reviewId) {
+    Swal.fire({
+        title: '¿Aprobar esta reseña?',
+        text: 'La reseña será visible públicamente.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, aprobar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // TODO: Implementar endpoint para aprobar reseña
+            // fetch(`/reseñas/${reviewId}/aprobar`, { method: 'POST' })
+            Swal.fire(
+                '¡Aprobada!',
+                'La reseña ha sido aprobada correctamente.',
+                'success'
+            ).then(() => {
+                location.reload();
+            });
+        }
+    });
+}
+
+function rechazarReseña(reviewId) {
+    Swal.fire({
+        title: '¿Rechazar esta reseña?',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo',
+        inputPlaceholder: 'Escribe el motivo por el cual rechazas esta reseña...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes proporcionar un motivo para el rechazo';
+            }
+            if (value.length < 10) {
+                return 'El motivo debe tener al menos 10 caracteres';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // TODO: Implementar endpoint para rechazar reseña
+            // fetch(`/reseñas/${reviewId}/rechazar`, { 
+            //     method: 'POST',
+            //     body: JSON.stringify({ motivo: result.value })
+            // })
+            Swal.fire(
+                'Rechazada',
+                'La reseña ha sido rechazada.',
+                'success'
+            ).then(() => {
+                location.reload();
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

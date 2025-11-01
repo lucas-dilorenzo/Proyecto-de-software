@@ -73,6 +73,15 @@ def list_all_sites():
     return Site.query.all()
 
 
+def get_all_sites():
+    """
+    Retrieves all active historical site records from the database.
+    Returns:
+        list: A list of Site objects representing all active historical sites.
+    """
+    return Site.query.filter(Site.deleted == False).all()
+
+
 def get_site_by_id(site_id: int):
     """
     Retrieve a Site object from the database by its unique ID.

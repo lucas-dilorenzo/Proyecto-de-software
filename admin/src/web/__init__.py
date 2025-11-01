@@ -50,7 +50,7 @@ from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
-from src.web.controllers.reseñas import reseñas_bp
+from web.controllers.reseñas_controller import reseñas_bp
 
 """
     Crea la aplicación Flask.

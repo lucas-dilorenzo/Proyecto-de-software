@@ -1,7 +1,275 @@
 {% extends "layout.html" %}
 
+{% block title %}
+    Moderación de Reseñas
+{% endblock %}
+
 {% block titulo_body %}
-    <h1>  
-        <i class="bi bi-chat-me"></i> Moderación de Reseñas
-    </h1>
-{% endblock%}
+  <h1 style="margin-top: 3%;">
+    <i class="bi bi-ui-checks-grid"></i> Listado y Moderación de Reseñas
+  </h1>
+{% endblock%} 
+
+{% block titulo_acciones_body %}
+    
+{% endblock %}
+
+{% block body %}
+
+<div class="card shadow-sm border-0 rounded-0 bg-white">
+        <div class="card-body">
+            <div class="row">
+                <form method="GET" class="row g-2 mb-3">
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="">(todos)</option>
+                            {% for key, value in review_statuses.choices() %}
+                                <option value="{{ key }}" {% if estado==key %}selected{% endif %}>{{ value }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Sitio</label>
+                        <select name="site" class="form-select">
+                            <option value="">(todos)</option>
+                            {% for site in all_sites %}
+                                <option value="{{ site.id }}" {% if site_id==site.id %}selected{% endif %}>{{ site.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Calificación</label>
+                        <select name="calificacion" class="form-select">
+                            <option value="">(todas)</option>
+                            {% for i in range(1, 6) %}
+                                <option value="{{ i }}" {% if calificacion|string == i|string %}selected{% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Usuario (Email)</label>
+                        <input name="usuario" value="{{ usuario }}" class="form-control" placeholder="buscar usuario">
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Fecha Desde</label>
+                        <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Fecha Hasta</label>
+                        <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="form-control">
+                    </div>
+
+                    <div class="col-2 d-flex justify-content-end align-items-end">
+                        <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+                            Filtrar <i class="bi bi-search small"></i> 
+                        </button>
+                    </div>
+
+                    {% if has_filters %}
+                        <div class="col-3 d-flex justify-content-end align-items-end">
+                            <a href="{{ url_for('reseñas.list_reseñas') }}" class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width:90%; margin-top: 8%;">
+                                Limpiar <i class="bi bi-x-circle small"></i>
+                            </a>
+                        </div>
+                    {% endif %}
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive mt-3">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Sitio</th>
+                    <th>Usuario</th>
+                    {% set next_dir_calificacion = 'asc' %}
+                    {% if order_by == 'calificacion' and order_dir == 'asc' %}
+                    {% set next_dir_calificacion = 'desc' %}
+                    {% endif %}
+                    <th>
+                        <a href="{{ url_for('reseñas.list_reseñas', page=1, order_by='calificacion', order_dir=next_dir_calificacion, **(current_query or {})) }}">
+                            Calificación
+                            {% if order_by == 'calificacion' %}
+                            <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th>Contenido</th>
+                    <th>Estado</th>
+                    {% set next_dir_fecha = 'asc' %}
+                    {% if order_by == 'fecha_creacion' and order_dir == 'asc' %}
+                        {% set next_dir_fecha = 'desc' %}
+                    {% endif %}
+                    <th>
+                        <a href="{{ url_for('reseñas.list_reseñas', page=1, order_by='fecha_creacion', order_dir=next_dir_fecha, **(current_query or {})) }}">
+                            Fecha
+                            {% if order_by == 'fecha_creacion' %}
+                                <i class="bi {% if order_dir == 'asc' %}bi-caret-up-fill{% else %}bi-caret-down-fill{% endif %}"></i>
+                            {% endif %}
+                        </a>
+                    </th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in reviews.items %}
+                    <tr>
+                        <td>
+                            <a href="{{ url_for('sites.show_site', site_id=r.site.id) }}" title="Ver Sitio">
+                                {{ r.site.name }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ r.user.apellido }}, {{ r.user.nombre }}
+                        </td>
+                        <td>
+                            {% for i in range(r.calificacion) %}
+                            <i class="bi bi-star-fill text-warning"></i>
+                            {% endfor %}
+                        </td>
+                        <td title="{{ r.contenido }}">{{ r.contenido|truncate(50) }}</td>
+                        <td>
+                            <!-- {# estado con etiquetas de color (chips) #} -->
+                            {% set badge_class = 'bg-secondary' %}
+                            {% if r.estado == 'aprobada' %}{% set badge_class = 'bg-success' %}
+                            {% elif r.estado == 'rechazada' %}{% set badge_class = 'bg-danger' %}
+                            {% elif r.estado == 'pendiente' %}{% set badge_class = 'bg-warning text-dark' %}
+                            {% endif %}
+                            <span class="badge {{ badge_class }}">{{ r.estado }}</span>
+                        </td>
+                        <td>{{ r.fecha_creacion.strftime("%d/%m/%Y") }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('reseñas.show_review', review_id=r.id) }}" class="btn btn-icon" 
+                               title="Ver detalles de la reseña" aria-label="Ver reseña">
+                                <i class="bi bi-eye"></i>
+                            </a>    
+                        
+                        </td>
+                    </tr>                
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-muted text-center">No hay reseñas que coincidan con los filtros.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+<!-- Paginación -->
+<div class="card-footer">
+  <div class="row align-items-center">
+    <div class="col text-start">
+      <small> Página {{ reviews.page }} de {{ reviews.pages }}, total de reseñas: {{ reviews.total }} </small>
+    </div>
+    <div class="col text-end">
+      <nav aria-label="Paginación reseñas">
+        <ul class="pagination justify-content-end mb-0">
+          <li class="page-item {% if not reviews.has_prev %}disabled{% endif %}">
+            <a class="page-link"
+              href="{% if reviews.has_prev %}{{ url_for('reseñas.list_reseñas', page=reviews.prev_num, order_by=order_by, order_dir=order_dir, **current_query) }}{% else %}#{% endif %}"
+              aria-label="Anterior" style="color:#004c82">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {% for page_num in reviews.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+          {% if page_num %}
+          {% if page_num == reviews.page %}
+          <li class="page-item active" aria-current="page"><span class="page-link">{{ page_num }}</span></li>
+          {% else %}
+          <li class="page-item"><a class="page-link"
+              href="{{ url_for('reseñas.list_reseñas', page=page_num, order_by=order_by, order_dir=order_dir, **current_query) }}">{{
+              page_num }}</a></li>
+          {% endif %}
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+          {% endif %}
+          {% endfor %}
+          <li class="page-item {% if not reviews.has_next %}disabled{% endif %}">
+            <a class="page-link"
+              href="{% if reviews.has_next %}{{ url_for('reseñas.list_reseñas', page=reviews.next_num, order_by=order_by, order_dir=order_dir, **current_query) }}{% else %}#{% endif %}"
+              aria-label="Siguiente" style="color:#004c82">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function aprobarReseñaRapida(reviewId) {
+    Swal.fire({
+        title: '¿Aprobar esta reseña?',
+        text: 'La reseña será visible públicamente.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, aprobar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // TODO: Implementar endpoint para aprobar reseña
+            // fetch(`/reseñas/${reviewId}/aprobar`, { method: 'POST' })
+            Swal.fire(
+                '¡Aprobada!',
+                'La reseña ha sido aprobada correctamente.',
+                'success'
+            ).then(() => {
+                location.reload();
+            });
+        }
+    });
+}
+
+function rechazarReseñaRapida(reviewId) {
+    Swal.fire({
+        title: '¿Rechazar esta reseña?',
+        input: 'textarea',
+        inputLabel: 'Motivo del rechazo',
+        inputPlaceholder: 'Escribe el motivo por el cual rechazas esta reseña...',
+        inputValidator: (value) => {
+            if (!value) {
+                return 'Debes proporcionar un motivo para el rechazo';
+            }
+            if (value.length < 5) {
+                return 'El motivo debe tener al menos 5 caracteres';
+            }
+        },
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Rechazar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // TODO: Implementar endpoint para rechazar reseña
+            // fetch(`/reseñas/${reviewId}/rechazar`, { 
+            //     method: 'POST',
+            //     body: JSON.stringify({ motivo: result.value })
+            // })
+            Swal.fire(
+                'Rechazada',
+                'La reseña ha sido rechazada.',
+                'success'
+            ).then(() => {
+                location.reload();
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

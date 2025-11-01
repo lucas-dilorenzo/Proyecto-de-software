@@ -14,7 +14,7 @@ class estadoReseña(Enum):
     @classmethod
     def choices(cls):
         """Retorna las tuplas(valor, nombre) para usar en formularios WTForms"""
-        return [(member.value, member.name.title()) for member in cls]
+        return [(member.code, member.label) for member in cls]
 
     # @classmethod
     # def get_label(cls, code):

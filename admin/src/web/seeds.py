@@ -603,15 +603,27 @@ def users():
                 )
             )
 
-    # 10 usuarios públicos (algunos inactivos)
-    for i in range(1, 11):
-        email = f"user{i}@example.com"
+    # 10 usuarios públicos (algunos inactivos) con nombres reales
+    usuarios_publicos_data = [
+        ("user1@example.com", "María", "García"),
+        ("user2@example.com", "Carlos", "Rodríguez"),
+        ("user3@example.com", "Ana", "Martínez"),
+        ("user4@example.com", "Luis", "López"),
+        ("user5@example.com", "Carmen", "Sánchez"),
+        ("user6@example.com", "Miguel", "Pérez"),
+        ("user7@example.com", "Rosa", "Hernández"),
+        ("user8@example.com", "Antonio", "Jiménez"),
+        ("user9@example.com", "Isabel", "Ruiz"),
+        ("user10@example.com", "Francisco", "Moreno"),
+    ]
+    
+    for i, (email, nombre, apellido) in enumerate(usuarios_publicos_data, 1):
         if not User.query.filter_by(email=email).first():
             test_users.append(
                 User(
                     email=email,
-                    nombre=f"Usuario{i}",
-                    apellido=f"Apellido{i}",
+                    nombre=nombre,
+                    apellido=apellido,
                     password_hash=generate_password_hash("password123"),
                     activo=i % 5 != 0,  # Cada quinto usuario inactivo
                     rol=UserRole.PUBLIC,
@@ -627,25 +639,34 @@ def users():
 
 
 def roles():
-    for name in UserRole.__members__.keys():
-        db.session.add(Role(name=name))
+    # Crear roles usando los VALUES del enum, no las keys
+    for role_enum in UserRole:
+        existing_role = Role.query.filter_by(name=role_enum.value).first()
+        if not existing_role:
+            db.session.add(Role(name=role_enum.value))
+    
+    db.session.commit()  # Commit roles first
 
+    # Crear permisos y sus relaciones con roles
     for name, roles in UserPermission.__members__.values():
-        perm = Permission(name=name)
-        for r in roles:
-            r = Role.query.filter_by(name=r).first()
-            if r:
-                perm.roles.append(r)
-        db.session.add(perm)
+        existing_perm = Permission.query.filter_by(name=name).first()
+        if not existing_perm:
+            perm = Permission(name=name)
+            for role_enum in roles:
+                r = Role.query.filter_by(name=role_enum.value).first()
+                if r:
+                    perm.roles.append(r)
+            db.session.add(perm)
+    
     db.session.commit()
 
 
 def reseñas():
     """
-    Crea 30 reseñas de usuarios públicos en estado pendiente para sitios históricos.
+    Crea 30 reseñas de usuarios públicos con fechas variadas y estados distribuidos para sitios históricos.
     
-    Las reseñas son distribuidas aleatoriamente entre sitios existentes y usuarios públicos,
-    con calificaciones y contenidos variados para simular reseñas reales.
+    Estados: 20 pendientes, 5 aprobadas, 5 rechazadas
+    Fechas: Variadas en los últimos 6 meses para facilitar pruebas de filtros de rango
     """
     # Obtener usuarios públicos existentes
     usuarios_publicos = User.query.filter_by(rol=UserRole.PUBLIC, activo=True).all()
@@ -705,6 +726,20 @@ def reseñas():
         "Un lugar que todo estudiante de historia debería conocer. Muy enriquecedor académicamente.",
     ]
     
+    # Generar fechas variadas en los últimos 6 meses
+    from datetime import timedelta
+    fecha_base = datetime.now(timezone.utc)
+    fechas_variadas = [
+        fecha_base - timedelta(days=random.randint(1, 180))  # Últimos 6 meses
+        for _ in range(30)
+    ]
+    
+    # Definir distribución de estados: 20 pendientes, 5 aprobadas, 5 rechazadas
+    estados = ([estadoReseña.PENDIENTE.code] * 20 + 
+              [estadoReseña.APROBADA.code] * 5 + 
+              [estadoReseña.RECHAZADA.code] * 5)
+    random.shuffle(estados)  # Mezclar para distribución aleatoria
+    
     reseñas_creadas = []
     usuarios_sitios_usados = set()  # Para evitar reseñas duplicadas del mismo usuario al mismo sitio
     
@@ -727,15 +762,18 @@ def reseñas():
         
         usuarios_sitios_usados.add(clave_unica)
         
-        # Crear la reseña
+        # Obtener índice actual para asignar fecha y estado correspondiente
+        indice_actual = len(reseñas_creadas)
+        
+        # Crear la reseña con fecha y estado variados
         nueva_reseña = Reseña(
             calificacion=random.randint(3, 5),  # Calificaciones entre 3 y 5 estrellas
             contenido=random.choice(contenidos_ejemplo),
             user_id=usuario.id,
             site_id=sitio.id,
-            estado=estadoReseña.PENDIENTE.code,  # Todas en estado pendiente
-            motivo_rechazo=None,
-            fecha_creacion=datetime.now(timezone.utc)
+            estado=estados[indice_actual],  # Estado según distribución planificada
+            motivo_rechazo="Contenido inapropiado" if estados[indice_actual] == estadoReseña.RECHAZADA.code else None,
+            fecha_creacion=fechas_variadas[indice_actual]  # Fecha variada
         )
         
         reseñas_creadas.append(nueva_reseña)
@@ -744,7 +782,17 @@ def reseñas():
     if reseñas_creadas:
         db.session.add_all(reseñas_creadas)
         db.session.commit()
-        print(f"Se crearon {len(reseñas_creadas)} reseñas de prueba en estado pendiente.")
+        
+        # Contar reseñas por estado para mostrar resumen
+        pendientes = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.PENDIENTE.code)
+        aprobadas = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.APROBADA.code)
+        rechazadas = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.RECHAZADA.code)
+        
+        print(f"Se crearon {len(reseñas_creadas)} reseñas con fechas variadas:")
+        print(f"  - {pendientes} pendientes")
+        print(f"  - {aprobadas} aprobadas") 
+        print(f"  - {rechazadas} rechazadas")
+        print(f"  - Fechas: desde {min(fechas_variadas).strftime('%d/%m/%Y')} hasta {max(fechas_variadas).strftime('%d/%m/%Y')}")
     else:
         print("No se pudieron crear reseñas (posiblemente por falta de combinaciones únicas usuario-sitio).")
 
