@@ -402,15 +402,6 @@ def create_site():
                                 request.form.get(k) for k in indexed_keys
                             ]
 
-                    # Logging debug (prefer logger sobre print)
-                    current_app.logger.debug("Secondary titles: %s", secondary_titles)
-                    current_app.logger.debug(
-                        "Secondary descriptions: %s", secondary_descriptions
-                    )
-                    # Imprimir cada elemento del request
-                    for key, value in request.form.items():
-                        current_app.logger.debug("Form key: %s => %s", key, value)
-
                     for idx, img in enumerate(secondary_images):
                         if img and img.filename:
                             file = img
@@ -454,7 +445,6 @@ def create_site():
             # Asignar tags seleccionados
             try:
                 selected_tag_ids = request.form.getlist("tags")
-                current_app.logger.debug("Selected tag IDs: %s", selected_tag_ids)
                 if selected_tag_ids:
                     tag_objs = []
                     for t in selected_tag_ids:
@@ -465,7 +455,6 @@ def create_site():
                         tag = historicalSites.tags.get_tag_by_id(tid)
                         if tag:
                             tag_objs.append(tag)
-                    current_app.logger.debug("Tag objects: %s", tag_objs)
                     if tag_objs:
                         historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:
@@ -605,10 +594,6 @@ def edit_site(site_id):
                             request.form.get(k) for k in indexed_keys
                         ]
 
-                current_app.logger.debug(
-                    "Secondary titles (edit): %s", secondary_titles
-                )
-
                 for idx, img in enumerate(secondary_images):
                     if img and img.filename:
                         file = img
@@ -651,9 +636,6 @@ def edit_site(site_id):
                             order=new_order,
                             titulo=titulo,
                             descripcion=descripcion,
-                        )
-                        current_app.logger.debug(
-                            "Imagen secundaria subida y registrada: %s", object_name
                         )
 
             # Tags

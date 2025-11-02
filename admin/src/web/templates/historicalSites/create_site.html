@@ -409,15 +409,6 @@ titulo_body %}
       return false;
     }
     
-    // Debug: Log de todos los campos del formulario
-    const form = document.querySelector('form');
-    const formData = new FormData(form);
-    console.log('=== DATOS DEL FORMULARIO ===');
-    for (let [key, value] of formData.entries()) {
-      console.log(key + ': ' + value);
-    }
-    console.log('=== FIN DATOS DEL FORMULARIO ===');
-    
     return true;
   }
 </script>
@@ -443,8 +434,6 @@ titulo_body %}
       if (form) {
         form.addEventListener('submit', function(e) {
           // Choices.js ya mantiene el select original actualizado
-          const selectedValues = choicesInstance.getValue(true);
-          console.log('Tags seleccionados:', selectedValues);
         });
       }
     }
