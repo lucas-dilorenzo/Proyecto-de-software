@@ -346,11 +346,64 @@ def create_site():
                     client = current_app.storage
                     secondary_images = request.files.getlist("secondary_images")
 
-                    # Obtener títulos y descripciones de las imágenes secundarias
-                    secondary_titles = request.form.getlist("secondary_image_titles")
-                    secondary_descriptions = request.form.getlist(
-                        "secondary_image_descriptions"
+                    # Obtener títulos y descripciones de las imágenes secundarias.
+                    # Aceptar varias convenciones de nombre que pueden venir
+                    # del template/JS: "secondary_image_titles", "secondary_image_titles[]"
+                    # o indexed names como "secondary_image_titles[0]".
+                    secondary_titles = (
+                        request.form.getlist("secondary_image_titles")
+                        or request.form.getlist("secondary_image_titles[]")
+                        or []
                     )
+                    secondary_descriptions = (
+                        request.form.getlist("secondary_image_descriptions")
+                        or request.form.getlist("secondary_image_descriptions[]")
+                        or []
+                    )
+
+                    # Si no encontramos títulos con las claves simples, buscar claves indexadas
+                    if not secondary_titles:
+                        indexed_keys = [
+                            k
+                            for k in request.form.keys()
+                            if k.startswith("secondary_image_titles[")
+                        ]
+                        if indexed_keys:
+                            # ordenar por índice si es posible
+                            def _idx_key(k):
+                                try:
+                                    i = int(k[k.find("[") + 1 : k.find("]")])
+                                    return i
+                                except Exception:
+                                    return 0
+
+                            indexed_keys.sort(key=_idx_key)
+                            secondary_titles = [
+                                request.form.get(k) for k in indexed_keys
+                            ]
+
+                    if not secondary_descriptions:
+                        indexed_keys = [
+                            k
+                            for k in request.form.keys()
+                            if k.startswith("secondary_image_descriptions[")
+                        ]
+                        if indexed_keys:
+
+                            def _idx_key2(k):
+                                try:
+                                    i = int(k[k.find("[") + 1 : k.find("]")])
+                                    return i
+                                except Exception:
+                                    return 0
+
+                            indexed_keys.sort(key=_idx_key2)
+                            secondary_descriptions = [
+                                request.form.get(k) for k in indexed_keys
+                            ]
+
+                    # Logging debug (prefer logger sobre print)
+                    current_app.logger.debug("Secondary titles: %s", secondary_titles)
 
                     for idx, img in enumerate(secondary_images):
                         if img and img.filename:
@@ -490,10 +543,62 @@ def edit_site(site_id):
                 client = current_app.storage
                 secondary_images = request.files.getlist("secondary_images")
 
-                # Obtener títulos y descripciones de las imágenes secundarias
-                secondary_titles = request.form.getlist("secondary_image_titles")
-                secondary_descriptions = request.form.getlist(
-                    "secondary_image_descriptions"
+                # Obtener títulos y descripciones de las imágenes secundarias.
+                # Aceptar varias convenciones de nombre que pueden venir
+                # del template/JS: "secondary_image_titles", "secondary_image_titles[]"
+                # o indexed names como "secondary_image_titles[0]".
+                secondary_titles = (
+                    request.form.getlist("secondary_image_titles")
+                    or request.form.getlist("secondary_image_titles[]")
+                    or []
+                )
+                secondary_descriptions = (
+                    request.form.getlist("secondary_image_descriptions")
+                    or request.form.getlist("secondary_image_descriptions[]")
+                    or []
+                )
+
+                # Si no encontramos títulos con las claves simples, buscar claves indexadas
+                if not secondary_titles:
+                    indexed_keys = [
+                        k
+                        for k in request.form.keys()
+                        if k.startswith("secondary_image_titles[")
+                    ]
+                    if indexed_keys:
+
+                        def _idx_key(k):
+                            try:
+                                i = int(k[k.find("[") + 1 : k.find("]")])
+                                return i
+                            except Exception:
+                                return 0
+
+                        indexed_keys.sort(key=_idx_key)
+                        secondary_titles = [request.form.get(k) for k in indexed_keys]
+
+                if not secondary_descriptions:
+                    indexed_keys = [
+                        k
+                        for k in request.form.keys()
+                        if k.startswith("secondary_image_descriptions[")
+                    ]
+                    if indexed_keys:
+
+                        def _idx_key2(k):
+                            try:
+                                i = int(k[k.find("[") + 1 : k.find("]")])
+                                return i
+                            except Exception:
+                                return 0
+
+                        indexed_keys.sort(key=_idx_key2)
+                        secondary_descriptions = [
+                            request.form.get(k) for k in indexed_keys
+                        ]
+
+                current_app.logger.debug(
+                    "Secondary titles (edit): %s", secondary_titles
                 )
 
                 for idx, img in enumerate(secondary_images):
@@ -517,13 +622,17 @@ def edit_site(site_id):
 
                         # Obtener título y descripción correspondiente al índice
                         titulo = (
-                            secondary_titles[idx]
+                            secondary_titles[idx].strip()
                             if idx < len(secondary_titles)
+                            and secondary_titles[idx]
+                            and secondary_titles[idx].strip()
                             else f"Imagen secundaria {idx + 1}"
                         )
                         descripcion = (
-                            secondary_descriptions[idx]
+                            secondary_descriptions[idx].strip()
                             if idx < len(secondary_descriptions)
+                            and secondary_descriptions[idx]
+                            and secondary_descriptions[idx].strip()
                             else "Imagen secundaria del sitio histórico"
                         )
 
@@ -535,7 +644,9 @@ def edit_site(site_id):
                             titulo=titulo,
                             descripcion=descripcion,
                         )
-                        print("Imagen secundaria subida y registrada:", object_name)
+                        current_app.logger.debug(
+                            "Imagen secundaria subida y registrada: %s", object_name
+                        )
 
             # Tags
             try:
