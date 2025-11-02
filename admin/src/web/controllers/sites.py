@@ -404,6 +404,12 @@ def create_site():
 
                     # Logging debug (prefer logger sobre print)
                     current_app.logger.debug("Secondary titles: %s", secondary_titles)
+                    current_app.logger.debug(
+                        "Secondary descriptions: %s", secondary_descriptions
+                    )
+                    # Imprimir cada elemento del request
+                    for key, value in request.form.items():
+                        current_app.logger.debug("Form key: %s => %s", key, value)
 
                     for idx, img in enumerate(secondary_images):
                         if img and img.filename:
@@ -448,6 +454,7 @@ def create_site():
             # Asignar tags seleccionados
             try:
                 selected_tag_ids = request.form.getlist("tags")
+                current_app.logger.debug("Selected tag IDs: %s", selected_tag_ids)
                 if selected_tag_ids:
                     tag_objs = []
                     for t in selected_tag_ids:
@@ -458,6 +465,7 @@ def create_site():
                         tag = historicalSites.tags.get_tag_by_id(tid)
                         if tag:
                             tag_objs.append(tag)
+                    current_app.logger.debug("Tag objects: %s", tag_objs)
                     if tag_objs:
                         historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:

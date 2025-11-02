@@ -46,7 +46,7 @@ titulo_body %}
 {% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
   <div class="card-body">        
-    <form method="POST" action="{{ url_for('sites.create_site') }}" enctype="multipart/form-data"
+    <form method="POST" action="{{ url_for('sites.create_site') }}" enctype="multipart/form-data">
       <div class="row">
         <!-- Primera columna -->
         <div class="col-md-6">
@@ -237,11 +237,16 @@ titulo_body %}
               </div>
             </div>
           </div> -->
-      <select name="tags" id="tags" class="form-select form-select-sm" multiple>
-        {% for tag in tags %}
-        <option value="{{ tag.id }}">{{ tag.name }}</option>
-        {% endfor %}
-      </select>
+      <div class="mb-3">
+        <label for="tags" class="form-label">
+          <i class="bi bi-tags me-1"></i>Tags
+        </label>
+        <select name="tags" id="tags" class="form-select form-select-sm" multiple>
+          {% for tag in tags %}
+          <option value="{{ tag.id }}">{{ tag.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
 
       <!-- MAPA -->
       <!-- Inputs ocultos para guardar coordenadas -->
@@ -403,6 +408,16 @@ titulo_body %}
       });
       return false;
     }
+    
+    // Debug: Log de todos los campos del formulario
+    const form = document.querySelector('form');
+    const formData = new FormData(form);
+    console.log('=== DATOS DEL FORMULARIO ===');
+    for (let [key, value] of formData.entries()) {
+      console.log(key + ': ' + value);
+    }
+    console.log('=== FIN DATOS DEL FORMULARIO ===');
+    
     return true;
   }
 </script>
@@ -412,13 +427,26 @@ titulo_body %}
   document.addEventListener("DOMContentLoaded", function () {
     const tagsSelect = document.getElementById("tags");
     if (tagsSelect) {
-      new Choices(tagsSelect, {
+      const choicesInstance = new Choices(tagsSelect, {
         removeItemButton: true,
         placeholderValue: "Selecciona tags",
         searchPlaceholderValue: "Buscar tags",
         shouldSort: false,
         maxItemCount: 10,
+        // Asegurar que los valores se mantengan en el select original
+        silent: false,
+        renderChoiceLimit: -1,
       });
+      
+      // Asegurar que el formulario envíe los valores seleccionados
+      const form = document.querySelector('form');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          // Choices.js ya mantiene el select original actualizado
+          const selectedValues = choicesInstance.getValue(true);
+          console.log('Tags seleccionados:', selectedValues);
+        });
+      }
     }
   });
 </script>
@@ -520,7 +548,7 @@ titulo_body %}
             <input
               type="text"
               class="form-control form-control-sm"
-              name="secondary_image_titles"
+              name="secondary_image_titles[${fileIndex}]"
               placeholder="Título de la imagen"
               value="Imagen secundaria ${fileIndex + 1}"
             />
@@ -529,7 +557,7 @@ titulo_body %}
             <label class="form-label small">Descripción</label>
             <textarea
               class="form-control form-control-sm"
-              name="secondary_image_descriptions"
+              name="secondary_image_descriptions[${fileIndex}]"
               rows="2"
               placeholder="Descripción de la imagen"
             >Imagen secundaria del sitio histórico</textarea>
