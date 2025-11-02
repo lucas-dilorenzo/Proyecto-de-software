@@ -452,3 +452,10 @@ i.small {
 .pagination .page-link:focus {
   box-shadow: 0 0 0 0.2rem rgba(0,76,130,0.25);
 }
+
+/* Fix Choices.js dropdown z-index so it appears above map and other elements */
+.choices__list--dropdown, .choices__list[aria-expanded],
+.choices {
+  z-index: 9999 !important;
+  position: relative !important;
+}
