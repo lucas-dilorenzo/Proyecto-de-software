@@ -147,11 +147,27 @@
                         </td>
                         <td>{{ r.fecha_creacion.strftime("%d/%m/%Y") }}</td>
                         <td class="text-end">
-                            <a href="{{ url_for('reseñas.show_review', review_id=r.id) }}" class="btn btn-icon" 
-                               title="Ver detalles de la reseña" aria-label="Ver reseña">
-                                <i class="bi bi-eye"></i>
-                            </a>    
-                        
+                            <div class="d-flex gap-1 justify-content-end">
+                                <!-- Botón Ver siempre visible -->
+                                <a href="{{ url_for('reseñas.show_review', review_id=r.id) }}" class="btn btn-icon" 
+                                   title="Ver detalles de la reseña" aria-label="Ver reseña">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                
+                                <!-- Botones de moderación solo para reseñas pendientes y usuarios con permisos -->
+                                {% if r.estado == 'pendiente' and (session['role'] == 'MODERATOR' or session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN') %}
+                                    <button type="button" class="btn btn-icon text-success" 
+                                            onclick="aprobarReseñaRapida('{{ r.id }}')"
+                                            title="Aprobar reseña" aria-label="Aprobar">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-icon text-danger" 
+                                            onclick="rechazarReseñaRapida('{{ r.id }}')"
+                                            title="Rechazar reseña" aria-label="Rechazar">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>                
                 {% else %}
@@ -222,14 +238,48 @@ function aprobarReseñaRapida(reviewId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // TODO: Implementar endpoint para aprobar reseña
-            // fetch(`/reseñas/${reviewId}/aprobar`, { method: 'POST' })
-            Swal.fire(
-                '¡Aprobada!',
-                'La reseña ha sido aprobada correctamente.',
-                'success'
-            ).then(() => {
-                location.reload();
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Aprobando la reseña',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para aprobar
+            fetch(`/reseñas/${reviewId}/aprobar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        '¡Aprobada!',
+                        'La reseña ha sido aprobada correctamente.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al aprobar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al aprobar la reseña',
+                    'error'
+                );
             });
         }
     });
@@ -248,6 +298,9 @@ function rechazarReseñaRapida(reviewId) {
             if (value.length < 5) {
                 return 'El motivo debe tener al menos 5 caracteres';
             }
+            if (value.length > 200) {
+                return 'El motivo no puede superar los 200 caracteres';
+            }
         },
         showCancelButton: true,
         confirmButtonColor: '#dc3545',
@@ -256,17 +309,49 @@ function rechazarReseñaRapida(reviewId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // TODO: Implementar endpoint para rechazar reseña
-            // fetch(`/reseñas/${reviewId}/rechazar`, { 
-            //     method: 'POST',
-            //     body: JSON.stringify({ motivo: result.value })
-            // })
-            Swal.fire(
-                'Rechazada',
-                'La reseña ha sido rechazada.',
-                'success'
-            ).then(() => {
-                location.reload();
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Rechazando la reseña',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para rechazar
+            fetch(`/reseñas/${reviewId}/rechazar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ motivo: result.value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Rechazada',
+                        'La reseña ha sido rechazada correctamente.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al rechazar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al rechazar la reseña',
+                    'error'
+                );
             });
         }
     });

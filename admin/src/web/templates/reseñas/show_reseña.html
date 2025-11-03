@@ -12,18 +12,6 @@
 
 {% block titulo_acciones_body %}
     <!-- Botones de acción según el estado y permisos -->
-    {% if review.estado == 'pendiente' %}
-        {% if session['role'] == 'MODERATOR' or session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
-        <!-- <div class="d-flex gap-2" style="margin-top: 6%;">
-            <button type="button" class="btn btn-success" onclick="aprobarReseña({{ review.id }})">
-                <i class="bi bi-check-circle"></i> Aprobar
-            </button>
-            <button type="button" class="btn btn-danger" onclick="rechazarReseña({{ review.id }})">
-                <i class="bi bi-x-circle"></i> Rechazar
-            </button>
-        </div> -->
-        {% endif %}
-    {% endif %}
 {% endblock %}
 
 {% block body %}
@@ -181,14 +169,48 @@ function aprobarReseña(reviewId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // TODO: Implementar endpoint para aprobar reseña
-            // fetch(`/reseñas/${reviewId}/aprobar`, { method: 'POST' })
-            Swal.fire(
-                '¡Aprobada!',
-                'La reseña ha sido aprobada correctamente.',
-                'success'
-            ).then(() => {
-                location.reload();
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Aprobando la reseña',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para aprobar
+            fetch(`/reseñas/${reviewId}/aprobar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        '¡Aprobada!',
+                        'La reseña ha sido aprobada correctamente.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al aprobar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al aprobar la reseña',
+                    'error'
+                );
             });
         }
     });
@@ -204,8 +226,11 @@ function rechazarReseña(reviewId) {
             if (!value) {
                 return 'Debes proporcionar un motivo para el rechazo';
             }
-            if (value.length < 10) {
-                return 'El motivo debe tener al menos 10 caracteres';
+            if (value.length < 5) {
+                return 'El motivo debe tener al menos 5 caracteres';
+            }
+            if (value.length > 200) {
+                return 'El motivo no puede superar los 200 caracteres';
             }
         },
         showCancelButton: true,
@@ -215,17 +240,49 @@ function rechazarReseña(reviewId) {
         cancelButtonText: 'Cancelar'
     }).then((result) => {
         if (result.isConfirmed) {
-            // TODO: Implementar endpoint para rechazar reseña
-            // fetch(`/reseñas/${reviewId}/rechazar`, { 
-            //     method: 'POST',
-            //     body: JSON.stringify({ motivo: result.value })
-            // })
-            Swal.fire(
-                'Rechazada',
-                'La reseña ha sido rechazada.',
-                'success'
-            ).then(() => {
-                location.reload();
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Rechazando la reseña',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para rechazar
+            fetch(`/reseñas/${reviewId}/rechazar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ motivo: result.value })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Rechazada',
+                        'La reseña ha sido rechazada correctamente.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al rechazar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al rechazar la reseña',
+                    'error'
+                );
             });
         }
     });

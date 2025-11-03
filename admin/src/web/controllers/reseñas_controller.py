@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, session
 from src.core.reseñas import (
-    get_reviews_paginated, get_review_by_id
+    get_reviews_paginated, get_review_by_id, aprobar_reseña, rechazar_reseña
 )
 from src.core.historicalSites import get_all_sites
 from src.core.reseñas.estadoReseña import estadoReseña
@@ -97,3 +97,56 @@ def show_review(review_id):
     if not review:
         return "Review not found", 404
     return render_template("reseñas/show_reseña.html", review=review)
+
+
+@reseñas_bp.route("/<int:review_id>/aprobar", methods=["POST"])
+@login_required
+def approve_review(review_id):
+    """
+    Aprueba una reseña específica.
+    Args:
+        review_id (int): ID de la reseña a aprobar.
+    """
+    # Verificar permisos (solo MODERATOR, ADMIN, SYS_ADMIN pueden aprobar)
+    if session.get('role') not in ['MODERATOR', 'ADMIN', 'SYS_ADMIN']:
+        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar reseñas'}), 403
+    
+    success = aprobar_reseña(review_id)
+    
+    if success:
+        flash('Reseña aprobada correctamente', 'success')
+        return jsonify({'success': True, 'message': 'Reseña aprobada correctamente'})
+    else:
+        flash('Error al aprobar la reseña', 'error')
+        return jsonify({'success': False, 'message': 'Error al aprobar la reseña'}), 500
+
+
+@reseñas_bp.route("/<int:review_id>/rechazar", methods=["POST"])
+@login_required
+def reject_review(review_id):
+    """
+    Rechaza una reseña específica con un motivo.
+    Args:
+        review_id (int): ID de la reseña a rechazar.
+    """
+    # falta verificar permisos (solo MODERATOR, ADMIN, SYS_ADMIN pueden rechazar)
+    if session.get('role') not in ['MODERATOR', 'ADMIN', 'SYS_ADMIN']:
+        return jsonify({'success': False, 'message': 'No tienes permisos para rechazar reseñas'}), 403
+    
+    data = request.get_json()
+    motivo_rechazo = data.get('motivo', '').strip()
+    
+    if not motivo_rechazo:
+        return jsonify({'success': False, 'message': 'Debes proporcionar un motivo para el rechazo'}), 400
+    
+    if len(motivo_rechazo) > 200:
+        return jsonify({'success': False, 'message': 'El motivo de rechazo no puede superar los 200 caracteres'}), 400
+    
+    success = rechazar_reseña(review_id, motivo_rechazo)
+    
+    if success:
+        flash('Reseña rechazada correctamente', 'success')
+        return jsonify({'success': True, 'message': 'Reseña rechazada correctamente'})
+    else:
+        flash('Error al rechazar la reseña', 'error')
+        return jsonify({'success': False, 'message': 'Error al rechazar la reseña'}), 500

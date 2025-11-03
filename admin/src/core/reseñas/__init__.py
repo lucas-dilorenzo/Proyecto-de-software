@@ -98,3 +98,56 @@ def get_reviews_paginated(
         query = query.order_by(order_field.asc(), Reseña.id.asc())
 
     return query.paginate(page=page, per_page=per_page, error_out=False)
+
+
+def aprobar_reseña(review_id):
+    """
+    Aprueba una reseña cambiando su estado a 'aprobada'.
+    Args:
+        review_id (int): ID de la reseña a aprobar
+    Returns:
+        bool: True si se aprobó correctamente, False si no se encontró o hubo error
+    """
+    from src.core.reseñas.estadoReseña import estadoReseña
+    
+    try:
+        review = get_review_by_id(review_id)
+        if not review:
+            return False
+            
+        review.estado = estadoReseña.APROBADA.code
+        review.motivo_rechazo = None  # Limpiar cualquier motivo de rechazo previo
+        
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al aprobar reseña: {e}")
+        return False
+
+
+def rechazar_reseña(review_id, motivo_rechazo):
+    """
+    Rechaza una reseña cambiando su estado a 'rechazada' y guardando el motivo.
+    Args:
+        review_id (int): ID de la reseña a rechazar
+        motivo_rechazo (str): Motivo del rechazo
+    Returns:
+        bool: True si se rechazó correctamente, False si no se encontró o hubo error
+    """
+    from src.core.reseñas.estadoReseña import estadoReseña
+    
+    try:
+        review = get_review_by_id(review_id)
+        if not review:
+            return False
+            
+        review.estado = estadoReseña.RECHAZADA.code
+        review.motivo_rechazo = motivo_rechazo
+        
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al rechazar reseña: {e}")
+        return False
