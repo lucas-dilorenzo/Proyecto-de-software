@@ -9,6 +9,7 @@ from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
 from src.core.historicalSites.site import SiteLog
+from sqlalchemy.orm.attributes import flag_modified
 
 
 def create_site(**kwargs):
@@ -122,6 +123,33 @@ def update_site(site_id, **kwargs):
                 except (ValueError, TypeError):
                     value = None
         setattr(site, key, value)
+    db.session.commit()
+    return site
+
+
+def add_image_to_site(site_id, object_name, main=False):
+    """
+    Adds an image to a historical site by its ID.
+    Args:
+        site_id (int): The unique identifier of the site to which the image will be added.
+        object_name (str): The name/path of the image object to be added.
+    Returns:
+        Site: The updated Site object with the new image added, or None if the site does not exist.
+    """
+
+    site = get_site_by_id(site_id)
+    if not site:
+        return None
+
+    if main:
+        site.main_image = object_name
+    else:
+        if site.images is None:
+            site.images = []
+        site.images.append(object_name)
+
+        flag_modified(site, "images")
+
     db.session.commit()
     return site
 

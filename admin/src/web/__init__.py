@@ -50,6 +50,7 @@ from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
+from src.web.storage import storage
 
 """
     Crea la aplicación Flask.
@@ -71,6 +72,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     # Inicializar base de datos (flask_sqlalchemy_lite)
     database.init_app(app)
+
+    # Inicializar almacenamiento (MinIO)
+    storage.init_app(app)
 
     # Protección CSRF
     csrf = CSRFProtect(app)
@@ -134,6 +138,11 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.jinja_env.globals.update(get_conservation_status_label=get_conservation_status)
     app.jinja_env.globals.update(get_category_label=get_category_label)
     app.jinja_env.globals.update(is_sys_admin=is_sys_admin)
+    app.jinja_env.globals.update(image_url=helpers.get_image_url)
+    app.jinja_env.globals.update(get_main_image=helpers.get_main_image_by_site)
+    app.jinja_env.globals.update(
+        get_secondary_image_urls=helpers.get_secondary_image_urls
+    )
 
     # ---------- Guard global: Admin Maintenance Mode ----------
     @app.before_request

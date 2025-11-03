@@ -31,6 +31,7 @@ class Site(db.Model):
     deleted = db.Column(db.Boolean, default=False)
 
     tags = relationship("Tag", secondary=sites_tags, backref="sites")
+    images = relationship("Image", back_populates="site", cascade="all, delete-orphan")
 
     def __init__(
         self,
