@@ -1,8 +1,12 @@
+// src/services/api.ts
 export const API_BASE: string = import.meta.env.VITE_API_BASE || '/api'
 
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+type QueryParams = Record<string, string | number | boolean | null | undefined>
+
 interface RequestOptions {
-  method?: string
-  params?: Record<string, any>
+  method?: HttpMethod
+  params?: QueryParams
   body?: unknown
   auth?: boolean
 }
@@ -21,8 +25,7 @@ async function request<T>(
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (auth) {
-    // Ejemplo: si usan token JWT
-    // headers["Authorization"] = `Bearer ${token}`;
+    // headers['Authorization'] = `Bearer ${token}`;
   }
 
   const res = await fetch(url.toString(), {
@@ -32,14 +35,11 @@ async function request<T>(
     body: body ? JSON.stringify(body) : undefined,
   })
 
-  if (!res.ok) {
-    throw new Error(`API ${res.status}: ${await res.text()}`)
-  }
-
-  return (await res.json()) as T
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
+  return res.json() as Promise<T>
 }
 
-// Interfaces de ejemplo para tus datos
+// ---- Tipos de dominio (ajustá a tu API real)
 export interface Site {
   id: number
   name: string
@@ -49,12 +49,16 @@ export interface Site {
   cover_url?: string
 }
 
-// Endpoints
+interface ListResponse<T> {
+  items: T[]
+}
+
+// ---- Endpoints
 export const SitesAPI = {
-  list({ sort, limit = 10 }: { sort: string; limit?: number }) {
-    return request<{ items: Site[] }>('/sites', { params: { sort, limit } })
+  list({ sort, limit = 10 }: { sort?: 'visited' | 'rating' | 'recent'; limit?: number }) {
+    return request<ListResponse<Site>>('/sites', { params: { sort, limit } })
   },
   favorites({ limit = 10 }: { limit?: number }) {
-    return request<{ items: Site[] }>('/sites/favorites', { params: { limit }, auth: true })
+    return request<ListResponse<Site>>('/sites/favorites', { params: { limit }, auth: true })
   },
 }

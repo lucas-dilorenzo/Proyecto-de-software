@@ -1,10 +1,11 @@
 <template>
-  <section class="hero">
+  <section class="hero card">
     <div class="wrap">
-      <h1 class="title">Sitios Históricos</h1>
+      <h1 class="title h1">Sitios Históricos</h1>
+      <p class="subtitle subtle">Descubrí lugares destacados y experiencias cerca tuyo.</p>
       <form @submit.prevent="goSearch" class="search">
         <input v-model.trim="q" type="search" placeholder="Buscar sitios…" />
-        <button>Buscar</button>
+        <button class="btn">Buscar</button>
       </form>
     </div>
   </section>
@@ -22,35 +23,41 @@ function goSearch() {
 
 <style scoped>
 .hero {
-  background: linear-gradient(135deg, #2fa573, #1b7250);
-  color: #fff;
-  padding: 28px 16px;
-  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid #eae6df;
+  padding: 32px 18px;
 }
 .wrap {
-  max-width: 1100px;
+  max-width: 880px;
   margin: 0 auto;
+  text-align: center;
 }
 .title {
-  margin: 0 0 12px;
+  margin: 0 0 6px;
+}
+.subtitle {
+  margin: 0 0 18px;
 }
 .search {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  justify-content: center;
 }
 .search input {
   flex: 1;
-  padding: 10px;
-  border-radius: 10px;
+  max-width: 640px;
+  padding: 12px 14px;
   border: none;
+  border-bottom: 2px solid #d9d4cc;
+  background: #f9f7f4;
+  border-radius: 10px;
 }
-.search button {
-  padding: 10px 14px;
-  border: none;
-  border-radius: 10px;
+.search input:focus {
+  outline: none;
+  border-bottom-color: #b1a99d;
   background: #fff;
-  color: #1b7250;
-  font-weight: 600;
-  cursor: pointer;
+}
+.btn {
+  padding: 12px 16px;
 }
 </style>

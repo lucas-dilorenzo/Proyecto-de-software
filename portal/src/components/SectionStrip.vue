@@ -2,7 +2,7 @@
   <section ref="rootEl" class="section">
     <header class="section-header">
       <h2>{{ title }}</h2>
-      <button class="see-all" @click="goSeeAll">Ver todos</button>
+      <button class="btn btn-ghost" @click="goSeeAll">Ver todos</button>
     </header>
 
     <div v-if="error" class="empty">Error: {{ error }}</div>
@@ -11,14 +11,13 @@
       <div v-if="loading" class="grid">
         <SkeletonCard v-for="i in 6" :key="i" />
       </div>
-      <div v-else-if="items.length === 0" class="empty">No hay elementos para mostrar.</div>
+      <div v-else-if="items.length === 0" class="empty subtle">No hay elementos para mostrar.</div>
       <div v-else class="grid">
         <SiteCard v-for="s in items" :key="s.id" :site="s" @open="openDetail" />
       </div>
     </div>
   </section>
 </template>
-
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import SkeletonCard from './SkeletonCard.vue'
@@ -28,7 +27,6 @@ import { useRouter } from 'vue-router'
 
 const props = defineProps({
   title: { type: String, required: true },
-  // 'sort' controla el orden ("visited" | "rating" | "recent"), o 'favorites' para favoritos
   sort: { type: String, required: true },
   seeAllQuery: { type: Object, default: () => ({}) },
   authRequired: { type: Boolean, default: false },
@@ -84,34 +82,32 @@ function makeLazy() {
 onMounted(makeLazy)
 onBeforeUnmount(() => observer && observer.disconnect())
 </script>
-
 <style scoped>
 .section {
-  margin: 24px 0;
+  margin: 36px 0;
 }
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 .section-header h2 {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   margin: 0;
+  font-family: 'Playfair Display', serif;
 }
-.see-all {
-  background: #2fa573;
-  color: white;
-  border: none;
+.btn-ghost {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid #e0dbd3;
   border-radius: 999px;
-  padding: 6px 12px;
-  cursor: pointer;
+  padding: 8px 12px;
 }
 .grid {
   display: grid;
-  gap: 12px;
+  gap: 18px;
 }
-/* Breakpoints del enunciado: <767, 768–1024, >1025 */
 @media (max-width: 767px) {
   .grid {
     grid-template-columns: 1fr 1fr;
@@ -128,7 +124,6 @@ onBeforeUnmount(() => observer && observer.disconnect())
   }
 }
 .empty {
-  color: #666;
   font-size: 0.95rem;
 }
 </style>
