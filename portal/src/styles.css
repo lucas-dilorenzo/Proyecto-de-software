@@ -92,3 +92,29 @@ h3 {
     grid-template-columns: repeat(4, 1fr);
   }
 }
+.section {
+  margin: 24px 0;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 16px;
+}
+.section-header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  margin: 0;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.btn-link:hover {
+  color: var(--brand);
+}

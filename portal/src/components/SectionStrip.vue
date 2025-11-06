@@ -2,47 +2,60 @@
   <section ref="rootEl" class="section">
     <header class="section-header">
       <h2>{{ title }}</h2>
-      <button class="btn btn-ghost" @click="goSeeAll">Ver todos</button>
+      <button class="btn-link" @click="goSeeAll">Ver todos ›</button>
     </header>
 
-    <div v-if="error" class="empty">Error: {{ error }}</div>
+    <div v-if="error" class="empty subtle">Error: {{ error }}</div>
 
-    <div v-else class="content">
+    <div v-else>
       <div v-if="loading" class="grid">
         <SkeletonCard v-for="i in 6" :key="i" />
       </div>
-      <div v-else-if="items.length === 0" class="empty subtle">No hay elementos para mostrar.</div>
+
+      <div v-else-if="items.length === 0" class="empty subtle pill">No hay contenido</div>
+
       <div v-else class="grid">
         <SiteCard v-for="s in items" :key="s.id" :site="s" @open="openDetail" />
       </div>
     </div>
   </section>
 </template>
-<script setup>
+
+<script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import SkeletonCard from './SkeletonCard.vue'
 import SiteCard from './SiteCard.vue'
-import { SitesAPI } from '@/services/api'
-import { useRouter } from 'vue-router'
+import { SitesAPI, type Site } from '@/services/api'
 
-const props = defineProps({
-  title: { type: String, required: true },
-  sort: { type: String, required: true },
-  seeAllQuery: { type: Object, default: () => ({}) },
-  authRequired: { type: Boolean, default: false },
-})
+const props = defineProps<{
+  title: string
+  /** 'visited' | 'rating' | 'recent' | 'favorites' */
+  sort: string
+  seeAllQuery?: Record<string, string | number | boolean>
+  authRequired?: boolean
+}>()
 
 const router = useRouter()
-const items = ref([])
+const items = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
-const rootEl = ref(null)
-let observer
+const rootEl = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
 
 function goSeeAll() {
-  router.push({ name: 'sites-list', query: props.seeAllQuery })
+  // Convertir booleanos a strings
+  const query = Object.entries(props.seeAllQuery || {}).reduce(
+    (acc, [key, value]) => {
+      acc[key] = typeof value === 'boolean' ? (value ? '1' : '0') : value
+      return acc
+    },
+    {} as Record<string, string | number>,
+  )
+
+  router.push({ name: 'sites-list', query })
 }
-function openDetail(site) {
+function openDetail(site: Site) {
   router.push({ name: 'site-detail', params: { id: site.id } })
 }
 
@@ -51,12 +64,14 @@ async function fetchData() {
     loading.value = true
     error.value = ''
     if (props.sort === 'favorites') {
-      items.value = (await SitesAPI.favorites({ limit: 12 })).items || []
+      const res = await SitesAPI.favorites({ limit: 12 })
+      items.value = res.items || []
     } else {
-      items.value = (await SitesAPI.list({ sort: props.sort, limit: 12 })).items || []
+      const res = await SitesAPI.list({ sort: props.sort as any, limit: 12 })
+      items.value = res.items || []
     }
-  } catch (e) {
-    error.value = e.message || 'Error al cargar'
+  } catch (e: any) {
+    error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
   }
@@ -71,7 +86,7 @@ function makeLazy() {
     (entries) => {
       if (entries.some((e) => e.isIntersecting)) {
         fetchData()
-        observer.disconnect()
+        observer?.disconnect()
       }
     },
     { rootMargin: '200px' },
@@ -80,30 +95,37 @@ function makeLazy() {
 }
 
 onMounted(makeLazy)
-onBeforeUnmount(() => observer && observer.disconnect())
+onBeforeUnmount(() => observer?.disconnect())
 </script>
+
 <style scoped>
 .section {
-  margin: 36px 0;
+  margin: 24px 0;
 }
 .section-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
+  align-items: baseline;
+  margin-bottom: 16px;
 }
 .section-header h2 {
-  font-size: 1.25rem;
-  margin: 0;
   font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  margin: 0;
 }
-.btn-ghost {
-  background: transparent;
+.btn-link {
+  background: none;
+  border: none;
   color: var(--fg);
-  border: 1px solid #e0dbd3;
-  border-radius: 999px;
-  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s;
 }
+.btn-link:hover {
+  color: var(--brand);
+}
+
 .grid {
   display: grid;
   gap: 18px;
@@ -123,7 +145,16 @@ onBeforeUnmount(() => observer && observer.disconnect())
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
 .empty {
-  font-size: 0.95rem;
+  text-align: center;
+}
+.pill {
+  display: inline-block;
+  margin: 8px auto 0;
+  padding: 10px 16px;
+  border: 1px solid #e0dbd3;
+  border-radius: 999px;
+  background: #fff;
 }
 </style>

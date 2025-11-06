@@ -1,34 +1,83 @@
 <template>
-  <main class="container">
+  <main class="home-container">
+    <!-- Hero opcional -->
     <HeroSearch />
 
-    <SectionStrip title="Más visitados" sort="visited" :seeAllQuery="{ sort: 'visited' }" />
-    <SectionStrip title="Mejor puntuados" sort="rating" :seeAllQuery="{ sort: 'rating' }" />
+    <section class="sections">
+      <SectionStrip title="Más visitados" sort="visited" :seeAllQuery="{ sort: 'visited' }" />
 
-    <!-- Solo se muestra Favoritos si hay sesión (flexible: controla desde App.vue o prop) -->
-    <SectionStrip
-      v-if="isLogged"
-      title="Favoritos"
-      sort="favorites"
-      :seeAllQuery="{ favorites: 1 }"
-      :authRequired="true"
-    />
+      <SectionStrip title="Mejor puntuados" sort="rating" :seeAllQuery="{ sort: 'rating' }" />
 
-    <SectionStrip title="Recientemente agregados" sort="recent" :seeAllQuery="{ sort: 'recent' }" />
+      <SectionStrip
+        title="Recientemente agregados"
+        sort="recent"
+        :seeAllQuery="{ sort: 'recent' }"
+      />
+    </section>
+
+    <footer class="footer">
+      <nav>
+        <a href="#">Términos</a>
+        <a href="#">Privacidad</a>
+        <a href="#">Contacto</a>
+      </nav>
+    </footer>
   </main>
 </template>
 
-<script setup>
-import SectionStrip from '@/components/SectionStrip.vue'
+<script setup lang="ts">
 import HeroSearch from '@/components/HeroSearch.vue'
-// Estrategia mínima: detectar cookie de sesión; si usan token, reemplazar por un store real
-const isLogged = document.cookie.includes('session=')
+import SectionStrip from '@/components/SectionStrip.vue'
 </script>
 
 <style scoped>
-.container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 16px;
+.home-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 0 16px 60px; /* 🔹 Agregado padding lateral de 16px */
+}
+
+/* 🔹 OPCIONAL: Aumentar padding en pantallas grandes */
+@media (min-width: 768px) {
+  .home-container {
+    padding: 0 24px 60px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .home-container {
+    padding: 0 32px 60px;
+  }
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+
+.footer {
+  margin-top: 60px;
+  padding: 24px 16px;
+  border-top: 1px solid #e0dbd3;
+  text-align: center;
+  color: var(--muted);
+}
+
+.footer nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.footer a:hover {
+  color: var(--fg);
 }
 </style>
