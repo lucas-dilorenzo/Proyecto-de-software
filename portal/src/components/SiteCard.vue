@@ -1,13 +1,7 @@
 <template>
   <article class="site-card card" @click="$emit('open', site)">
     <div class="thumb">
-      <img
-        :src="imgSrc"
-        :alt="site.name + ' - portada'"
-        loading="lazy"
-        referrerpolicy="no-referrer"
-        @error="onImgError"
-      />
+      <img :src="imgSrc" :alt="site.name + ' - portada'" loading="lazy" @error="onImgError" />
     </div>
     <div class="body">
       <h3 class="name">{{ site.name }}</h3>
@@ -18,30 +12,30 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps<{ site: any }>()
 
-// normalizamos keys del backend
-const cover = computed<string>(() => props.site.cover_url ?? props.site.cover_image ?? '')
-const rating = computed<number | null>(() => {
-  const r = props.site.rating ?? props.site.avg_rating
-  return typeof r === 'number' ? r : null
-})
+const PLACEHOLDER = '/placeholder.svg'
 
-// placeholder local (poner un archivo en portal/public/placeholder.jpg)
-const FALLBACK = '/placeholder.jpg'
+const imgSrc = ref(props.site.cover_image || props.site.cover_url || PLACEHOLDER)
 
-const imgSrc = ref(cover.value || FALLBACK)
-watch(cover, (val) => {
-  imgSrc.value = val || FALLBACK
-})
+watch(
+  () => props.site,
+  (newSite) => {
+    imgSrc.value = newSite.cover_image || newSite.cover_url || PLACEHOLDER
+  },
+  { deep: true },
+)
 
 function onImgError() {
-  if (imgSrc.value !== FALLBACK) {
-    imgSrc.value = FALLBACK
-  }
+  imgSrc.value = PLACEHOLDER
 }
+
+const rating = computed(() => {
+  const r = props.site.avg_rating ?? props.site.rating
+  return typeof r === 'number' ? r : null
+})
 </script>
 
 <style scoped>
@@ -54,17 +48,19 @@ function onImgError() {
   transform: translateY(-4px);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
 }
-.site-card .thumb {
+.thumb {
   aspect-ratio: 16/9;
   background: #f2f0ec;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
 }
-.site-card img {
+.thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.site-card .body {
+.body {
   padding: 12px 14px;
 }
 .name {
