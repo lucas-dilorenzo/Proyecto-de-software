@@ -51,6 +51,7 @@ from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
 from src.web.storage import storage
+from src.web.api import api_bp 
 
 """
     Crea la aplicación Flask.
@@ -108,6 +109,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.register_blueprint(historical_sites_bp)
     app.register_blueprint(feature_flags_bp)
     app.register_blueprint(maintenance_bp)
+    app.register_blueprint(api_bp)  # Ya está aquí, solo faltaba el import arriba
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)

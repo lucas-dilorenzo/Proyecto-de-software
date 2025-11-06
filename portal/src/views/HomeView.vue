@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import HeroSearch from '@/components/HeroSearch.vue'
 import SectionStrip from '@/components/SectionStrip.vue'
+console.log('✅ HomeView mounted')
 </script>
 
 <style scoped>

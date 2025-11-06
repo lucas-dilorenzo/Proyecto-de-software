@@ -55,15 +55,19 @@ async function fetchData() {
   try {
     loading.value = true
     error.value = ''
+    console.log('📦 SectionStrip fetch:', props.title, props.sort)
 
     if (props.sort === 'favorites') {
       const res = await SitesAPI.favorites({ page: 1, per_page: 12 })
+      console.log('✅ API /me/favorites:', res)
       items.value = res.data || []
     } else {
       const res = await SitesAPI.list({ order_by: props.sort as any, per_page: 12 })
+      console.log('✅ API /sites:', res)
       items.value = res.data || []
     }
   } catch (e: any) {
+    console.error('❌ SectionStrip error:', e)
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
