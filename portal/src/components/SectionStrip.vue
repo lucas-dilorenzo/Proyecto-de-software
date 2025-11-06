@@ -44,17 +44,9 @@ const rootEl = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
 function goSeeAll() {
-  // Convertir booleanos a strings
-  const query = Object.entries(props.seeAllQuery || {}).reduce(
-    (acc, [key, value]) => {
-      acc[key] = typeof value === 'boolean' ? (value ? '1' : '0') : value
-      return acc
-    },
-    {} as Record<string, string | number>,
-  )
-
-  router.push({ name: 'sites-list', query })
+  router.push({ name: 'sites-list', query: { order_by: props.sort } })
 }
+
 function openDetail(site: Site) {
   router.push({ name: 'site-detail', params: { id: site.id } })
 }
@@ -63,12 +55,13 @@ async function fetchData() {
   try {
     loading.value = true
     error.value = ''
+
     if (props.sort === 'favorites') {
-      const res = await SitesAPI.favorites({ limit: 12 })
-      items.value = res.items || []
+      const res = await SitesAPI.favorites({ page: 1, per_page: 12 })
+      items.value = res.data || []
     } else {
-      const res = await SitesAPI.list({ sort: props.sort as any, limit: 12 })
-      items.value = res.items || []
+      const res = await SitesAPI.list({ order_by: props.sort as any, per_page: 12 })
+      items.value = res.data || []
     }
   } catch (e: any) {
     error.value = e?.message || 'Error al cargar'

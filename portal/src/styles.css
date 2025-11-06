@@ -118,3 +118,9 @@ h3 {
 .btn-link:hover {
   color: var(--brand);
 }
+.select {
+  padding: 8px 10px;
+  border: 1px solid #e0dbd3;
+  border-radius: 10px;
+  background: #fff;
+}

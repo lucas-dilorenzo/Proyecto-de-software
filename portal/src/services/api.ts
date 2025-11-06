@@ -1,21 +1,36 @@
 // src/services/api.ts
-export const API_BASE: string = import.meta.env.VITE_API_BASE || '/api'
+export const API_BASE: string =
+  import.meta.env.VITE_API_BASE || 'https://admin-grupo37.proyecto2025.linti.unlp.edu.ar/api'
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
-type QueryParams = Record<string, string | number | boolean | null | undefined>
+type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest'
+
+export interface Site {
+  id: number
+  name: string
+  city: string
+  province: string
+  avg_rating?: number
+  cover_image?: string
+}
+
+interface ListResponse<T> {
+  data: T[]
+  page: number
+  per_page: number
+  total: number
+}
 
 interface RequestOptions {
-  method?: HttpMethod
-  params?: QueryParams
-  body?: unknown
+  method?: string
+  params?: Record<string, string | number | boolean | undefined>
   auth?: boolean
 }
 
 async function request<T>(
   path: string,
-  { method = 'GET', params, body, auth = false }: RequestOptions = {},
+  { method = 'GET', params, auth = false }: RequestOptions = {},
 ): Promise<T> {
-  const url = new URL(API_BASE + path, window.location.origin)
+  const url = new URL(API_BASE + path)
 
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
@@ -25,40 +40,37 @@ async function request<T>(
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (auth) {
-    // headers['Authorization'] = `Bearer ${token}`;
+    const token = localStorage.getItem('token')
+    if (token) headers['Authorization'] = `Bearer ${token}`
   }
 
-  const res = await fetch(url.toString(), {
-    method,
-    headers,
-    credentials: 'include',
-    body: body ? JSON.stringify(body) : undefined,
-  })
-
+  const res = await fetch(url.toString(), { method, headers, credentials: 'include' })
   if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`)
   return res.json() as Promise<T>
 }
 
-// ---- Tipos de dominio (ajustá a tu API real)
-export interface Site {
-  id: number
-  name: string
-  city: string
-  province: string
-  rating?: number
-  cover_url?: string
-}
-
-interface ListResponse<T> {
-  items: T[]
-}
-
-// ---- Endpoints
 export const SitesAPI = {
-  list({ sort, limit = 10 }: { sort?: 'visited' | 'rating' | 'recent'; limit?: number }) {
-    return request<ListResponse<Site>>('/sites', { params: { sort, limit } })
+  list({
+    order_by = 'latest',
+    page = 1,
+    per_page = 12,
+    name,
+    city,
+    province,
+  }: {
+    order_by?: OrderBy
+    page?: number
+    per_page?: number
+    name?: string
+    city?: string
+    province?: string
+  }) {
+    return request<ListResponse<Site>>('/sites', {
+      params: { order_by, page, per_page, name, city, province },
+    })
   },
-  favorites({ limit = 10 }: { limit?: number }) {
-    return request<ListResponse<Site>>('/sites/favorites', { params: { limit }, auth: true })
+
+  favorites({ page = 1, per_page = 12 }: { page?: number; per_page?: number }) {
+    return request<ListResponse<Site>>('/me/favorites', { params: { page, per_page }, auth: true })
   },
 }

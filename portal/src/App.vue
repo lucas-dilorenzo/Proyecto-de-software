@@ -1,7 +1,7 @@
 <template>
   <div>
     <header class="topbar">Portal Público</header>
-    <router-view />
+    <div class="container"><router-view /></div>
   </div>
 </template>
 

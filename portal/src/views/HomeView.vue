@@ -4,15 +4,17 @@
     <HeroSearch />
 
     <section class="sections">
-      <SectionStrip title="Más visitados" sort="visited" :seeAllQuery="{ sort: 'visited' }" />
-
-      <SectionStrip title="Mejor puntuados" sort="rating" :seeAllQuery="{ sort: 'rating' }" />
-
       <SectionStrip
-        title="Recientemente agregados"
-        sort="recent"
-        :seeAllQuery="{ sort: 'recent' }"
+        title="Más visitados"
+        sort="rating-5-1"
+        :seeAllQuery="{ order_by: 'rating-5-1' }"
       />
+      <SectionStrip
+        title="Mejor puntuados"
+        sort="rating-5-1"
+        :seeAllQuery="{ order_by: 'rating-5-1' }"
+      />
+      <SectionStrip title="Recientes" sort="latest" :seeAllQuery="{ order_by: 'latest' }" />
     </section>
 
     <footer class="footer">
