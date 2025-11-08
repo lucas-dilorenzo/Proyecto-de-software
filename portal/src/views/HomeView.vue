@@ -36,10 +36,10 @@
 import { onMounted } from 'vue'
 import HeroSearch from '@/components/HeroSearch.vue'
 import SectionStrip from '@/components/SectionStrip.vue'
-import { logger } from '@/utils/logger'  // 🔹 Importar logger
+import { logger } from '@/utils/logger' // 🔹 Importar logger
 
 onMounted(() => {
-  logger.log('✅ HomeView mounted')  // 🔹 Usar logger en onMounted
+  logger.log('✅ HomeView mounted') // 🔹 Usar logger en onMounted
 })
 </script>
 

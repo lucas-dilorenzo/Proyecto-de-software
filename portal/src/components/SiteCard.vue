@@ -1,12 +1,12 @@
 <template>
   <article class="card h-100 border-0 shadow-sm site-card" @click="$emit('open', site)">
-    <div class="card-img-top overflow-hidden" style="aspect-ratio: 16/9;">
-      <img 
-        :src="imgSrc" 
-        :alt="site.name + ' - portada'" 
+    <div class="card-img-top overflow-hidden" style="aspect-ratio: 16/9">
+      <img
+        :src="imgSrc"
+        :alt="site.name + ' - portada'"
         class="w-100 h-100 object-fit-cover"
-        loading="lazy" 
-        @error="onImgError" 
+        loading="lazy"
+        @error="onImgError"
       />
     </div>
     <div class="card-body p-3">
@@ -56,7 +56,9 @@ const rating = computed(() => {
 <style scoped>
 .site-card {
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .site-card:hover {

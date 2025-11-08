@@ -1,7 +1,7 @@
 <template>
   <article class="card h-100 border-0 shadow-sm">
     <div class="card-img-top placeholder-glow">
-      <div class="placeholder col-12 rounded" style="aspect-ratio: 16/9;"></div>
+      <div class="placeholder col-12 rounded" style="aspect-ratio: 16/9"></div>
     </div>
     <div class="card-body p-3">
       <div class="placeholder-glow">

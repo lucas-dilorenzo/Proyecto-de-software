@@ -10,16 +10,16 @@ export interface Site {
   name: string
   city: string
   province: string
-  latitude: number  // 🔹 Agregado
-  longitude: number  // 🔹 Agregado
-  description?: string  // 🔹 Agregado
-  conservation_status?: string  // 🔹 Agregado
+  latitude: number // 🔹 Agregado
+  longitude: number // 🔹 Agregado
+  description?: string // 🔹 Agregado
+  conservation_status?: string // 🔹 Agregado
   rating?: number
   avg_rating?: number
   cover_url?: string
   cover_image?: string
-  tags?: string[]  // 🔹 Agregado
-  images?: SiteImage[]  // 🔹 Agregado
+  tags?: string[] // 🔹 Agregado
+  images?: SiteImage[] // 🔹 Agregado
 }
 
 // 🔹 Nueva interfaz para imágenes
@@ -132,10 +132,7 @@ export const SitesAPI = {
     return res.json()
   },
 
-  async favorites(params: {
-    page?: number
-    per_page?: number
-  }): Promise<PaginatedResponse<Site>> {
+  async favorites(params: { page?: number; per_page?: number }): Promise<PaginatedResponse<Site>> {
     const query = new URLSearchParams()
     if (params.page) query.set('page', String(params.page))
     if (params.per_page) query.set('per_page', String(params.per_page))

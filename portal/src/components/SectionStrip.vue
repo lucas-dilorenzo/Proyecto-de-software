@@ -27,7 +27,7 @@ import { useRouter } from 'vue-router'
 import SkeletonCard from './SkeletonCard.vue'
 import SiteCard from './SiteCard.vue'
 import { SitesAPI, type Site } from '@/services/api'
-import { logger } from '@/utils/logger'  // 🔹 Importar logger
+import { logger } from '@/utils/logger' // 🔹 Importar logger
 
 const props = defineProps<{
   title: string
@@ -56,19 +56,19 @@ async function fetchData() {
   try {
     loading.value = true
     error.value = ''
-    logger.log('📦 SectionStrip fetch:', props.title, props.sort)  // 🔹 Usar logger
+    logger.log('📦 SectionStrip fetch:', props.title, props.sort) // 🔹 Usar logger
 
     if (props.sort === 'favorites') {
       const res = await SitesAPI.favorites({ page: 1, per_page: 12 })
-      logger.log('✅ API /me/favorites:', res)  // 🔹 Usar logger
+      logger.log('✅ API /me/favorites:', res) // 🔹 Usar logger
       items.value = res.data || []
     } else {
       const res = await SitesAPI.list({ order_by: props.sort as any, per_page: 12 })
-      logger.log('✅ API /sites:', res)  // 🔹 Usar logger
+      logger.log('✅ API /sites:', res) // 🔹 Usar logger
       items.value = res.data || []
     }
   } catch (e: any) {
-    logger.error('❌ SectionStrip error:', e)  // 🔹 Usar logger
+    logger.error('❌ SectionStrip error:', e) // 🔹 Usar logger
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false

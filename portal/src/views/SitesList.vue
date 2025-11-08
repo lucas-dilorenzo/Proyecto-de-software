@@ -3,7 +3,12 @@
     <!-- Header con título y filtro -->
     <header class="d-flex justify-content-between align-items-baseline gap-3 mb-3">
       <h1 class="m-0">Listado de Sitios</h1>
-      <select v-model="orderBy" @change="reload()" class="form-select form-select-sm" style="width: auto;">
+      <select
+        v-model="orderBy"
+        @change="reload()"
+        class="form-select form-select-sm"
+        style="width: auto"
+      >
         <option value="latest">Recientes</option>
         <option value="rating-5-1">Mejor puntuados</option>
         <option value="rating-1-5">Peor puntuados</option>
@@ -13,9 +18,7 @@
 
     <section>
       <!-- Error -->
-      <div v-if="error" class="alert alert-danger" role="alert">
-        Error: {{ error }}
-      </div>
+      <div v-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
 
       <!-- Loading -->
       <div v-else-if="loading" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
@@ -48,7 +51,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SitesAPI, type Site } from '@/services/api'
-import { logger } from '@/utils/logger'  // 🔹 Importar logger
+import { logger } from '@/utils/logger' // 🔹 Importar logger
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import SiteCard from '@/components/SiteCard.vue'
 
@@ -76,23 +79,23 @@ async function fetchPage(p: number) {
   loading.value = true
   error.value = ''
   try {
-    logger.log('📦 SitesList fetchPage:', p, orderBy.value)  // 🔹 Usar logger
-    
+    logger.log('📦 SitesList fetchPage:', p, orderBy.value) // 🔹 Usar logger
+
     const res = await SitesAPI.list({
       order_by: orderBy.value as any,
       page: p,
       per_page: pageSize,
     })
-    
+
     const pageItems = res.data ?? []
     if (p === 1) items.value = pageItems
     else items.value = [...items.value, ...pageItems]
 
     hasMore.value = p * res.per_page < res.total
-    
-    logger.log('✅ SitesList loaded:', pageItems.length, 'items')  // 🔹 Usar logger
+
+    logger.log('✅ SitesList loaded:', pageItems.length, 'items') // 🔹 Usar logger
   } catch (e: any) {
-    logger.error('❌ SitesList error:', e)  // 🔹 Usar logger
+    logger.error('❌ SitesList error:', e) // 🔹 Usar logger
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
@@ -125,7 +128,7 @@ watch(
 )
 
 onMounted(() => {
-  logger.log('✅ SitesList mounted')  // 🔹 Usar logger
+  logger.log('✅ SitesList mounted') // 🔹 Usar logger
   reload()
 })
 </script>
