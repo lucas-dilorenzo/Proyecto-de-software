@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
 from . import api_bp
@@ -67,8 +67,28 @@ def list_sites():
     sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
     # ----- respuesta
-    data = [
-        {
+    # Leer configuración de MinIO desde config
+    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
+    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
+    minio_secure = current_app.config.get("MINIO_SECURE", False)
+    protocol = "https" if minio_secure else "http"
+
+    data = []
+    for s in sites:
+        # 🔹 Buscar imagen principal: la de menor order (0 o 1)
+        main_image = None
+        if s.images:
+            # Ordenar por 'order' y tomar la primera
+            sorted_images = sorted(s.images, key=lambda img: img.order if img.order is not None else 999)
+            main_image = sorted_images[0] if sorted_images else None
+
+        # Construir URL
+        cover_url = None
+        if main_image:
+            # El campo es 'url', no 'object_name'
+            cover_url = f"{protocol}://{minio_endpoint}/{bucket_name}/{main_image.url}"
+
+        data.append({
             "id": s.id,
             "name": s.name,
             "city": s.city,
@@ -76,10 +96,8 @@ def list_sites():
             "latitude": s.latitude,
             "longitude": s.longitude,
             "avg_rating": None,
-            "cover_image": None,
-        }
-        for s in sites
-    ]
+            "cover_image": cover_url,
+        })
 
     return jsonify({
         "data": data,
