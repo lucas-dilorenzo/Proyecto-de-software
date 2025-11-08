@@ -10,14 +10,28 @@ export interface Site {
   name: string
   city: string
   province: string
-  // el backend puede enviar cualquiera de estos
+  latitude: number  // 🔹 Agregado
+  longitude: number  // 🔹 Agregado
+  description?: string  // 🔹 Agregado
+  conservation_status?: string  // 🔹 Agregado
   rating?: number
   avg_rating?: number
   cover_url?: string
   cover_image?: string
+  tags?: string[]  // 🔹 Agregado
+  images?: SiteImage[]  // 🔹 Agregado
 }
 
-export interface ListResponse<T> {
+// 🔹 Nueva interfaz para imágenes
+export interface SiteImage {
+  id: number
+  url: string
+  titulo?: string
+  descripcion?: string
+  order?: number
+}
+
+export interface PaginatedResponse<T> {
   data: T[]
   page: number
   per_page: number
@@ -75,27 +89,60 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
 }
 
 export const SitesAPI = {
-  list({
-    order_by = 'latest',
-    page = 1,
-    per_page = 12,
-    name,
-    city,
-    province,
-  }: {
+  async list(params: {
+    name?: string
+    description?: string
+    city?: string
+    province?: string
+    tags?: string
+    lat?: number
+    long?: number
+    radius?: number
     order_by?: OrderBy
     page?: number
     per_page?: number
-    name?: string
-    city?: string
-    province?: string
-  }) {
-    return request<ListResponse<Site>>('/sites', {
-      params: { order_by, page, per_page, name, city, province },
-    })
+  }): Promise<PaginatedResponse<Site>> {
+    const query = new URLSearchParams()
+    if (params.name) query.set('name', params.name)
+    if (params.description) query.set('description', params.description)
+    if (params.city) query.set('city', params.city)
+    if (params.province) query.set('province', params.province)
+    if (params.tags) query.set('tags', params.tags)
+    if (params.lat !== undefined) query.set('lat', String(params.lat))
+    if (params.long !== undefined) query.set('long', String(params.long))
+    if (params.radius !== undefined) query.set('radius', String(params.radius))
+    if (params.order_by) query.set('order_by', params.order_by)
+    if (params.page) query.set('page', String(params.page))
+    if (params.per_page) query.set('per_page', String(params.per_page))
+
+    const url = `${API_BASE}/sites?${query}`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error('Error al obtener sitios')
+    return res.json()
   },
 
-  favorites({ page = 1, per_page = 12 }: { page?: number; per_page?: number }) {
-    return request<ListResponse<Site>>('/me/favorites', { params: { page, per_page }, auth: true })
+  // 🔹 Nuevo método para obtener un sitio por ID
+  async getById(id: number): Promise<Site> {
+    const url = `${API_BASE}/sites/${id}`
+    const res = await fetch(url)
+    if (!res.ok) {
+      if (res.status === 404) throw new Error('Sitio no encontrado')
+      throw new Error('Error al obtener el sitio')
+    }
+    return res.json()
+  },
+
+  async favorites(params: {
+    page?: number
+    per_page?: number
+  }): Promise<PaginatedResponse<Site>> {
+    const query = new URLSearchParams()
+    if (params.page) query.set('page', String(params.page))
+    if (params.per_page) query.set('per_page', String(params.per_page))
+
+    const url = `${API_BASE}/me/favorites?${query}`
+    const res = await fetch(url, { credentials: 'include' })
+    if (!res.ok) throw new Error('Error al obtener favoritos')
+    return res.json()
   },
 }

@@ -1,20 +1,33 @@
 <template>
-  <article class="site-card card" @click="$emit('open', site)">
-    <div class="thumb">
-      <img :src="imgSrc" :alt="site.name + ' - portada'" loading="lazy" @error="onImgError" />
+  <article class="card h-100 border-0 shadow-sm site-card" @click="$emit('open', site)">
+    <div class="card-img-top overflow-hidden" style="aspect-ratio: 16/9;">
+      <img 
+        :src="imgSrc" 
+        :alt="site.name + ' - portada'" 
+        class="w-100 h-100 object-fit-cover"
+        loading="lazy" 
+        @error="onImgError" 
+      />
     </div>
-    <div class="body">
-      <h3 class="name">{{ site.name }}</h3>
-      <p class="meta">{{ site.city }}, {{ site.province }}</p>
-      <p v-if="rating !== null" class="rating">★ {{ rating.toFixed(1) }}</p>
+    <div class="card-body p-3">
+      <h3 class="card-title h6 fw-semibold mb-2">{{ site.name }}</h3>
+      <p class="text-muted small mb-1">{{ site.city }}, {{ site.province }}</p>
+      <p v-if="rating !== null" class="mb-0 small">
+        <span class="text-warning">★</span> {{ rating.toFixed(1) }}
+      </p>
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { logger } from '@/utils/logger'
 
 const props = defineProps<{ site: any }>()
+
+defineEmits<{
+  open: [site: any]
+}>()
 
 const PLACEHOLDER = '/placeholder.svg'
 
@@ -24,12 +37,14 @@ watch(
   () => props.site,
   (newSite) => {
     imgSrc.value = newSite.cover_image || newSite.cover_url || PLACEHOLDER
+    logger.log('🔄 SiteCard updated:', newSite.name)
   },
   { deep: true },
 )
 
 function onImgError() {
   imgSrc.value = PLACEHOLDER
+  logger.log('⚠️ SiteCard image error, using placeholder')
 }
 
 const rating = computed(() => {
@@ -40,43 +55,16 @@ const rating = computed(() => {
 
 <style scoped>
 .site-card {
-  transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 .site-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
 }
-.thumb {
-  aspect-ratio: 16/9;
-  background: #f2f0ec;
-  border-radius: 10px 10px 0 0;
-  overflow: hidden;
-}
-.thumb img {
-  width: 100%;
-  height: 100%;
+
+.object-fit-cover {
   object-fit: cover;
-  display: block;
-}
-.body {
-  padding: 12px 14px;
-}
-.name {
-  font-size: 1.05rem;
-  line-height: 1.2;
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-.meta {
-  font-size: 0.9rem;
-  color: #6b7280;
-  margin: 0;
-}
-.rating {
-  font-size: 0.9rem;
-  margin-top: 8px;
-  color: #111;
 }
 </style>

@@ -1,46 +1,19 @@
 <template>
-  <article class="skeleton-card">
-    <div class="ph thumb"></div>
-    <div class="ph line w70"></div>
-    <div class="ph line w40"></div>
+  <article class="card h-100 border-0 shadow-sm">
+    <div class="card-img-top placeholder-glow">
+      <div class="placeholder col-12 rounded" style="aspect-ratio: 16/9;"></div>
+    </div>
+    <div class="card-body p-3">
+      <div class="placeholder-glow">
+        <span class="placeholder col-8 mb-2"></span>
+        <span class="placeholder col-6 placeholder-sm"></span>
+      </div>
+    </div>
   </article>
 </template>
 
-<script setup></script>
+<script setup lang="ts"></script>
 
 <style scoped>
-.skeleton-card {
-  border: 1px solid #eee;
-  border-radius: 12px;
-  overflow: hidden;
-  padding: 10px;
-  background: #fff;
-}
-.ph {
-  background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
-  animation: pulse 1.4s ease infinite;
-}
-.thumb {
-  aspect-ratio: 16/9;
-  border-radius: 8px;
-}
-.line {
-  height: 12px;
-  border-radius: 6px;
-  margin-top: 10px;
-}
-.w70 {
-  width: 70%;
-}
-.w40 {
-  width: 40%;
-}
-@keyframes pulse {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
+/* Bootstrap maneja todo el skeleton con placeholder-glow */
 </style>
