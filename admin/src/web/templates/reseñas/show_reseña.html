@@ -12,6 +12,34 @@
 
 {% block titulo_acciones_body %}
     <!-- Botones de acción según el estado y permisos -->
+    <div class="d-flex gap-2" style="margin-top: 6%;">
+        <!-- Botones de moderación para roles con permisos -->
+        {% if session['role'] == 'MODERATOR' or session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
+            {% if review.estado == 'pendiente' %}
+                <button type="button" class="btn btn-success" onclick="aprobarReseña('{{ review.id }}')">
+                    <i class="bi bi-check-circle"></i> Aprobar
+                </button>
+                <button type="button" class="btn btn-danger" onclick="rechazarReseña('{{ review.id }}')">
+                    <i class="bi bi-x-circle"></i> Rechazar
+                </button>
+            {% elif review.estado == 'rechazada' %}
+                <button type="button" class="btn btn-success" onclick="aprobarReseña('{{ review.id }}')">
+                    <i class="bi bi-check-circle"></i> Aprobar
+                </button>
+            {% elif review.estado == 'aprobada' %}
+                <button type="button" class="btn btn-danger" onclick="rechazarReseña('{{ review.id }}')">
+                    <i class="bi bi-x-circle"></i> Rechazar
+                </button>
+            {% endif %}
+        {% endif %}
+        
+        <!-- Botón Eliminar solo para ADMIN y SYS_ADMIN -->
+        {% if session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
+            <button type="button" class="btn btn-outline-danger" onclick="eliminarReseña('{{ review.id }}')">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        {% endif %}
+    </div>
 {% endblock %}
 
 {% block body %}
@@ -221,7 +249,7 @@ function rechazarReseña(reviewId) {
         title: '¿Rechazar esta reseña?',
         input: 'textarea',
         inputLabel: 'Motivo del rechazo',
-        inputPlaceholder: 'Escribe el motivo por el cual rechazas esta reseña...',
+        inputPlaceholder: 'Escribí el motivo por el cual rechazas esta reseña...',
         inputValidator: (value) => {
             if (!value) {
                 return 'Debes proporcionar un motivo para el rechazo';
@@ -281,6 +309,67 @@ function rechazarReseña(reviewId) {
                 Swal.fire(
                     'Error',
                     'Hubo un problema al rechazar la reseña',
+                    'error'
+                );
+            });
+        }
+    });
+}
+
+function eliminarReseña(reviewId) {
+    Swal.fire({
+        title: '¿Eliminar esta reseña?',
+        text: 'Esta acción no se puede deshacer. La reseña será eliminada permanentemente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Eliminando...',
+                text: 'Eliminando la reseña permanentemente',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para eliminar
+            fetch(`/reseñas/${reviewId}/eliminar`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Eliminada',
+                        'La reseña ha sido eliminada correctamente.',
+                        'success'
+                    ).then(() => {
+                        // Redirigir al listado ya que la reseña ya no existe
+                        window.location.href = '/reseñas/reseñas';
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al eliminar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al eliminar la reseña',
                     'error'
                 );
             });

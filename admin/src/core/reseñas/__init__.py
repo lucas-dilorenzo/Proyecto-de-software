@@ -28,7 +28,6 @@ def get_reviews_paginated(
     joinedload(Reseña.site)
 )
 
-    # Aplicar filtros basados en los parámetros proporcionados
     if estado:
         estado_q = estado.strip()
         if estado_q:
@@ -38,13 +37,13 @@ def get_reviews_paginated(
             query = query.filter(Reseña.site_id == site_id)
     if calificacion is not None:
         query = query.filter(Reseña.calificacion == calificacion)
-    # Filtrar por texto contenido en el email del usuario (case-insensitive)
     if usuario:
         user_q = usuario.strip()
         if user_q:
             q = f"%{user_q}%"
-            # Hacemos join con User para poder filtrar por su email
-            query = query.join(Reseña.user).filter(User.email.ilike(q))
+            query = query.join(User, Reseña.user_id == User.id).filter(
+                or_(User.nombre.ilike(q), User.apellido.ilike(q))
+            )
     if fecha_desde:
         try:
             s = fecha_desde.strip()
@@ -150,4 +149,26 @@ def rechazar_reseña(review_id, motivo_rechazo):
     except Exception as e:
         db.session.rollback()
         print(f"Error al rechazar reseña: {e}")
+        return False
+
+
+def eliminar_reseña(review_id):
+    """
+    Elimina permanentemente una reseña de la base de datos.
+    Args:
+        review_id (int): ID de la reseña a eliminar
+    Returns:
+        bool: True si se eliminó correctamente, False si no se encontró o hubo error
+    """
+    try:
+        review = get_review_by_id(review_id)
+        if not review:
+            return False
+            
+        db.session.delete(review)
+        db.session.commit()
+        return True
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al eliminar reseña: {e}")
         return False

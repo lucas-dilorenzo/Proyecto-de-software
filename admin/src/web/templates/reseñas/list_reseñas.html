@@ -24,7 +24,7 @@
                     <div class="col-md-2">
                         <label class="form-label">Estado</label>
                         <select name="estado" class="form-select">
-                            <option value="">(todos)</option>
+                            <option value="" disabled {% if not estado %}selected{% endif %}>Seleccionar estado</option>
                             {% for key, value in review_statuses.choices() %}
                                 <option value="{{ key }}" {% if estado==key %}selected{% endif %}>{{ value }}</option>
                             {% endfor %}
@@ -34,7 +34,7 @@
                     <div class="col-md-4">
                         <label class="form-label">Sitio</label>
                         <select name="site" class="form-select">
-                            <option value="">(todos)</option>
+                            <option value="" disabled {% if not site_id %}selected{% endif %}>Seleccionar sitio</option>
                             {% for site in all_sites %}
                                 <option value="{{ site.id }}" {% if site_id==site.id %}selected{% endif %}>{{ site.name }}</option>
                             {% endfor %}
@@ -44,7 +44,7 @@
                     <div class="col-md-2">
                         <label class="form-label">Calificación</label>
                         <select name="calificacion" class="form-select">
-                            <option value="">(todas)</option>
+                            <option value="" disabled {% if not calificacion %}selected{% endif %}>Seleccionar calificación</option>
                             {% for i in range(1, 6) %}
                                 <option value="{{ i }}" {% if calificacion|string == i|string %}selected{% endif %}>{{ i }}</option>
                             {% endfor %}
@@ -52,17 +52,17 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">Usuario (Email)</label>
-                        <input name="usuario" value="{{ usuario }}" class="form-control" placeholder="buscar usuario">
+                        <label class="form-label">Usuario</label>
+                        <input name="usuario" value="{{ usuario or '' }}" class="form-control" placeholder="Ingrese nombre o apellido">
                     </div>
 
                     <div class="col-md-2">
                         <label class="form-label">Fecha Desde</label>
-                        <input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="form-control">
+                        <input type="date" name="fecha_desde" id="fechaDesde" value="{{ fecha_desde or '' }}" class="form-control">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Fecha Hasta</label>
-                        <input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="form-control">
+                        <input type="date" name="fecha_hasta" id="fechaHasta" value="{{ fecha_hasta or '' }}" class="form-control">
                     </div>
 
                     <div class="col-2 d-flex justify-content-end align-items-end">
@@ -147,26 +147,38 @@
                         </td>
                         <td>{{ r.fecha_creacion.strftime("%d/%m/%Y") }}</td>
                         <td class="text-end">
-                            <div class="d-flex gap-1 justify-content-end">
+                            <div class="d-flex gap-0 justify-content-end">
                                 <!-- Botón Ver siempre visible -->
                                 <a href="{{ url_for('reseñas.show_review', review_id=r.id) }}" class="btn btn-icon" 
-                                   title="Ver detalles de la reseña" aria-label="Ver reseña">
+                                   title="Ver detalles de la reseña" aria-label="Ver reseña"
+                                   style="padding: 0.2rem 0.3rem; font-size: 0.7rem;">
                                     <i class="bi bi-eye"></i>
                                 </a>
+
+                                {% if session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN' %}
+                                    <button type="button" class="btn btn-icon text-white" 
+                                            onclick="eliminarReseñaRapida('{{ r.id }}')"
+                                            title="Eliminar reseña permanentemente" aria-label="Eliminar"
+                                            style="padding: 0.2rem 0.3rem; font-size: 0.7rem;">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                {% endif %}
                                 
-                                <!-- Botones de moderación solo para reseñas pendientes y usuarios con permisos -->
                                 {% if r.estado == 'pendiente' and (session['role'] == 'MODERATOR' or session['role'] == 'ADMIN' or session['role'] == 'SYS_ADMIN') %}
                                     <button type="button" class="btn btn-icon text-success" 
                                             onclick="aprobarReseñaRapida('{{ r.id }}')"
-                                            title="Aprobar reseña" aria-label="Aprobar">
+                                            title="Aprobar reseña" aria-label="Aprobar"
+                                            style="padding: 0.2rem 0.3rem; font-size: 0.7rem;">
                                         <i class="bi bi-check-circle"></i>
                                     </button>
                                     <button type="button" class="btn btn-icon text-danger" 
                                             onclick="rechazarReseñaRapida('{{ r.id }}')"
-                                            title="Rechazar reseña" aria-label="Rechazar">
+                                            title="Rechazar reseña" aria-label="Rechazar"
+                                            style="padding: 0.2rem 0.3rem; font-size: 0.7rem;">
                                         <i class="bi bi-x-circle"></i>
                                     </button>
                                 {% endif %}
+                                
                             </div>
                         </td>
                     </tr>                
@@ -290,7 +302,7 @@ function rechazarReseñaRapida(reviewId) {
         title: '¿Rechazar esta reseña?',
         input: 'textarea',
         inputLabel: 'Motivo del rechazo',
-        inputPlaceholder: 'Escribe el motivo por el cual rechazas esta reseña...',
+        inputPlaceholder: 'Escribí el motivo por el cual rechazas esta reseña...',
         inputValidator: (value) => {
             if (!value) {
                 return 'Debes proporcionar un motivo para el rechazo';
@@ -356,5 +368,151 @@ function rechazarReseñaRapida(reviewId) {
         }
     });
 }
+
+function eliminarReseñaRapida(reviewId) {
+    Swal.fire({
+        title: '¿Eliminar esta reseña?',
+        text: 'Esta acción no se puede deshacer. La reseña será eliminada permanentemente.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        focusCancel: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loading mientras se procesa
+            Swal.fire({
+                title: 'Eliminando...',
+                text: 'Eliminando la reseña permanentemente',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            
+            // Llamar al endpoint para eliminar
+            fetch(`/reseñas/${reviewId}/eliminar`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire(
+                        'Eliminada',
+                        'La reseña ha sido eliminada correctamente.',
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire(
+                        'Error',
+                        data.message || 'Error al eliminar la reseña',
+                        'error'
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire(
+                    'Error',
+                    'Hubo un problema al eliminar la reseña',
+                    'error'
+                );
+            });
+        }
+    });
+}
+
+// Validación de rangos de fechas
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaDesde = document.getElementById('fechaDesde');
+    const fechaHasta = document.getElementById('fechaHasta');
+
+    function validarRangoFechas() {
+        if (fechaDesde.value && fechaHasta.value) {
+            const desde = new Date(fechaDesde.value);
+            const hasta = new Date(fechaHasta.value);
+
+            if (desde > hasta) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function actualizarLimiteFechas() {
+        // Si hay fecha desde, la fecha hasta no puede ser menor
+        if (fechaDesde.value) {
+            fechaHasta.setAttribute('min', fechaDesde.value);
+        } else {
+            fechaHasta.removeAttribute('min');
+        }
+
+        // Si hay fecha hasta, la fecha desde no puede ser mayor
+        if (fechaHasta.value) {
+            fechaDesde.setAttribute('max', fechaHasta.value);
+        } else {
+            fechaDesde.removeAttribute('max');
+        }
+    }
+
+    // Evento cuando cambia la fecha desde
+    fechaDesde.addEventListener('change', function() {
+        actualizarLimiteFechas();
+        
+        // Si el rango es inválido, limpiar fecha hasta y mostrar mensaje
+        if (!validarRangoFechas()) {
+            fechaHasta.value = '';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha inválida',
+                text: 'La fecha desde no puede ser mayor que la fecha hasta',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
+
+    // Evento cuando cambia la fecha hasta
+    fechaHasta.addEventListener('change', function() {
+        actualizarLimiteFechas();
+        
+        // Si el rango es inválido, limpiar fecha desde y mostrar mensaje
+        if (!validarRangoFechas()) {
+            fechaDesde.value = '';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Fecha inválida',
+                text: 'La fecha hasta no puede ser menor que la fecha desde',
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+    });
+
+    // Validación al enviar el formulario
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validarRangoFechas()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Rango de fechas inválido',
+                    text: 'Por favor, corrija el rango de fechas antes de continuar'
+                });
+            }
+        });
+    }
+
+    // Inicializar límites al cargar la página
+    actualizarLimiteFechas();
+});
 </script>
 {% endblock %}

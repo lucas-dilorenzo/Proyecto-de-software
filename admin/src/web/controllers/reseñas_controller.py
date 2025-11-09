@@ -1,19 +1,23 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, session
 from src.core.reseñas import (
-    get_reviews_paginated, get_review_by_id, aprobar_reseña, rechazar_reseña
+    get_reviews_paginated, get_review_by_id, aprobar_reseña, rechazar_reseña, eliminar_reseña
 )
 from src.core.historicalSites import get_all_sites
 from src.core.reseñas.estadoReseña import estadoReseña
+from src.core.permissions.permission import UserPermission
 from src.web.helpers import login_required
+from src.web.auth import permission_required
 
 
 reseñas_bp = Blueprint("reseñas", __name__, url_prefix="/reseñas")
 
-# @reseñas_bp.before_request
-# @permission_required(UserPermission.REVIEW_MODERATE)
-# def bp_guard():
-#     """Blueprint guard to check permissions before each request."""
-#     pass
+@reseñas_bp.before_request
+@permission_required(UserPermission.REVIEW_MODERATE)
+def bp_guard():
+    """Blueprint guard to check permissions before each request."""
+    user_role = session.get("role")
+    user_id = session.get("user")
+    pass
 
 @reseñas_bp.route("/reseñas", methods=["GET"])
 @login_required
@@ -60,7 +64,6 @@ def list_reseñas():
 
     current_query = {}
     for k in request.args:
-        # Excluimos 'page', 'order_by', 'order_dir' y los parámetros vacíos
         if k not in ['page', 'order_by', 'order_dir'] and request.args.get(k):
             current_query[k] = request.args.get(k)
             
@@ -69,7 +72,7 @@ def list_reseñas():
         reviews=reviews_paginated,
         pagination=reviews_paginated, 
         
-        # Parámetros de filtrado para mantener el estado del formulario
+        # Parámetros de filtrado 
         estado=estado,
         site_id=site_id,
         calificacion=calificacion,
@@ -107,10 +110,6 @@ def approve_review(review_id):
     Args:
         review_id (int): ID de la reseña a aprobar.
     """
-    # Verificar permisos (solo MODERATOR, ADMIN, SYS_ADMIN pueden aprobar)
-    if session.get('role') not in ['MODERATOR', 'ADMIN', 'SYS_ADMIN']:
-        return jsonify({'success': False, 'message': 'No tienes permisos para aprobar reseñas'}), 403
-    
     success = aprobar_reseña(review_id)
     
     if success:
@@ -129,9 +128,6 @@ def reject_review(review_id):
     Args:
         review_id (int): ID de la reseña a rechazar.
     """
-    # falta verificar permisos (solo MODERATOR, ADMIN, SYS_ADMIN pueden rechazar)
-    if session.get('role') not in ['MODERATOR', 'ADMIN', 'SYS_ADMIN']:
-        return jsonify({'success': False, 'message': 'No tienes permisos para rechazar reseñas'}), 403
     
     data = request.get_json()
     motivo_rechazo = data.get('motivo', '').strip()
@@ -150,3 +146,25 @@ def reject_review(review_id):
     else:
         flash('Error al rechazar la reseña', 'error')
         return jsonify({'success': False, 'message': 'Error al rechazar la reseña'}), 500
+
+
+@reseñas_bp.route("/<int:review_id>/eliminar", methods=["DELETE"])
+@login_required
+def delete_review(review_id):
+    """
+    Elimina permanentemente una reseña específica.
+    Args:
+        review_id (int): ID de la reseña a eliminar.
+    """
+    # Verificar permisos (solo ADMIN y SYS_ADMIN pueden eliminar)
+    if session.get('role') not in ['ADMIN', 'SYS_ADMIN']:
+        return jsonify({'success': False, 'message': 'No tienes permisos para eliminar reseñas'}), 403
+    
+    success = eliminar_reseña(review_id)
+    
+    if success:
+        flash('Reseña eliminada correctamente', 'success')
+        return jsonify({'success': True, 'message': 'Reseña eliminada correctamente'})
+    else:
+        flash('Error al eliminar la reseña', 'error')
+        return jsonify({'success': False, 'message': 'Error al eliminar la reseña'}), 500
