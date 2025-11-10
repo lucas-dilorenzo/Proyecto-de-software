@@ -5,6 +5,74 @@
 {% endblock %}
 
 {% block body %}
+
+  <!-- Primera columna: Filtros avanzados -->
+  <div class="col-4">
+    <button type="button" id="toggle-filters" class="btn btn-outline-secondary">
+      <i class="bi bi-funnel"></i>Filtros avanzados 
+    </button>
+  </div>
+  <!-- Filtros -->
+<div id="advanced-filters" class="card shadow-sm border-0 rounded-0 bg-white" style="display: none;">
+  <div class="card-body">
+    <div class="row">
+      <form method="get" class="row g-2 mb-4">
+        <div class="row">
+        <!-- Usuario -->
+        <div class="col-3">
+          <select name="user" class="form-select">
+            <option value="">Usuario: todos</option>
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if request.args.get('user')|int == user.id %}selected{% endif %}>
+              {{ user.nombre }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <!-- Acción -->
+        <div class="col-3">
+          <select name="action" class="form-select">
+            <option value="">Acción: todas</option>
+            {% for action in actions %}
+            <option value="{{ action }}" {% if request.args.get('action')==action %}selected{% endif %}>{{ action }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        </div>
+        
+        <div class="row">
+        <!-- Fechas de registro -->
+        <div class="col-3" style="margin-top: 1.5rem;">
+          <label for="date_from" class="form-label">Desde</label>
+          <input type="date" id="date_from" name="date_from" class="form-control" value="{{ date_from or '' }}">
+        </div>
+        <div class="col-3" style="margin-top: 1.5rem;">
+          <label for="date_to" class="form-label">Hasta</label>
+          <input type="date" id="date_to" name="date_to" class="form-control" value="{{ date_to or '' }}">
+        </div>
+        </div>
+        <div class="row">
+          <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+            <button type="submit" class="btn btn-azul d-flex align-items-center justify-content-center gap-2 shadow">
+              Buscar <i class="bi bi-search small"></i>
+            </button>
+          </div>
+          {% if has_filters %}
+          <div class="col-3 d-flex justify-content-end align-items-center" style="margin-top: 2rem;">
+            <a href="{{ url_for('sites.show_site_history', site_id=site.id) }}"
+              class="btn btn-limpiar d-flex align-items-center justify-content-center gap-2 shadow" style="width: 90%;">
+              Limpiar <i class="bi bi-x-circle small"></i>
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="row align-items-center mb-3"></div>
+  <!-- Contenedor para listar modificaciones -->
   <div class="card shadow-sm border-0 rounded-0 bg-white">
     <div class="card-body">
       {% if logs %}
@@ -44,6 +112,8 @@
     </div>
   </div>
 
+  
+
   <div class="col-2 justify-content-start" style="margin-top: 2%">
     {% if not site.deleted %}
     <a href="{{ url_for('sites.list_sites') }}" class="btn btn-azul">
@@ -58,3 +128,54 @@
 
   </div>
 {% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    
+    // Toggle para mostrar/ocultar filtros avanzados
+    const toggleButton = document.getElementById('toggle-filters');
+    const filtersContainer = document.getElementById('advanced-filters');
+
+    if (toggleButton && filtersContainer) {
+      toggleButton.addEventListener('click', function () {
+        if (filtersContainer.style.display === 'none') {
+          filtersContainer.style.display = 'block';
+          toggleButton.innerHTML = '<i class="bi bi-funnel-fill"></i> Ocultar filtros';
+        } else {
+          filtersContainer.style.display = 'none';
+          toggleButton.innerHTML = '<i class="bi bi-funnel"></i> Filtros avanzados';
+        }
+      });
+    }
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dateFrom = document.getElementById("date_from");
+    const dateTo = document.getElementById("date_to");
+    const form = document.querySelector("form");
+
+    // Cuando cambia la fecha "desde", ajusta el mínimo de "hasta"
+    dateFrom.addEventListener("change", function () {
+      dateTo.min = this.value;
+      if (dateTo.value && dateTo.value < this.value) {
+        dateTo.value = ""; // Limpia el campo si quedó inconsistente
+      }
+    });
+
+    // Validación antes de enviar el formulario
+    form.addEventListener("submit", function (event) {
+      if (dateFrom.value && dateTo.value && dateTo.value < dateFrom.value) {
+        event.preventDefault();
+        alert("La fecha 'hasta' no puede ser anterior a la fecha 'desde'.");
+      }
+    });
+  });
+</script>
+{% endblock %}
+

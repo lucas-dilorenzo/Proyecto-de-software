@@ -1,4 +1,4 @@
-from flask import jsonify, request
+from flask import jsonify, request, current_app
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
 from . import api_bp
@@ -67,8 +67,28 @@ def list_sites():
     sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
     # ----- respuesta
-    data = [
-        {
+    # Leer configuración de MinIO desde config
+    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
+    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
+    minio_secure = current_app.config.get("MINIO_SECURE", False)
+    protocol = "https" if minio_secure else "http"
+
+    data = []
+    for s in sites:
+        # 🔹 Buscar imagen principal: la de menor order (0 o 1)
+        main_image = None
+        if s.images:
+            # Ordenar por 'order' y tomar la primera
+            sorted_images = sorted(s.images, key=lambda img: img.order if img.order is not None else 999)
+            main_image = sorted_images[0] if sorted_images else None
+
+        # Construir URL
+        cover_url = None
+        if main_image:
+            # El campo es 'url', no 'object_name'
+            cover_url = f"{protocol}://{minio_endpoint}/{bucket_name}/{main_image.url}"
+
+        data.append({
             "id": s.id,
             "name": s.name,
             "city": s.city,
@@ -76,14 +96,55 @@ def list_sites():
             "latitude": s.latitude,
             "longitude": s.longitude,
             "avg_rating": None,
-            "cover_image": None,
-        }
-        for s in sites
-    ]
+            "cover_image": cover_url,
+        })
 
     return jsonify({
         "data": data,
         "page": page,
         "per_page": per_page,
         "total": total,
+    })
+
+@api_bp.route("/sites/<int:site_id>", methods=["GET"])
+def get_site(site_id):
+    """
+    GET /api/sites/:id
+    Devuelve un sitio específico con todas sus imágenes y datos.
+    """
+    # 🔹 Usar SQLAlchemy directamente en lugar del módulo
+    site = db.session.query(Site).filter_by(id=site_id, deleted=False, visibility=True).first()
+    
+    if not site:
+        return jsonify({"error": "Sitio no encontrado"}), 404
+    
+    # Construir URLs de imágenes desde MinIO
+    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
+    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
+    minio_secure = current_app.config.get("MINIO_SECURE", False)
+    protocol = "https" if minio_secure else "http"
+    
+    images = []
+    for img in sorted(site.images, key=lambda x: x.order if x.order is not None else 999):
+        images.append({
+            "id": img.id,
+            "url": f"{protocol}://{minio_endpoint}/{bucket_name}/{img.url}",
+            "titulo": img.titulo,
+            "descripcion": img.descripcion,
+            "order": img.order,
+        })
+    
+    # Construir respuesta
+    return jsonify({
+        "id": site.id,
+        "name": site.name,
+        "description": site.description,
+        "city": site.city,
+        "province": site.province,
+        "latitude": float(site.latitude) if site.latitude else None,
+        "longitude": float(site.longitude) if site.longitude else None,
+        "conservation_status": site.conservation_status,
+        "avg_rating": None,  # TODO: calcular promedio real de ratings
+        "tags": [tag.name for tag in site.tags] if site.tags else [],
+        "images": images,
     })

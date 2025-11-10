@@ -6,6 +6,7 @@ from src.core.historicalSites.tags import get_all_tags
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 from src.core import images
 from datetime import datetime
+from datetime import date, datetime, time
 from flask import (
     Blueprint,
     Response,
@@ -249,8 +250,27 @@ def show_site_history(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
+    
+    # filtros elegidos desde query
+    user_filtrado = request.args.get("user", "", type=str)
+    action_filtrado = request.args.get("action", "", type=str)
+    fecha_desde_filtrado = request.args.get("date_from", "", type=str)
+    fecha_hasta_filtrado = request.args.get("date_to", "", type=str)
 
-    logs = historicalSites.get_site_logs(site_id)
+    # diccionario sobre si los filtros para usar como comprobación
+    has_filters = any (
+        [
+            user_filtrado,
+            action_filtrado,
+            fecha_desde_filtrado,
+            fecha_hasta_filtrado
+        ]
+    )
+
+    # otros parametros 
+    all_actions = historicalSites.get_all_log_actions(site_id=site_id)  # Filtrar acciones por sitio
+    all_users = historicalSites.get_site_log_users(site_id=site_id) #test
+    logs = historicalSites.get_site_logs(site_id, user_filtrado, action_filtrado, fecha_desde_filtrado, fecha_hasta_filtrado)
 
     # Normalizar 'details' para render
     for l in logs:
@@ -276,8 +296,18 @@ def show_site_history(site_id):
                     new = change
                 display_changes.append((field, old, new))
         setattr(l, "parsed_changes", display_changes)
-
-    return render_template("historicalSites/site_history.html", site=site, logs=logs)
+   
+    return render_template(
+        "historicalSites/site_history.html",
+        site=site,
+        logs=logs,
+        actions=all_actions,
+        users=all_users,
+        has_filters=has_filters,
+        date_from=fecha_desde_filtrado,
+        date_to=fecha_hasta_filtrado,
+        
+    )
 
 
 @historical_sites_bp.route("/create", methods=["GET", "POST"])

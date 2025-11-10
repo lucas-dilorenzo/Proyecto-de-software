@@ -1,63 +1,41 @@
 <template>
-  <section class="hero card">
-    <div class="wrap">
-      <h1 class="title h1">Sitios Históricos</h1>
-      <p class="subtitle subtle">Descubrí lugares destacados y experiencias cerca tuyo.</p>
-      <form @submit.prevent="goSearch" class="search">
-        <input v-model.trim="q" type="search" placeholder="Buscar sitios…" />
-        <button class="btn">Buscar</button>
-      </form>
+  <section class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-4 py-md-5 px-3 px-md-4">
+      <div class="text-center mx-auto" style="max-width: 880px">
+        <h1 class="display-5 fw-bold mb-2">Sitios Históricos</h1>
+        <p class="text-muted mb-4">Descubrí lugares destacados y experiencias cerca tuyo.</p>
+
+        <form @submit.prevent="goSearch" class="d-flex gap-2 justify-content-center">
+          <input
+            v-model.trim="q"
+            type="search"
+            placeholder="Buscar sitios…"
+            class="form-control form-control-lg"
+            style="max-width: 640px"
+          />
+          <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+        </form>
+      </div>
     </div>
   </section>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { logger } from '@/utils/logger'
+
 const q = ref('')
 const router = useRouter()
+
 function goSearch() {
+  if (!q.value.trim()) return
+
+  logger.log('🔍 HeroSearch: searching for', q.value)
   router.push({ name: 'sites-list', query: { q: q.value } })
 }
 </script>
 
 <style scoped>
-.hero {
-  background: var(--card);
-  border: 1px solid #eae6df;
-  padding: 32px 18px;
-}
-.wrap {
-  max-width: 880px;
-  margin: 0 auto;
-  text-align: center;
-}
-.title {
-  margin: 0 0 6px;
-}
-.subtitle {
-  margin: 0 0 18px;
-}
-.search {
-  display: flex;
-  gap: 10px;
-  justify-content: center;
-}
-.search input {
-  flex: 1;
-  max-width: 640px;
-  padding: 12px 14px;
-  border: none;
-  border-bottom: 2px solid #d9d4cc;
-  background: #f9f7f4;
-  border-radius: 10px;
-}
-.search input:focus {
-  outline: none;
-  border-bottom-color: #b1a99d;
-  background: #fff;
-}
-.btn {
-  padding: 12px 16px;
-}
+/* Estilos mínimos, Bootstrap maneja el resto */
 </style>

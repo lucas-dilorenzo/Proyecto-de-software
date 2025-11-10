@@ -1,16 +1,14 @@
 <template>
-  <main class="container" style="padding-top: 16px">
-    <header
-      style="
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        gap: 12px;
-        margin-bottom: 16px;
-      "
-    >
-      <h1 style="margin: 0">Listado de Sitios</h1>
-      <select v-model="orderBy" @change="reload()" class="select">
+  <main class="container py-3">
+    <!-- Header con título y filtro -->
+    <header class="d-flex justify-content-between align-items-baseline gap-3 mb-3">
+      <h1 class="m-0">Listado de Sitios</h1>
+      <select
+        v-model="orderBy"
+        @change="reload()"
+        class="form-select form-select-sm"
+        style="width: auto"
+      >
         <option value="latest">Recientes</option>
         <option value="rating-5-1">Mejor puntuados</option>
         <option value="rating-1-5">Peor puntuados</option>
@@ -19,25 +17,31 @@
     </header>
 
     <section>
-      <div v-if="error" class="subtle">Error: {{ error }}</div>
+      <!-- Error -->
+      <div v-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
 
-      <div v-else-if="loading" class="grid">
-        <SkeletonCard v-for="i in 8" :key="i" />
+      <!-- Loading -->
+      <div v-else-if="loading" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div class="col" v-for="i in 8" :key="i">
+          <SkeletonCard />
+        </div>
       </div>
 
-      <div v-else-if="items.length === 0" class="subtle" style="text-align: center">
+      <!-- No results -->
+      <div v-else-if="items.length === 0" class="text-center text-muted py-5">
         No hay resultados
       </div>
 
-      <div v-else class="grid">
-        <SiteCard v-for="s in items" :key="s.id" :site="s" @open="openDetail" />
+      <!-- Results grid -->
+      <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div class="col" v-for="s in items" :key="s.id">
+          <SiteCard :site="s" @open="openDetail" />
+        </div>
       </div>
 
-      <div
-        v-if="!loading && hasMore"
-        style="display: flex; justify-content: center; margin-top: 16px"
-      >
-        <button class="btn" @click="loadMore">Cargar más</button>
+      <!-- Load more button -->
+      <div v-if="!loading && hasMore" class="d-flex justify-content-center mt-4">
+        <button class="btn btn-outline-primary" @click="loadMore">Cargar más</button>
       </div>
     </section>
   </main>
@@ -47,6 +51,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SitesAPI, type Site } from '@/services/api'
+import { logger } from '@/utils/logger' // 🔹 Importar logger
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import SiteCard from '@/components/SiteCard.vue'
 
@@ -74,19 +79,23 @@ async function fetchPage(p: number) {
   loading.value = true
   error.value = ''
   try {
+    logger.log('📦 SitesList fetchPage:', p, orderBy.value) // 🔹 Usar logger
+
     const res = await SitesAPI.list({
-      order_by: orderBy.value as any, // 'latest' | 'rating-5-1' | ...
+      order_by: orderBy.value as any,
       page: p,
       per_page: pageSize,
-      // name: q.value || undefined,  // si tu API soporta búsqueda por nombre
     })
+
     const pageItems = res.data ?? []
     if (p === 1) items.value = pageItems
     else items.value = [...items.value, ...pageItems]
 
-    // hasMore con total oficial:
     hasMore.value = p * res.per_page < res.total
+
+    logger.log('✅ SitesList loaded:', pageItems.length, 'items') // 🔹 Usar logger
   } catch (e: any) {
+    logger.error('❌ SitesList error:', e) // 🔹 Usar logger
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
@@ -118,5 +127,12 @@ watch(
   },
 )
 
-onMounted(() => reload())
+onMounted(() => {
+  logger.log('✅ SitesList mounted') // 🔹 Usar logger
+  reload()
+})
 </script>
+
+<style scoped>
+/* Sin estilos custom necesarios */
+</style>
