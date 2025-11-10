@@ -34,7 +34,6 @@ def list_sites():
     page = request.args.get("page", type=int, default=1)
     per_page = request.args.get("per_page", type=int, default=12)
 
-    # 🔹 Validación de dependencias entre parámetros
     if (lat is not None or lng is not None) and radius_km is None:
         raise ValidationError(
             message="Geographic search requires lat, long, and radius parameters",
