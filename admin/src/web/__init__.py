@@ -74,7 +74,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     database.init_app(app)
 
     # Inicializar almacenamiento (MinIO)
-    # storage.init_app(app)
+    storage.init_app(app)
 
     # Protección CSRF
     csrf = CSRFProtect(app)
