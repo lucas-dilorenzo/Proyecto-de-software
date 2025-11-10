@@ -19,7 +19,7 @@ defineProps<{ title?: string }>()
   </header>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .app-toolbar {
   height: 56px;
   display: flex;
@@ -32,4 +32,4 @@ defineProps<{ title?: string }>()
   z-index: 40;
 }
 .app-toolbar .left h2 { margin: 0; font-size: 1.1rem }
-</style>
+</style> -->

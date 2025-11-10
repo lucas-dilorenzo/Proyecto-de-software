@@ -24,19 +24,23 @@ function onDelete(e: Event) {
 </script>
 
 <template>
-  <li class="sitio-item" @click="onSelect">
-    <div class="info">
-      <strong>{{ sitio.nombre }}</strong>
+  <li class="sitio-item list-group-item d-flex justify-content-between align-items-start" @click="onSelect">
+    <div class="info ms-2 me-auto">
+      <div class="fw-bold">
+        {{ sitio.nombre }}
+      </div>
       <div class="descripcion">{{ sitio.descripcion }}</div>
     </div>
     <div class="actions">
-      <button type="button" @click="onEdit" aria-label="Editar">Editar</button>
-      <button type="button" @click="onDelete" aria-label="Eliminar">Eliminar</button>
+      <div class="btn-group" role="group" aria-label="Basic outlined example">
+        <button class="btn btn-sm btn-outline-secondary" type="button" @click="onEdit" aria-label="Editar">Editar</button>
+        <button class="btn btn-sm btn-outline-danger" type="button" @click="onDelete" aria-label="Eliminar">Eliminar</button>
+      </div>
     </div>
   </li>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .sitio-item {
   display: flex;
   justify-content: space-between;
@@ -51,4 +55,4 @@ function onDelete(e: Event) {
 .descripcion { color: #666; font-size: 0.9em }
 .actions { display: flex; gap: 8px }
 .actions button { padding: 4px 8px; font-size: 0.9em }
-</style>
+</style> -->

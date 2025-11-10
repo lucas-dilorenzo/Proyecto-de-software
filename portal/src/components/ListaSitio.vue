@@ -18,7 +18,7 @@ function onDelete(id: number) { emit('delete', id) }
 <template>
   <div class="listado-sitios">
     <h1>Listado de Sitios</h1>
-    <ul>
+    <ul class="lista-sitios list-group ">
       <SitioItem
         v-for="sitio in sitios"
         :key="sitio.id"
@@ -30,10 +30,10 @@ function onDelete(id: number) { emit('delete', id) }
     </ul>
   </div>
 </template>
-<style scoped>
+<!-- <style scoped>
 .listado-sitios {
   padding: 20px;
   background-color: #1b221a;
   border: 1px solid #676767;
 }
-</style>
+</style> -->

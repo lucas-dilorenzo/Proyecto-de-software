@@ -29,7 +29,7 @@ import Toolbar from './components/shared/AppToolbar.vue'
   </div>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .navbar-brand { 
   font-weight: 600;
 }
@@ -39,4 +39,4 @@ import Toolbar from './components/shared/AppToolbar.vue'
     flex-direction: column !important;
   }
 }
-</style>
+</style> -->

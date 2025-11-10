@@ -30,7 +30,7 @@ function toggle() {
       <slot>
         <ul class="nav nav-pills flex-column mb-auto">
           <li class="nav-item">
-            <router-link to="/" class="nav-link text-white" active-class="active" aria-current="page">
+            <router-link :to="{ name: 'home' }" class="nav-link text-white" active-class="active" aria-current="page">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-door me-2" viewBox="0 0 16 16">
                 <path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.354 1.146zM2.5 14V7.707l5.5-5.5 5.5 5.5V14H10v-4a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v4H2.5z"/>
               </svg>
@@ -38,16 +38,7 @@ function toggle() {
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/about" class="nav-link text-white" active-class="active">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle me-2" viewBox="0 0 16 16">
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-              </svg>
-              About
-            </router-link>
-          </li>
-          <li class="nav-item">
-            <router-link to="/listado" class="nav-link text-white" active-class="active">
+            <router-link :to="{ name: 'listado-sitios' }" class="nav-link text-white" active-class="active">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-list-ul me-2" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
               </svg>
@@ -75,7 +66,7 @@ function toggle() {
   </aside>
 </template>
 
-<style scoped>
+<!-- <style scoped>
 .app-sidebar {
   width: 280px;
   background-color: #212529;
@@ -135,4 +126,4 @@ function toggle() {
 .overflow-auto::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.3);
 }
-</style>
+</style> -->

@@ -15,10 +15,10 @@ const sitios = ref([
 ])
 </script>
 
-<style scoped>
+<!-- <style scoped>
 .listado-sitios {
     padding: 20px;
     background-color: #1d3221;
     border: 1px solid #68816c;
 }
-</style>    
+</style>     -->
