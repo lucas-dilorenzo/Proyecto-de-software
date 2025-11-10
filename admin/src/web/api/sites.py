@@ -185,7 +185,7 @@ def get_site(site_id):
     })
 
 
-@api_bp.route("/sites/test-500", methods=["GET"])
-def test_server_error():
-    """🔥 Endpoint temporal para testear error 500"""
-    raise Exception("Simulated server error")
+@api_bp.route("/sites/<path:invalid_id>", methods=["GET"])
+def catch_invalid_site_id(invalid_id):
+    """Captura rutas /api/sites/... que no son enteros"""
+    raise NotFoundError(message="Invalid site ID format")

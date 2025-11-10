@@ -56,8 +56,3 @@ def handle_unexpected_exception(error):
 
 # Importar rutas después de definir error handlers
 from . import sites
-
-@api_bp.route("/sites/<path:invalid_id>", methods=["GET"])
-def catch_invalid_site_id(invalid_id):
-    """Captura rutas /api/sites/... que no son enteros"""
-    raise NotFoundError(message="Invalid site ID format")
