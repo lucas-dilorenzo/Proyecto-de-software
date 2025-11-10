@@ -62,6 +62,29 @@ block titulo_body %}
         style="padding: 1rem"
       >
         <div class="card-body">
+          {% if site.images %}
+          <div class="row">
+            <div class="col-md-12 mb-4">
+              <div class="card text-bg-dark">
+                <img
+                  src="{{ image_url(get_main_image(site.id).url) }}"
+                  class="card-img"
+                  alt="Imagen principal de {{ site.name }}"
+                  style="max-height: 500px; object-fit: cover; filter: brightness(0.7);"
+                />
+                <div class="card-img-overlay d-flex flex-column justify-content-end">
+                  {% if get_main_image(site.id).titulo %}
+                  <h5 class="card-title fs-3 fw-bold text-white">{{ get_main_image(site.id).titulo }}</h5>
+                  {% endif %}
+                  {% if site.images[0].descripcion %}
+                  <p class="card-text fs-5">{{ get_main_image(site.id).descripcion }}</p>
+                  {% endif %}
+                  <p class="card-text"><small>{{ site.name }}</small></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
           <div class="row">
             <div class="col-md-8">
               <label class="form-label fw-semibold fs-5 mb-2 text-primary">
@@ -124,6 +147,37 @@ block titulo_body %}
               </p>
             </div>
           </div>
+          {% if get_secondary_image_urls(site.id) %}
+          <div class="row mt-4">
+            <div class="col-md-12">
+              <label class="form-label fw-semibold fs-5 mb-3 text-primary">
+                <i class="bi bi-images me-2"></i>Más Imágenes
+              </label>
+              <div class="row row-cols-1 row-cols-md-2 g-4">
+                {% for image in get_secondary_image_urls(site.id) %}
+                <div class="col">
+                  <div class="card h-100">
+                    <img
+                      src="{{ image_url(image.url) }}"
+                      class="card-img-top"
+                      alt="{{ image.titulo or 'Imagen del sitio' }}"
+                      style="height: 250px; object-fit: cover"
+                    />
+                    <div class="card-body">
+                      {% if image.titulo %}
+                      <h5 class="card-title">{{ image.titulo }}</h5>
+                      {% endif %}
+                      {% if image.descripcion %}
+                      <p class="card-text">{{ image.descripcion }}</p>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>

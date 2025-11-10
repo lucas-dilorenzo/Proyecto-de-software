@@ -4,7 +4,9 @@ from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
 from src.core.historicalSites.tags import get_all_tags
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
+from src.core import images
 from datetime import datetime
+from datetime import date, datetime, time
 from flask import (
     Blueprint,
     Response,
@@ -15,12 +17,14 @@ from flask import (
     abort,
     flash,
     session,
+    current_app,
 )
 import csv
 import json
 from src.web.helpers import login_required
 from urllib.parse import urlparse, parse_qs
 from werkzeug.datastructures import MultiDict
+from os import fstat
 
 
 # --------------------------------------------------------------------
@@ -246,8 +250,27 @@ def show_site_history(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
+    
+    # filtros elegidos desde query
+    user_filtrado = request.args.get("user", "", type=str)
+    action_filtrado = request.args.get("action", "", type=str)
+    fecha_desde_filtrado = request.args.get("date_from", "", type=str)
+    fecha_hasta_filtrado = request.args.get("date_to", "", type=str)
 
-    logs = historicalSites.get_site_logs(site_id)
+    # diccionario sobre si los filtros para usar como comprobación
+    has_filters = any (
+        [
+            user_filtrado,
+            action_filtrado,
+            fecha_desde_filtrado,
+            fecha_hasta_filtrado
+        ]
+    )
+
+    # otros parametros 
+    all_actions = historicalSites.get_all_log_actions(site_id=site_id)  # Filtrar acciones por sitio
+    all_users = historicalSites.get_site_log_users(site_id=site_id) #test
+    logs = historicalSites.get_site_logs(site_id, user_filtrado, action_filtrado, fecha_desde_filtrado, fecha_hasta_filtrado)
 
     # Normalizar 'details' para render
     for l in logs:
@@ -273,8 +296,18 @@ def show_site_history(site_id):
                     new = change
                 display_changes.append((field, old, new))
         setattr(l, "parsed_changes", display_changes)
-
-    return render_template("historicalSites/site_history.html", site=site, logs=logs)
+   
+    return render_template(
+        "historicalSites/site_history.html",
+        site=site,
+        logs=logs,
+        actions=all_actions,
+        users=all_users,
+        has_filters=has_filters,
+        date_from=fecha_desde_filtrado,
+        date_to=fecha_hasta_filtrado,
+        
+    )
 
 
 @historical_sites_bp.route("/create", methods=["GET", "POST"])
@@ -304,6 +337,140 @@ def create_site():
                     registration_date=formulario.get("registration_date"),
                     visibility=visibility_,
                 )
+
+                site = historicalSites.get_site_by_name(formulario.get("name"))
+                site_id = site.id
+                if "main_image" in request.files:
+                    primary_img = request.files["main_image"]
+                    if primary_img and primary_img.filename:
+                        file = primary_img
+                        size = fstat(file.fileno()).st_size
+                        bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                        # ulid = file.filename  # Simplificado para este ejemplo
+                        object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+                        client = current_app.storage
+                        client.put_object(
+                            bucket_name=bucket_name,
+                            object_name=object_name,
+                            data=file,
+                            length=size,
+                            content_type=primary_img.content_type,
+                        )
+                        # Devolver en params el path del objeto subido
+                        titulo = request.form.get(
+                            "main_image_title", "Imagen principal"
+                        )
+                        descripcion = request.form.get(
+                            "main_image_description",
+                            "Imagen principal del sitio histórico",
+                        )
+                        images.create_image(
+                            site_id=site_id,
+                            url=object_name,
+                            order=0,
+                            titulo=titulo,
+                            descripcion=descripcion,
+                        )
+
+                if "secondary_images" in request.files:
+                    client = current_app.storage
+                    secondary_images = request.files.getlist("secondary_images")
+
+                    # Obtener títulos y descripciones de las imágenes secundarias.
+                    # Aceptar varias convenciones de nombre que pueden venir
+                    # del template/JS: "secondary_image_titles", "secondary_image_titles[]"
+                    # o indexed names como "secondary_image_titles[0]".
+                    secondary_titles = (
+                        request.form.getlist("secondary_image_titles")
+                        or request.form.getlist("secondary_image_titles[]")
+                        or []
+                    )
+                    secondary_descriptions = (
+                        request.form.getlist("secondary_image_descriptions")
+                        or request.form.getlist("secondary_image_descriptions[]")
+                        or []
+                    )
+
+                    # Si no encontramos títulos con las claves simples, buscar claves indexadas
+                    if not secondary_titles:
+                        indexed_keys = [
+                            k
+                            for k in request.form.keys()
+                            if k.startswith("secondary_image_titles[")
+                        ]
+                        if indexed_keys:
+                            # ordenar por índice si es posible
+                            def _idx_key(k):
+                                try:
+                                    i = int(k[k.find("[") + 1 : k.find("]")])
+                                    return i
+                                except Exception:
+                                    return 0
+
+                            indexed_keys.sort(key=_idx_key)
+                            secondary_titles = [
+                                request.form.get(k) for k in indexed_keys
+                            ]
+
+                    if not secondary_descriptions:
+                        indexed_keys = [
+                            k
+                            for k in request.form.keys()
+                            if k.startswith("secondary_image_descriptions[")
+                        ]
+                        if indexed_keys:
+
+                            def _idx_key2(k):
+                                try:
+                                    i = int(k[k.find("[") + 1 : k.find("]")])
+                                    return i
+                                except Exception:
+                                    return 0
+
+                            indexed_keys.sort(key=_idx_key2)
+                            secondary_descriptions = [
+                                request.form.get(k) for k in indexed_keys
+                            ]
+
+                    for idx, img in enumerate(secondary_images):
+                        if img and img.filename:
+                            file = img
+                            size = fstat(file.fileno()).st_size
+                            bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                            object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+
+                            client.put_object(
+                                bucket_name=bucket_name,
+                                object_name=object_name,
+                                data=file,
+                                length=size,
+                                content_type=img.content_type,
+                            )
+
+                            # Obtener el order máximo actual para las imágenes del sitio
+                            max_order = images.get_max_order_for_site(site_id) or 0
+                            new_order = max_order + idx + 1
+
+                            # Obtener título y descripción correspondiente al índice
+                            titulo = (
+                                secondary_titles[idx]
+                                if idx < len(secondary_titles)
+                                else f"Imagen secundaria {idx + 1}"
+                            )
+                            descripcion = (
+                                secondary_descriptions[idx]
+                                if idx < len(secondary_descriptions)
+                                else "Imagen secundaria del sitio histórico"
+                            )
+
+                            # Crear registro de imagen con order incremental
+                            images.create_image(
+                                site_id=site_id,
+                                url=object_name,
+                                order=new_order,
+                                titulo=titulo,
+                                descripcion=descripcion,
+                            )
 
             # Asignar tags seleccionados
             try:
@@ -370,6 +537,136 @@ def edit_site(site_id):
                 registration_date=formulario.get("registration_date"),
                 visibility=formulario.get("visibility") == "true",
             )
+            if "main_image" in request.files:
+                primary_img = request.files["main_image"]
+                if primary_img and primary_img.filename:
+                    file = primary_img
+                    size = fstat(file.fileno()).st_size
+                    bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                    # ulid = file.filename  # Simplificado para este ejemplo
+                    object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+                    client = current_app.storage
+                    client.put_object(
+                        bucket_name=bucket_name,
+                        object_name=object_name,
+                        data=file,
+                        length=size,
+                        content_type=primary_img.content_type,
+                    )
+                    # Devolver en params el path del objeto subido
+                    titulo = request.form.get("main_image_title", "Imagen principal")
+                    descripcion = request.form.get(
+                        "main_image_description", "Imagen principal del sitio histórico"
+                    )
+                    images.create_image(
+                        site_id=site_id,
+                        url=object_name,
+                        order=0,
+                        titulo=titulo,
+                        descripcion=descripcion,
+                    )
+
+            if "secondary_images" in request.files:
+                client = current_app.storage
+                secondary_images = request.files.getlist("secondary_images")
+
+                # Obtener títulos y descripciones de las imágenes secundarias.
+                # Aceptar varias convenciones de nombre que pueden venir
+                # del template/JS: "secondary_image_titles", "secondary_image_titles[]"
+                # o indexed names como "secondary_image_titles[0]".
+                secondary_titles = (
+                    request.form.getlist("secondary_image_titles")
+                    or request.form.getlist("secondary_image_titles[]")
+                    or []
+                )
+                secondary_descriptions = (
+                    request.form.getlist("secondary_image_descriptions")
+                    or request.form.getlist("secondary_image_descriptions[]")
+                    or []
+                )
+
+                # Si no encontramos títulos con las claves simples, buscar claves indexadas
+                if not secondary_titles:
+                    indexed_keys = [
+                        k
+                        for k in request.form.keys()
+                        if k.startswith("secondary_image_titles[")
+                    ]
+                    if indexed_keys:
+
+                        def _idx_key(k):
+                            try:
+                                i = int(k[k.find("[") + 1 : k.find("]")])
+                                return i
+                            except Exception:
+                                return 0
+
+                        indexed_keys.sort(key=_idx_key)
+                        secondary_titles = [request.form.get(k) for k in indexed_keys]
+
+                if not secondary_descriptions:
+                    indexed_keys = [
+                        k
+                        for k in request.form.keys()
+                        if k.startswith("secondary_image_descriptions[")
+                    ]
+                    if indexed_keys:
+
+                        def _idx_key2(k):
+                            try:
+                                i = int(k[k.find("[") + 1 : k.find("]")])
+                                return i
+                            except Exception:
+                                return 0
+
+                        indexed_keys.sort(key=_idx_key2)
+                        secondary_descriptions = [
+                            request.form.get(k) for k in indexed_keys
+                        ]
+
+                for idx, img in enumerate(secondary_images):
+                    if img and img.filename:
+                        file = img
+                        size = fstat(file.fileno()).st_size
+                        bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+                        object_name = f"sites/{site_id}/{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{file.filename}"
+
+                        client.put_object(
+                            bucket_name=bucket_name,
+                            object_name=object_name,
+                            data=file,
+                            length=size,
+                            content_type=img.content_type,
+                        )
+
+                        # Obtener el order máximo actual para las imágenes del sitio
+                        max_order = images.get_max_order_for_site(site_id) or 0
+                        new_order = max_order + idx + 1
+
+                        # Obtener título y descripción correspondiente al índice
+                        titulo = (
+                            secondary_titles[idx].strip()
+                            if idx < len(secondary_titles)
+                            and secondary_titles[idx]
+                            and secondary_titles[idx].strip()
+                            else f"Imagen secundaria {idx + 1}"
+                        )
+                        descripcion = (
+                            secondary_descriptions[idx].strip()
+                            if idx < len(secondary_descriptions)
+                            and secondary_descriptions[idx]
+                            and secondary_descriptions[idx].strip()
+                            else "Imagen secundaria del sitio histórico"
+                        )
+
+                        # Crear registro de imagen con order incremental
+                        images.create_image(
+                            site_id=site_id,
+                            url=object_name,
+                            order=new_order,
+                            titulo=titulo,
+                            descripcion=descripcion,
+                        )
 
             # Tags
             try:
@@ -387,6 +684,39 @@ def edit_site(site_id):
                 historicalSites.asignar_tags_a_sitio(site, tag_objs)
             except Exception as e:
                 flash(f"No se pudieron actualizar los tags: {e}", "warning")
+
+                # Manejar cambio de imagen principal
+            new_main_image_id = request.form.get("new_main_image_id")
+            if new_main_image_id:
+                # La nueva imagen principal
+                new_main = images.get_image_by_id(int(new_main_image_id))
+                # # La antigua imagen principal
+                # old_main = images.get_image_by_id(int(new_main_image_id))
+
+                # if new_main and new_main.site_id == site.id:
+                #     if old_main and old_main.id != new_main.id:
+                #         # Intercambiar: la antigua principal pasa a secundaria
+                #         images.set_image_order(old_main, new_main.order)
+                #     # La nueva imagen pasa a ser principal (orden 0)
+                #     images.set_image_order(new_main, 0)
+                images.set_image_order(new_main, 0)
+
+            # Manejar eliminación de imágenes
+            images_to_delete = request.form.getlist("delete_images[]")
+            for image_id in images_to_delete:
+                image = images.get_image_by_id(int(image_id))
+                if image and image.site_id == site.id:
+                    images.delete_image(image)
+
+            # Actualizar orden de imágenes existentes
+            image_orders = request.form.to_dict(flat=False)
+            for key, value in image_orders.items():
+                if key.startswith("image_orders["):
+                    image_id = int(key.replace("image_orders[", "").replace("]", ""))
+                    new_order = int(value[0])
+                    image = images.get_image_by_id(image_id)
+                    if image and image.site_id == site.id:
+                        images.set_image_order(image, new_order)
 
             return redirect(url_for("sites.list_sites"))
         else:

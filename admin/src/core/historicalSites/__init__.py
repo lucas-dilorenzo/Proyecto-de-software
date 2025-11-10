@@ -1,4 +1,5 @@
 # from core.database import db
+from src.core.users.user import User
 from src.core.database import db
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.site import SiteLog
@@ -9,6 +10,7 @@ from datetime import datetime
 from src.core.historicalSites.tags.tag import Tag
 from geoalchemy2 import WKTElement
 from src.core.historicalSites.site import SiteLog
+from sqlalchemy.orm.attributes import flag_modified
 
 
 def create_site(**kwargs):
@@ -122,6 +124,33 @@ def update_site(site_id, **kwargs):
                 except (ValueError, TypeError):
                     value = None
         setattr(site, key, value)
+    db.session.commit()
+    return site
+
+
+def add_image_to_site(site_id, object_name, main=False):
+    """
+    Adds an image to a historical site by its ID.
+    Args:
+        site_id (int): The unique identifier of the site to which the image will be added.
+        object_name (str): The name/path of the image object to be added.
+    Returns:
+        Site: The updated Site object with the new image added, or None if the site does not exist.
+    """
+
+    site = get_site_by_id(site_id)
+    if not site:
+        return None
+
+    if main:
+        site.main_image = object_name
+    else:
+        if site.images is None:
+            site.images = []
+        site.images.append(object_name)
+
+        flag_modified(site, "images")
+
     db.session.commit()
     return site
 
@@ -319,18 +348,29 @@ def get_all_provinces():
     return Site.query.with_entities(Site.province).distinct().all()
 
 
-def get_site_logs(site_id: int):
-    """Devuelve los logs de un sitio ordenados por fecha descendente, con usuario cargado."""
+def get_site_logs(site_id=None, 
+                  user_filtrado=None,
+                  action_filtrado=None,
+                  fecha_desde_filtrado=None, # 'YYYY-MM-DD'
+                  fecha_hasta_filtrado=None, # 'YYYY-MM-DD'
+                  ):
+    """Devuelve los logs de un sitio ordenados por fecha descendente, filtra por condiciones de movimientos historial"""
     try:
-        logs = (
-            SiteLog.query.filter_by(site_id=site_id)
-            .order_by(SiteLog.timestamp.desc())
-            .all()
-        )
+        query = SiteLog.query.filter_by(site_id=site_id)
+        if user_filtrado:
+            query = query.filter(SiteLog.user_id == user_filtrado)
+        if action_filtrado:
+            query = query.filter(SiteLog.action == action_filtrado)
+        if fecha_desde_filtrado:
+            query = query.filter(SiteLog.timestamp >= fecha_desde_filtrado)
+        if fecha_hasta_filtrado:
+            query = query.filter(SiteLog.timestamp <= fecha_hasta_filtrado)
+           
+        logs = query.order_by(SiteLog.timestamp.desc()).all()
         return logs
     except Exception:
         return []
-
+        
 
 def get_deleted_sites():
     """Retorna todos los sitios marcados como eliminados (deleted == True)."""
@@ -413,3 +453,69 @@ def get_sites_filtered(
         q = q.order_by(col.asc())
 
     return q.all()
+
+def get_site_log_users(site_id):
+    """Devuelve una lista de usuarios que han realizado acciones en un sitio específico.
+    
+    Args:
+        site_id (int): ID del sitio del que queremos obtener los usuarios.
+        
+    Returns:
+        list: Lista de diccionarios con id y nombre de usuarios únicos ordenados por nombre.
+    """
+    try:
+        users = (
+            db.session.query(User.id, User.nombre)
+            .join(SiteLog)
+            .filter(SiteLog.site_id == site_id)
+            .distinct()
+            .order_by(User.nombre)
+            .all()
+        )
+        return [{"id": u[0], "nombre": u[1]} for u in users]
+    except Exception:
+        return []
+
+def get_all_log_actions(site_id=None):
+    """Devuelve una lista de todas las acciones únicas en los logs de sitios históricos.
+    
+    Args:
+        site_id (int, optional): Si se proporciona, filtra las acciones solo para ese sitio.
+        
+    Returns:
+        list[str]: Lista de acciones únicas ordenadas alfabéticamente.
+    """
+    try:
+        query = db.session.query(SiteLog.action).distinct()
+        
+        if site_id is not None:
+            query = query.filter(SiteLog.site_id == site_id)
+            
+        actions = query.order_by(SiteLog.action.asc()).all()
+        return [a[0] for a in actions]
+    except Exception:
+        return []
+
+
+
+
+"""
+        logs = (
+            SiteLog.query.filter_by(site_id=site_id)
+            .order_by(SiteLog.timestamp.desc())
+            .all()
+        )
+        # Rango por fecha de registro
+        if fecha_desde_filtrado:
+            logs = [log for log in logs if (log.site.registration_date >= fecha_desde_filtrado)]
+            ##logs = logs.filter(Site.registration_date >= fecha_desde_filtrado)
+        if fecha_hasta_filtrado:
+            logs = [log for log in logs if (log.site.registration_date <= fecha_hasta_filtrado)]
+            ##logs = logs.filter(Site.registration_date <= fecha_hasta_filtrado)
+
+        if action_filtrado:
+            logs = [log for log in logs if str(log.action) == str(action_filtrado)]
+        if user_filtrado:
+            logs = [log for log in logs if str(log.user_id) == str(user_filtrado)]
+        return logs
+        """
