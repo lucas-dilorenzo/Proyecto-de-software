@@ -13,7 +13,7 @@ def handle_api_exception(error):
     return response
 
 
-@api_bp.errorhandler(404)  # 🔹 Agregar handler específico para 404
+@api_bp.errorhandler(404)
 def handle_not_found(error):
     """Maneja 404 en endpoints de API (devuelve JSON en lugar de HTML)"""
     response = jsonify({
