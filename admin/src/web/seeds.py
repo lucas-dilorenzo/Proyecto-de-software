@@ -526,13 +526,13 @@ def run():
 
     roles()
     print("Roles y permisos creados.")
-    
+
     users()
     print("Usuarios de prueba creados.")
-    
+
     reseñas()
     print("Reseñas de usuarios públicos creadas.")
-    
+
     print("Database seeding complete.")
 
 
@@ -553,7 +553,7 @@ def users():
         print("Admin creado: admin@example.com / admin123")
     else:
         print("El admin ya existe.")
-    
+
     # Crear moderador si no existe
     moderator_exists = User.query.filter_by(email="moderador@example.com").first()
     if not moderator_exists:
@@ -616,7 +616,7 @@ def users():
         ("user9@example.com", "Isabel", "Ruiz"),
         ("user10@example.com", "Francisco", "Moreno"),
     ]
-    
+
     for i, (email, nombre, apellido) in enumerate(usuarios_publicos_data, 1):
         if not User.query.filter_by(email=email).first():
             test_users.append(
@@ -644,7 +644,7 @@ def roles():
         existing_role = Role.query.filter_by(name=role_enum.value).first()
         if not existing_role:
             db.session.add(Role(name=role_enum.value))
-    
+
     db.session.commit()  # Commit roles first
 
     # Crear permisos y sus relaciones con roles
@@ -657,31 +657,31 @@ def roles():
                 if r:
                     perm.roles.append(r)
             db.session.add(perm)
-    
+
     db.session.commit()
 
 
 def reseñas():
     """
     Crea 30 reseñas de usuarios públicos con fechas variadas y estados distribuidos para sitios históricos.
-    
+
     Estados: 20 pendientes, 5 aprobadas, 5 rechazadas
     Fechas: Variadas en los últimos 6 meses para facilitar pruebas de filtros de rango
     """
     # Obtener usuarios públicos existentes
     usuarios_publicos = User.query.filter_by(rol=UserRole.PUBLIC, activo=True).all()
-    
+
     if not usuarios_publicos:
         print("No hay usuarios públicos activos. Creando reseñas de prueba...")
         return
-    
+
     # Obtener sitios históricos existentes
     sitios = Site.query.filter_by(visibility=True, deleted=False).all()
-    
+
     if not sitios:
         print("No hay sitios históricos disponibles. Creando reseñas de prueba...")
         return
-    
+
     # Contenidos de ejemplo para las reseñas
     contenidos_ejemplo = [
         "Excelente lugar histórico, muy bien conservado y con una historia fascinante.",
@@ -725,46 +725,55 @@ def reseñas():
         "Esperaba más actividades interactivas, pero la belleza del lugar compensa.",
         "Un lugar que todo estudiante de historia debería conocer. Muy enriquecedor académicamente.",
     ]
-    
+
     # Generar fechas variadas en los últimos 6 meses
     from datetime import timedelta
+
     fecha_base = datetime.now(timezone.utc)
     fechas_variadas = [
         fecha_base - timedelta(days=random.randint(1, 180))  # Últimos 6 meses
         for _ in range(30)
     ]
-    
+
     # Definir distribución de estados: 20 pendientes, 5 aprobadas, 5 rechazadas
-    estados = ([estadoReseña.PENDIENTE.code] * 20 + 
-              [estadoReseña.APROBADA.code] * 5 + 
-              [estadoReseña.RECHAZADA.code] * 5)
+    estados = (
+        [estadoReseña.PENDIENTE.code] * 20
+        + [estadoReseña.APROBADA.code] * 5
+        + [estadoReseña.RECHAZADA.code] * 5
+    )
     random.shuffle(estados)  # Mezclar para distribución aleatoria
-    
+
     reseñas_creadas = []
-    usuarios_sitios_usados = set()  # Para evitar reseñas duplicadas del mismo usuario al mismo sitio
-    
+    usuarios_sitios_usados = (
+        set()
+    )  # Para evitar reseñas duplicadas del mismo usuario al mismo sitio
+
     intentos = 0
-    while len(reseñas_creadas) < 30 and intentos < 100:  # Máximo 100 intentos para evitar loop infinito
+    while (
+        len(reseñas_creadas) < 30 and intentos < 100
+    ):  # Máximo 100 intentos para evitar loop infinito
         usuario = random.choice(usuarios_publicos)
         sitio = random.choice(sitios)
-        
+
         # Verificar que este usuario no haya reseñado este sitio
         clave_unica = (usuario.id, sitio.id)
         if clave_unica in usuarios_sitios_usados:
             intentos += 1
             continue
-            
+
         # Verificar en la base de datos que no exista ya una reseña de este usuario para este sitio
-        reseña_existente = Reseña.query.filter_by(user_id=usuario.id, site_id=sitio.id).first()
+        reseña_existente = Reseña.query.filter_by(
+            user_id=usuario.id, site_id=sitio.id
+        ).first()
         if reseña_existente:
             intentos += 1
             continue
-        
+
         usuarios_sitios_usados.add(clave_unica)
-        
+
         # Obtener índice actual para asignar fecha y estado correspondiente
         indice_actual = len(reseñas_creadas)
-        
+
         # Crear la reseña con fecha y estado variados
         nueva_reseña = Reseña(
             calificacion=random.randint(3, 5),  # Calificaciones entre 3 y 5 estrellas
@@ -772,29 +781,43 @@ def reseñas():
             user_id=usuario.id,
             site_id=sitio.id,
             estado=estados[indice_actual],  # Estado según distribución planificada
-            motivo_rechazo="Contenido inapropiado" if estados[indice_actual] == estadoReseña.RECHAZADA.code else None,
-            fecha_creacion=fechas_variadas[indice_actual]  # Fecha variada
+            motivo_rechazo=(
+                "Contenido inapropiado"
+                if estados[indice_actual] == estadoReseña.RECHAZADA.code
+                else None
+            ),
+            fecha_creacion=fechas_variadas[indice_actual],  # Fecha variada
         )
-        
+
         reseñas_creadas.append(nueva_reseña)
         intentos += 1
-    
+
     if reseñas_creadas:
         db.session.add_all(reseñas_creadas)
         db.session.commit()
-        
+
         # Contar reseñas por estado para mostrar resumen
-        pendientes = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.PENDIENTE.code)
-        aprobadas = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.APROBADA.code)
-        rechazadas = sum(1 for r in reseñas_creadas if r.estado == estadoReseña.RECHAZADA.code)
-        
+        pendientes = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.PENDIENTE.code
+        )
+        aprobadas = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.APROBADA.code
+        )
+        rechazadas = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.RECHAZADA.code
+        )
+
         print(f"Se crearon {len(reseñas_creadas)} reseñas con fechas variadas:")
         print(f"  - {pendientes} pendientes")
-        print(f"  - {aprobadas} aprobadas") 
+        print(f"  - {aprobadas} aprobadas")
         print(f"  - {rechazadas} rechazadas")
-        print(f"  - Fechas: desde {min(fechas_variadas).strftime('%d/%m/%Y')} hasta {max(fechas_variadas).strftime('%d/%m/%Y')}")
+        print(
+            f"  - Fechas: desde {min(fechas_variadas).strftime('%d/%m/%Y')} hasta {max(fechas_variadas).strftime('%d/%m/%Y')}"
+        )
     else:
-        print("No se pudieron crear reseñas (posiblemente por falta de combinaciones únicas usuario-sitio).")
+        print(
+            "No se pudieron crear reseñas (posiblemente por falta de combinaciones únicas usuario-sitio)."
+        )
 
 
 def feature_flags_seed():

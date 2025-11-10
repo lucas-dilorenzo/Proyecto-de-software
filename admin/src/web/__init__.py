@@ -107,7 +107,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.register_blueprint(maintenance_bp)
     app.register_blueprint(reseñas_bp)
 
-
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)
     app.register_error_handler(401, error_handlers.unauthorized)

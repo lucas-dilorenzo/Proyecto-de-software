@@ -5,8 +5,10 @@ from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 from datetime import datetime
 
+
 def get_review_by_id(review_id):
     return db.session.query(Reseña).filter(Reseña.id == review_id).first()
+
 
 def get_reviews_paginated(
     page: int = 1,
@@ -24,9 +26,8 @@ def get_reviews_paginated(
     Retorna reseñas paginadas aplicando filtros para moderación.
     """
     query = db.session.query(Reseña).options(
-    joinedload(Reseña.user), 
-    joinedload(Reseña.site)
-)
+        joinedload(Reseña.user), joinedload(Reseña.site)
+    )
 
     if estado:
         estado_q = estado.strip()
@@ -52,17 +53,18 @@ def get_reviews_paginated(
                 df = datetime.fromisoformat(s).date()
             except Exception:
                 from datetime import datetime as _dt
+
                 for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
                     try:
                         df = _dt.strptime(s, fmt).date()
                         break
                     except Exception:
                         continue
-                        
+
             if df:
                 query = query.filter(func.date(Reseña.fecha_creacion) >= df)
         except Exception:
-            pass # Ignorar fecha_desde inválida
+            pass  # Ignorar fecha_desde inválida
 
     # Fecha Hasta
     if fecha_hasta:
@@ -73,25 +75,26 @@ def get_reviews_paginated(
                 dt = datetime.fromisoformat(s).date()
             except Exception:
                 from datetime import datetime as _dt
+
                 for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"):
                     try:
                         dt = _dt.strptime(s, fmt).date()
                         break
                     except Exception:
                         continue
-            
+
             if dt:
                 query = query.filter(func.date(Reseña.fecha_creacion) <= dt)
         except Exception:
-            pass # Ignorar fecha_hasta inválida
+            pass  # Ignorar fecha_hasta inválida
 
     # Ordenamiento
     order_field = Reseña.fecha_creacion
-    if order_by == 'calificacion':
+    if order_by == "calificacion":
         order_field = Reseña.calificacion
 
     # Añadir ordenamiento secundario por ID para garantizar consistencia
-    if str(order).lower() == 'desc':
+    if str(order).lower() == "desc":
         query = query.order_by(order_field.desc(), Reseña.id.desc())
     else:
         query = query.order_by(order_field.asc(), Reseña.id.asc())
@@ -108,15 +111,15 @@ def aprobar_reseña(review_id):
         bool: True si se aprobó correctamente, False si no se encontró o hubo error
     """
     from src.core.reseñas.estadoReseña import estadoReseña
-    
+
     try:
         review = get_review_by_id(review_id)
         if not review:
             return False
-            
+
         review.estado = estadoReseña.APROBADA.code
         review.motivo_rechazo = None  # Limpiar cualquier motivo de rechazo previo
-        
+
         db.session.commit()
         return True
     except Exception as e:
@@ -135,15 +138,15 @@ def rechazar_reseña(review_id, motivo_rechazo):
         bool: True si se rechazó correctamente, False si no se encontró o hubo error
     """
     from src.core.reseñas.estadoReseña import estadoReseña
-    
+
     try:
         review = get_review_by_id(review_id)
         if not review:
             return False
-            
+
         review.estado = estadoReseña.RECHAZADA.code
         review.motivo_rechazo = motivo_rechazo
-        
+
         db.session.commit()
         return True
     except Exception as e:
@@ -164,7 +167,7 @@ def eliminar_reseña(review_id):
         review = get_review_by_id(review_id)
         if not review:
             return False
-            
+
         db.session.delete(review)
         db.session.commit()
         return True

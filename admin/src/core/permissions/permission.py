@@ -63,4 +63,7 @@ class UserPermission(tuple[str, list[UserRole]], Enum):
     SITE_EXPORT = ("site_export", [UserRole.ADMIN])
     SITE_HISTORY = ("site_history", [UserRole.EDITOR, UserRole.ADMIN])
     SYSTEM_FLAGS = ("system_flags", [UserRole.SYS_ADMIN])
-    REVIEW_MODERATE = ("review_moderate", [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SYS_ADMIN])
+    REVIEW_MODERATE = (
+        "review_moderate",
+        [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SYS_ADMIN],
+    )

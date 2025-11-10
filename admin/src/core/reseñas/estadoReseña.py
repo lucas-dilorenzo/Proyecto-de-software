@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class estadoReseña(Enum):
     """Enumerador para los estados de una reseña de sitio histórico"""
 
