@@ -3,8 +3,11 @@ from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
 from . import api_bp
 from src.core.database import db
-from src.core.historicalSites.site  import Site
+from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
+from src.core.reseñas.reseña import Reseña
+from src.core.reseñas import get_reviews_by_site
+
 
 @api_bp.route("/sites", methods=["GET"])
 def list_sites():
@@ -24,7 +27,9 @@ def list_sites():
     page = max(1, request.args.get("page", type=int) or 1)
     per_page = min(max(1, request.args.get("per_page", type=int) or 12), 100)
 
-    q = db.session.query(Site).filter(Site.deleted.is_(False), Site.visibility.is_(True))
+    q = db.session.query(Site).filter(
+        Site.deleted.is_(False), Site.visibility.is_(True)
+    )
 
     # ----- filtros
     if name:
@@ -50,7 +55,7 @@ def list_sites():
                 geofunc.ST_DWithin(
                     Site.location,
                     func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
-                    radius_m
+                    radius_m,
                 )
             )
         except Exception as e:
@@ -79,7 +84,9 @@ def list_sites():
         main_image = None
         if s.images:
             # Ordenar por 'order' y tomar la primera
-            sorted_images = sorted(s.images, key=lambda img: img.order if img.order is not None else 999)
+            sorted_images = sorted(
+                s.images, key=lambda img: img.order if img.order is not None else 999
+            )
             main_image = sorted_images[0] if sorted_images else None
 
         # Construir URL
@@ -88,23 +95,28 @@ def list_sites():
             # El campo es 'url', no 'object_name'
             cover_url = f"{protocol}://{minio_endpoint}/{bucket_name}/{main_image.url}"
 
-        data.append({
-            "id": s.id,
-            "name": s.name,
-            "city": s.city,
-            "province": s.province,
-            "latitude": s.latitude,
-            "longitude": s.longitude,
-            "avg_rating": None,
-            "cover_image": cover_url,
-        })
+        data.append(
+            {
+                "id": s.id,
+                "name": s.name,
+                "city": s.city,
+                "province": s.province,
+                "latitude": s.latitude,
+                "longitude": s.longitude,
+                "avg_rating": None,
+                "cover_image": cover_url,
+            }
+        )
 
-    return jsonify({
-        "data": data,
-        "page": page,
-        "per_page": per_page,
-        "total": total,
-    })
+    return jsonify(
+        {
+            "data": data,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+        }
+    )
+
 
 @api_bp.route("/sites/<int:site_id>", methods=["GET"])
 def get_site(site_id):
@@ -113,38 +125,83 @@ def get_site(site_id):
     Devuelve un sitio específico con todas sus imágenes y datos.
     """
     # 🔹 Usar SQLAlchemy directamente en lugar del módulo
-    site = db.session.query(Site).filter_by(id=site_id, deleted=False, visibility=True).first()
-    
+    site = (
+        db.session.query(Site)
+        .filter_by(id=site_id, deleted=False, visibility=True)
+        .first()
+    )
+
     if not site:
         return jsonify({"error": "Sitio no encontrado"}), 404
-    
+
     # Construir URLs de imágenes desde MinIO
     minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
     bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
     minio_secure = current_app.config.get("MINIO_SECURE", False)
     protocol = "https" if minio_secure else "http"
-    
+
     images = []
-    for img in sorted(site.images, key=lambda x: x.order if x.order is not None else 999):
-        images.append({
-            "id": img.id,
-            "url": f"{protocol}://{minio_endpoint}/{bucket_name}/{img.url}",
-            "titulo": img.titulo,
-            "descripcion": img.descripcion,
-            "order": img.order,
-        })
-    
+    for img in sorted(
+        site.images, key=lambda x: x.order if x.order is not None else 999
+    ):
+        images.append(
+            {
+                "id": img.id,
+                "url": f"{protocol}://{minio_endpoint}/{bucket_name}/{img.url}",
+                "titulo": img.titulo,
+                "descripcion": img.descripcion,
+                "order": img.order,
+            }
+        )
+
     # Construir respuesta
-    return jsonify({
-        "id": site.id,
-        "name": site.name,
-        "description": site.description,
-        "city": site.city,
-        "province": site.province,
-        "latitude": float(site.latitude) if site.latitude else None,
-        "longitude": float(site.longitude) if site.longitude else None,
-        "conservation_status": site.conservation_status,
-        "avg_rating": None,  # TODO: calcular promedio real de ratings
-        "tags": [tag.name for tag in site.tags] if site.tags else [],
-        "images": images,
-    })
+    return jsonify(
+        {
+            "id": site.id,
+            "name": site.name,
+            "description": site.description,
+            "city": site.city,
+            "province": site.province,
+            "latitude": float(site.latitude) if site.latitude else None,
+            "longitude": float(site.longitude) if site.longitude else None,
+            "conservation_status": site.conservation_status,
+            "avg_rating": None,  # TODO: calcular promedio real de ratings
+            "tags": [tag.name for tag in site.tags] if site.tags else [],
+            "images": images,
+        }
+    )
+
+
+@api_bp.route("/sites/<int:site_id>/reviews", methods=["GET"])
+def get_site_reviews(site_id):
+    """
+    GET localhost:5000/api/sites/:id/reviews
+    Devuelve todas las reseñas de un sitio específico.
+    """
+    reviews = get_reviews_by_site(site_id)
+    page = max(1, request.args.get("page", type=int) or 1)
+    per_page = min(max(1, request.args.get("per_page", type=int) or 10), 100)
+
+    data = []
+    for r in reviews:
+        data.append(
+            {
+                "id": r.id,
+                "site_id": r.site_id,
+                "rating": r.calificacion,
+                "comment": r.contenido,
+                "inserted_at": r.fecha_creacion,
+                "updated_at": r.fecha_creacion,
+            }
+        )
+
+    return jsonify(
+        {
+            "data": data,
+            "meta": {
+                "page": page,
+                "per_page": per_page,
+                "total": len(data),
+            },
+        }
+    )

@@ -31,4 +31,13 @@ class Reseña(db.Model):
     )
 
     def __repr__(self):
-        return f"<Reseña(id={self.id}, estado={self.estado})>"
+        return (
+            f"<Reseña(id={self.id}, "
+            f"calificacion={self.calificacion}, "
+            f"contenido='{self.contenido[:50]}...', "
+            f"user_id={self.user_id}, "
+            f"site_id={self.site_id}, "
+            f"estado='{self.estado}', "
+            f"motivo_rechazo='{self.motivo_rechazo}', "
+            f"fecha_creacion={self.fecha_creacion})>"
+        )

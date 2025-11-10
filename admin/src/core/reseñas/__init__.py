@@ -175,3 +175,19 @@ def eliminar_reseña(review_id):
         db.session.rollback()
         print(f"Error al eliminar reseña: {e}")
         return False
+
+
+def get_reviews_by_site(site_id):
+    """
+    Devuelve las reseñas correspondientes a un sitio histórico específico.
+    Args:
+        site_id (int): ID del sitio histórico.
+    Returns:
+        list: Una lista de objetos Reseña asociados con el sitio.
+    """
+    try:
+        reviews = db.session.query(Reseña).filter(Reseña.site_id == site_id).all()
+        return reviews
+    except Exception as e:
+        print(f"Error al obtener reseñas por site_id: {e}")
+        return []
