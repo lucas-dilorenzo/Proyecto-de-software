@@ -1,6 +1,4 @@
 // src/services/api.ts
-
-// Base configurable por .env (VITE_API_BASE="/api" con proxy de Vite, o URL absoluta)
 export const API_BASE: string = String(import.meta.env.VITE_API_BASE ?? '/api').replace(/\/+$/, '')
 
 export type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest'
@@ -10,19 +8,18 @@ export interface Site {
   name: string
   city: string
   province: string
-  latitude: number // 🔹 Agregado
-  longitude: number // 🔹 Agregado
-  description?: string // 🔹 Agregado
-  conservation_status?: string // 🔹 Agregado
+  latitude: number
+  longitude: number
+  description?: string
+  conservation_status?: string
   rating?: number
   avg_rating?: number
   cover_url?: string
   cover_image?: string
-  tags?: string[] // 🔹 Agregado
-  images?: SiteImage[] // 🔹 Agregado
+  tags?: string[]
+  images?: SiteImage[]
 }
 
-// 🔹 Nueva interfaz para imágenes
 export interface SiteImage {
   id: number
   url: string
@@ -67,7 +64,6 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   const { method = 'GET', params, auth = false, body } = opts
   const url = buildUrl(path, params)
 
-  // Logs útiles mientras debugueamos
   console.log('🌐 API_BASE:', API_BASE)
   console.log('📡 Fetching:', url.toString())
 
@@ -121,7 +117,6 @@ export const SitesAPI = {
     return res.json()
   },
 
-  // 🔹 Nuevo método para obtener un sitio por ID
   async getById(id: number): Promise<Site> {
     const url = `${API_BASE}/sites/${id}`
     const res = await fetch(url)

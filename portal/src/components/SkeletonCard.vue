@@ -14,6 +14,4 @@
 
 <script setup lang="ts"></script>
 
-<style scoped>
-/* Bootstrap maneja todo el skeleton con placeholder-glow */
-</style>
+<style scoped></style>

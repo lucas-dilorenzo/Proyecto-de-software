@@ -1,21 +1,17 @@
 <template>
   <main class="container py-4">
-    <!-- Loading -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Cargando...</span>
       </div>
     </div>
 
-    <!-- Error -->
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <strong>Error:</strong> {{ error }}
       <button @click="router.back()" class="btn btn-sm btn-outline-danger ms-3">Volver</button>
     </div>
 
-    <!-- Site Detail -->
     <article v-else-if="site" class="row g-4">
-      <!-- Images Carousel -->
       <section class="col-12 col-lg-6">
         <div
           v-if="site.images && site.images.length > 0"
@@ -65,7 +61,6 @@
         </div>
       </section>
 
-      <!-- Site Info -->
       <section class="col-12 col-lg-6">
         <div class="mb-3">
           <h1 class="mb-2">{{ site.name }}</h1>
@@ -160,6 +155,4 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Sin estilos custom necesarios */
-</style>
+<style scoped></style>
