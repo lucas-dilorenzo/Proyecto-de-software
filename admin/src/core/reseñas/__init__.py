@@ -191,3 +191,41 @@ def get_reviews_by_site(site_id):
     except Exception as e:
         print(f"Error al obtener reseñas por site_id: {e}")
         return []
+
+
+def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 10):
+    """
+    Devuelve las reseñas de un sitio específico con paginación.
+    Args:
+        site_id (int): ID del sitio histórico.
+        page (int): Número de página (por defecto 1).
+        per_page (int): Cantidad de reseñas por página (por defecto 10).
+    Returns:
+        Pagination: Objeto de paginación de SQLAlchemy con las reseñas.
+        None: Si el sitio no existe o hay error.
+    """
+    try:
+        # Verificar que el sitio existe y es válido
+        from src.core.historicalSites.site import Site
+        site = db.session.query(Site).filter_by(
+            id=site_id, deleted=False, visibility=True
+        ).first()
+        
+        if not site:
+            return None
+        
+        # Construir consulta base con orden por fecha de creación descendente
+        query = db.session.query(Reseña).filter(Reseña.site_id == site_id).order_by(
+            Reseña.fecha_creacion.desc(), Reseña.id.desc()
+        )
+        
+        # Aplicar paginación usando SQLAlchemy paginate()
+        return query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+    except Exception as e:
+        print(f"Error al obtener reseñas paginadas por site_id: {e}")
+        return None
