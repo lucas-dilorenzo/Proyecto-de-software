@@ -7,6 +7,8 @@ from .exceptions import NotFoundError, ValidationError
 from src.core.database import db
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
+from src.web import helpers
+
 
 
 @api_bp.route("/sites", methods=["GET"])
@@ -59,7 +61,9 @@ def list_sites():
                 }
             )
 
-    q = db.session.query(Site).filter(Site.deleted.is_(False), Site.visibility.is_(True))
+    q = db.session.query(Site).filter(
+        Site.deleted.is_(False), Site.visibility.is_(True)
+    )
 
     # Filtros de texto
     if name:
@@ -85,7 +89,7 @@ def list_sites():
                 geofunc.ST_DWithin(
                     Site.location,
                     func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
-                    radius_m
+                    radius_m,
                 )
             )
         except Exception as e:
@@ -104,87 +108,91 @@ def list_sites():
     total = q.count()
     sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
-    # Construir respuesta
-    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
-    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
-    minio_secure = current_app.config.get("MINIO_SECURE", False)
-    protocol = "https" if minio_secure else "http"
+    # ----- respuesta
 
     data = []
     for s in sites:
         main_image = None
         if s.images:
-            sorted_images = sorted(s.images, key=lambda img: img.order if img.order is not None else 999)
+            # Ordenar por 'order' y tomar la primera
+            sorted_images = sorted(
+                s.images, key=lambda img: img.order if img.order is not None else 999
+            )
             main_image = sorted_images[0] if sorted_images else None
 
         cover_url = None
         if main_image:
-            cover_url = f"{protocol}://{minio_endpoint}/{bucket_name}/{main_image.url}"
+            # El campo es 'url', no 'object_name'
+            cover_url = helpers.get_image_url(main_image.url)
 
-        data.append({
-            "id": s.id,
-            "name": s.name,
-            "city": s.city,
-            "province": s.province,
-            "latitude": s.latitude,
-            "longitude": s.longitude,
-            "avg_rating": None,
-            "cover_image": cover_url,
-        })
+        data.append(
+            {
+                "id": s.id,
+                "name": s.name,
+                "city": s.city,
+                "province": s.province,
+                "latitude": s.latitude,
+                "longitude": s.longitude,
+                "avg_rating": None,
+                "cover_image": cover_url,
+            }
+        )
 
-    return jsonify({
-        "data": data,
-        "page": page,
-        "per_page": per_page,
-        "total": total,
-    })
+    return jsonify(
+        {
+            "data": data,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+        }
+    )
+
 
 
 @api_bp.route("/sites/<int:site_id>", methods=["GET"])
 def get_site(site_id):
-    """GET /api/sites/:id - Obtiene un sitio por ID"""
-    
-    site = db.session.query(Site).filter_by(
-        id=site_id, 
-        deleted=False, 
-        visibility=True
-    ).first()
-    
+    """
+    GET /api/sites/:id
+    Devuelve un sitio específico con todas sus imágenes y datos.
+    """
+    # 🔹 Usar SQLAlchemy directamente en lugar del módulo
+    site = (
+        db.session.query(Site)
+        .filter_by(id=site_id, deleted=False, visibility=True)
+        .first()
+    )
+
     if not site:
-        raise NotFoundError(message=f"Site with id {site_id} not found")
-    
-    # Construir URLs de imágenes
-    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
-    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
-    minio_secure = current_app.config.get("MINIO_SECURE", False)
-    protocol = "https" if minio_secure else "http"
-    
+        return jsonify({"error": "Sitio no encontrado"}), 404
+
     images = []
-    for img in sorted(site.images, key=lambda x: x.order if x.order is not None else 999):
-        images.append({
-            "id": img.id,
-            "url": f"{protocol}://{minio_endpoint}/{bucket_name}/{img.url}",
-            "titulo": img.titulo,
-            "descripcion": img.descripcion,
-            "order": img.order,
-        })
-    
-    return jsonify({
-        "id": site.id,
-        "name": site.name,
-        "description": site.description,
-        "city": site.city,
-        "province": site.province,
-        "latitude": float(site.latitude) if site.latitude else None,
-        "longitude": float(site.longitude) if site.longitude else None,
-        "conservation_status": site.conservation_status,
-        "avg_rating": None,
-        "tags": [tag.name for tag in site.tags] if site.tags else [],
-        "images": images,
-    })
+    for img in sorted(
+        site.images, key=lambda x: x.order if x.order is not None else 999
+    ):
+        url_ = helpers.get_image_url(img.url)
+        images.append(
+            {
+                "id": img.id,
+                "url": url_,
+                "titulo": img.titulo,
+                "descripcion": img.descripcion,
+                "order": img.order,
+            }
+        )
 
-
-@api_bp.route("/sites/<path:invalid_id>", methods=["GET"])
-def catch_invalid_site_id(invalid_id):
-    """Captura rutas /api/sites/... que no son enteros"""
-    raise NotFoundError(message="Invalid site ID format")
+    # Construir respuesta
+    return jsonify(
+        {
+            "id": site.id,
+            "name": site.name,
+            "description": site.description,
+            "city": site.city,
+            "province": site.province,
+            "latitude": float(site.latitude) if site.latitude else None,
+            "longitude": float(site.longitude) if site.longitude else None,
+            "conservation_status": site.conservation_status,
+            "avg_rating": None,  # TODO: calcular promedio real de ratings
+            "tags": [tag.name for tag in site.tags] if site.tags else [],
+            "images": images,
+        }
+    )

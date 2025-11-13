@@ -57,9 +57,13 @@ class UserPermission(tuple[str, list[UserRole]], Enum):
     USER_MODULE = ("user_module", [UserRole.ADMIN])
     SITE_CREATE = ("site_create", [UserRole.EDITOR, UserRole.ADMIN])
     SITE_LIST = ("site_list", [UserRole.PUBLIC, UserRole.EDITOR, UserRole.ADMIN])
-    SITE_UPDATE = ("site_update", [UserRole.EDITOR, UserRole.ADMIN])
+    SITE_UPDATE = ("site_update", [UserRole.EDITOR, UserRole.ADMIN, UserRole.MODERATOR])
     SITE_DELETE = ("site_delete", [UserRole.ADMIN])
     SITE_TAGS = ("site_tags", [UserRole.EDITOR, UserRole.ADMIN])
     SITE_EXPORT = ("site_export", [UserRole.ADMIN])
     SITE_HISTORY = ("site_history", [UserRole.EDITOR, UserRole.ADMIN])
     SYSTEM_FLAGS = ("system_flags", [UserRole.SYS_ADMIN])
+    REVIEW_MODERATE = (
+        "review_moderate",
+        [UserRole.MODERATOR, UserRole.ADMIN, UserRole.SYS_ADMIN],
+    )
