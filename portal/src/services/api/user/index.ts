@@ -1,5 +1,6 @@
 import { BaseApi } from '../BaseApi'
-import type { GetFavoritesQueryParams, GetTokenData } from './types'
+import type { Site } from '../sites/types'
+import type { GetFavoritesQueryParams, GetTokenData, TokenResponse } from './types'
 
 export class UserApi extends BaseApi {
   constructor() {
@@ -7,10 +8,10 @@ export class UserApi extends BaseApi {
   }
 
   getToken(data: GetTokenData) {
-    return this.request('/api/auth', { method: 'POST', body: data })
+    return this.request<TokenResponse>('/api/auth', { method: 'POST', body: data })
   }
 
   getFavorites(query: GetFavoritesQueryParams, token: string) {
-    return this.request('/me/favorites', { query, token })
+    return this.request<Site, true>('/me/favorites', { query, token })
   }
 }

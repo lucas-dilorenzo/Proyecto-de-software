@@ -1,3 +1,5 @@
+export { RequestError } from './RequestError'
+
 import { SitesApi } from './sites'
 import { ReviewsApi } from './sites/reviews'
 import { UserApi } from './user'
@@ -23,3 +25,5 @@ export default {
     return store.user || (store.user = new UserApi())
   },
 }
+
+export type * from './types'

@@ -6,3 +6,8 @@ export interface GetTokenData {
 }
 
 export type GetFavoritesQueryParams = PaginationQuery
+
+export interface TokenResponse {
+  token: string
+  expires_in: number
+}

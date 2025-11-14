@@ -1,5 +1,5 @@
 import { BaseApi } from '../BaseApi'
-import type { ListSitesQueryParams } from './types'
+import type { CreateSiteData, ListSitesQueryParams, Site } from './types'
 
 export class SitesApi extends BaseApi {
   constructor() {
@@ -7,24 +7,24 @@ export class SitesApi extends BaseApi {
   }
 
   list(query?: ListSitesQueryParams) {
-    return this.request('/', { query })
+    return this.request<Site, true>('/', { query })
   }
 
   get(id: number) {
-    return this.request(`/${id}`)
+    return this.request<Site>(`/${id}`)
   }
 
-  create(data: object, token: string) {
-    return this.request('/', { method: 'POST', body: data, token })
+  create(data: CreateSiteData, token: string) {
+    return this.request<Site & { user_id: number }>('/', { method: 'POST', body: data, token })
   }
 
   // FAVORITES
 
   star(id: number, token: string) {
-    return this.request(`/${id}/favorite`, { method: 'PUT', token })
+    return this.request<void>(`/${id}/favorite`, { method: 'PUT', token })
   }
 
   unstar(id: number, token: string) {
-    return this.request(`/${id}/favorite`, { method: 'DELETE', token })
+    return this.request<void>(`/${id}/favorite`, { method: 'DELETE', token })
   }
 }
