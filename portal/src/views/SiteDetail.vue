@@ -112,6 +112,15 @@
           </div>
         </div>
       </section>
+      <section class="col-12 ubication-section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Ubicación</h5>
+            <!-- mapa de leafleat -->
+            <MapComponent />
+          </div>
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -121,6 +130,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SitesAPI, type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
+import MapComponent from '@/components/MapComponent.vue'
 
 const route = useRoute()
 const router = useRouter()
