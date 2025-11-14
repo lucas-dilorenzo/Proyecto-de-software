@@ -151,9 +151,10 @@ async function fetchSite() {
     site.value = data
 
     logger.log('✅ SiteDetail loaded:', data)
-  } catch (e: any) {
-    logger.error('❌ SiteDetail error:', e)
-    error.value = e?.message || 'Error al cargar el sitio'
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error:', err)
+    error.value = err.message || 'Error al cargar el sitio'
   } finally {
     loading.value = false
   }
