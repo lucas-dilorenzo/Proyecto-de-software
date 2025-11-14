@@ -117,7 +117,7 @@
           <div class="card-body">
             <h5 class="card-title">Ubicación</h5>
             <!-- mapa de leafleat -->
-            <MapComponent />
+            <MapComponent :lat="site.latitude" :lng="site.longitude" :zoom="12" />
           </div>
         </div>
       </section>
