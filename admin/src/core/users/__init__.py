@@ -1,6 +1,7 @@
 from src.core.users.user import User, UserRole
 from src.core.users.role import Role
 from src.core.database import db
+from src.core import historicalSites
 
 __all__ = ["User", "UserRole", "Role"]
 
@@ -171,3 +172,61 @@ def get_users_filtered(page=1, per_page=25, email="", activo="", rol="", order="
 
     # Ejecutar la consulta paginada
     return query.paginate(page=page, per_page=per_page, error_out=False)
+
+
+def marcar_favorito(user: User, site_id: int) -> bool:
+    """
+    Marca un sitio como favorito para un usuario dado.
+    Args:
+        user (User): El objeto User que marca el sitio como favorito.
+        site_id (int): El ID del sitio a marcar como favorito.
+    Returns:
+        bool: True si se marcó correctamente, False en caso de error.
+    """
+    try:
+        site = historicalSites.get_site_by_id(site_id)
+        if not site:
+            return False
+
+        if site not in user.favs:
+            user.favs.append(site)
+            db.session.commit()
+        return True
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al marcar favorito: {e}")
+        return False
+
+
+def eliminar_favorito(user: User, site_id: int) -> bool:
+
+    try:
+        site = historicalSites.get_site_by_id(site_id)
+        # compruebo que el sitio exista
+        if not site:
+            return False
+        # compruebo que esté en favoritos
+        if site not in user.favs:
+            return False
+        # if site in user.favs:
+        user.favs.remove(site)
+        db.session.commit()
+        return True
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al eliminar el favorito: {e}")
+        return False
+
+
+def get_user_favs(user: User):
+    """
+    Obtiene la lista de sitios favoritos de un usuario.
+    Args:
+        user (User): El objeto User del cual obtener los favoritos.
+    Returns:
+        list: Lista de sitios favoritos del usuario.
+    """
+    favs_sites = [historicalSites.get_site_by_id(site.id) for site in user.favs]
+    return favs_sites

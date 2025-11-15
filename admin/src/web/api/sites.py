@@ -8,6 +8,7 @@ from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
 from src.core.reseñas.reseña import Reseña
 from src.core.reseñas import get_reviews_by_site, get_reviews_by_site_paginated
+from flask import session
 
 
 @api_bp.route("/sites", methods=["GET"])
@@ -300,3 +301,120 @@ def get_site_reviews(site_id):
 #                 "message": "Internal server error"
 #             }
 #         }), 500
+
+
+@api_bp.route("/sites/<int:site_id>/favorite", methods=["PUT"])
+# @api_auth_required
+def put_site_as_fav(site_id):
+    """
+    PUT /sites/{site_id}/favorite
+    Marca un sitio como favorito para el usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+    """
+    from src.core.users import marcar_favorito, get_user_by_id
+
+    try:
+        user_id = session.get("user") or 1
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        user = get_user_by_id(user_id)
+
+        success = marcar_favorito(user, site_id)
+        if not success:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "not_found",
+                            "message": "Site not found",
+                        }
+                    }
+                ),
+                404,
+            )
+        # esta devolución 200, debería ser la 204 que marca la espicificación de API?
+        return "", 204
+
+    except Exception as e:
+        print(f"Error desconocido al cargar el sitio favorito: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/sites/<int:site_id>/favorite", methods=["DELETE"])
+# @api_auth_required
+def delete_site_from_fav(site_id):
+    """
+    DELETE /sites/{site_id}/favorite
+    Quita un sitio de favoritos para el usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+    """
+
+    from src.core.users import eliminar_favorito, get_user_by_id
+
+    try:
+        user_id = session.get("user") or 1
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication requiered",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        user = get_user_by_id(user_id)
+
+        success = eliminar_favorito(user, site_id)
+        if not success:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "not_found",
+                            "message": "Site not found",
+                        }
+                    }
+                ),
+                404,
+            )
+
+        return "", 204
+
+    except Exception as e:
+        print(f"Error desconocido al eliminar el sitio del listado de favoritos: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
