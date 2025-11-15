@@ -15,6 +15,7 @@ from src.core.reseñas import (
     get_review_by_id,
     delete_review,
 )
+from src.web import helpers
 
 
 @api_bp.route("/sites", methods=["GET"])
@@ -80,11 +81,6 @@ def list_sites():
     sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
     # ----- respuesta
-    # Leer configuración de MinIO desde config
-    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
-    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
-    minio_secure = current_app.config.get("MINIO_SECURE", False)
-    protocol = "https" if minio_secure else "http"
 
     data = []
     for s in sites:
@@ -101,7 +97,7 @@ def list_sites():
         cover_url = None
         if main_image:
             # El campo es 'url', no 'object_name'
-            cover_url = f"{protocol}://{minio_endpoint}/{bucket_name}/{main_image.url}"
+            cover_url = helpers.get_image_url(main_image.url)
 
         data.append(
             {
@@ -142,20 +138,15 @@ def get_site(site_id):
     if not site:
         return jsonify({"error": "Sitio no encontrado"}), 404
 
-    # Construir URLs de imágenes desde MinIO
-    minio_endpoint = current_app.config.get("MINIO_ENDPOINT", "localhost:9000")
-    bucket_name = current_app.config.get("MINIO_BUCKET_NAME", "grupo37")
-    minio_secure = current_app.config.get("MINIO_SECURE", False)
-    protocol = "https" if minio_secure else "http"
-
     images = []
     for img in sorted(
         site.images, key=lambda x: x.order if x.order is not None else 999
     ):
+        url_ = helpers.get_image_url(img.url)
         images.append(
             {
                 "id": img.id,
-                "url": f"{protocol}://{minio_endpoint}/{bucket_name}/{img.url}",
+                "url": url_,
                 "titulo": img.titulo,
                 "descripcion": img.descripcion,
                 "order": img.order,
