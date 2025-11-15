@@ -90,7 +90,7 @@
 
         <div class="d-flex gap-2">
           <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
-          <button class="btn btn-primary">Ver en mapa</button>
+          <!-- <button class="btn btn-primary">Ver en mapa</button> -->
         </div>
       </section>
 
