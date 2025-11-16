@@ -1,4 +1,5 @@
 // src/services/api.ts
+import { useAuthStore } from '@/stores/auth';
 export const API_BASE: string = String(import.meta.env.VITE_API_BASE ?? '/api').replace(/\/+$/, '')
 
 export type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest'
@@ -140,15 +141,14 @@ export const SitesAPI = {
 
   async addFav(siteId: number): Promise<void> {
     const url = `${API_BASE}/sites/${siteId}/favorite`
+    // Acceder al store
+    const authStore = useAuthStore();
     const res = await fetch(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${authStore.user.token}` },
       
     })
     if (!res.ok) throw new Error('Error al agregar favorito')
   }
 }
-
-
-// credentials: 'include',
-// body: JSON.stringify({ site_id: siteId }),

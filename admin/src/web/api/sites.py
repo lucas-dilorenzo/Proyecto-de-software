@@ -18,7 +18,7 @@ from src.core.reseñas import (
 )
 from src.web import helpers
 from flask import session
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 
 @api_bp.route("/sites", methods=["GET"])
@@ -482,7 +482,7 @@ def delete_site_review(site_id, review_id):
 
 
 @api_bp.route("/sites/<int:site_id>/favorite", methods=["PUT"])
-@api_auth_required
+@jwt_required()
 def put_site_as_fav(site_id):
     """
     PUT /sites/{site_id}/favorite
