@@ -1,21 +1,29 @@
 <template>
-  <section ref="rootEl" class="section">
-    <header class="section-header">
-      <h2>{{ title }}</h2>
-      <button class="btn-link" @click="goSeeAll">Ver todos ›</button>
+  <section ref="rootEl" class="my-4">
+    <header class="d-flex justify-content-between align-items-baseline mb-3">
+      <h2 class="h4 mb-0" style="font-family: 'Playfair Display', serif">{{ title }}</h2>
+      <button class="btn btn-link text-decoration-none p-0" @click="goSeeAll">Ver todos ›</button>
     </header>
 
-    <div v-if="error" class="empty subtle">Error: {{ error }}</div>
+    <div v-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
 
     <div v-else>
-      <div v-if="loading" class="grid">
-        <SkeletonCard v-for="i in 6" :key="i" />
+      <div v-if="loading" class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div class="col" v-for="i in 6" :key="i">
+          <SkeletonCard />
+        </div>
       </div>
 
-      <div v-else-if="items.length === 0" class="empty subtle pill">No hay contenido</div>
+      <div v-else-if="items.length === 0" class="text-center py-3">
+        <span class="badge rounded-pill bg-light text-muted border px-3 py-2">
+          No hay contenido
+        </span>
+      </div>
 
-      <div v-else class="grid">
-        <SiteCard v-for="s in items" :key="s.id" :site="s" @open="openDetail" />
+      <div v-else class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+        <div class="col" v-for="s in items" :key="s.id">
+          <SiteCard :site="s" @open="openDetail" />
+        </div>
       </div>
     </div>
   </section>
@@ -27,7 +35,7 @@ import { useRouter } from 'vue-router'
 import SkeletonCard from './SkeletonCard.vue'
 import SiteCard from './SiteCard.vue'
 import { SitesAPI, type Site } from '@/services/api'
-import { logger } from '@/utils/logger' // 🔹 Importar logger
+import { logger } from '@/utils/logger'
 
 const props = defineProps<{
   title: string
@@ -56,19 +64,19 @@ async function fetchData() {
   try {
     loading.value = true
     error.value = ''
-    logger.log('📦 SectionStrip fetch:', props.title, props.sort) // 🔹 Usar logger
+    logger.log('📦 SectionStrip fetch:', props.title, props.sort)
 
     if (props.sort === 'favorites') {
       const res = await SitesAPI.favorites({ page: 1, per_page: 12 })
-      logger.log('✅ API /me/favorites:', res) // 🔹 Usar logger
+      logger.log('✅ API /me/favorites:', res)
       items.value = res.data || []
     } else {
       const res = await SitesAPI.list({ order_by: props.sort as any, per_page: 12 })
-      logger.log('✅ API /sites:', res) // 🔹 Usar logger
+      logger.log('✅ API /sites:', res)
       items.value = res.data || []
     }
   } catch (e: any) {
-    logger.error('❌ SectionStrip error:', e) // 🔹 Usar logger
+    logger.error('❌ SectionStrip error:', e)
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
@@ -97,62 +105,5 @@ onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <style scoped>
-.section {
-  margin: 24px 0;
-}
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: 16px;
-}
-.section-header h2 {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
-  margin: 0;
-}
-.btn-link {
-  background: none;
-  border: none;
-  color: var(--fg);
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
-  transition: color 0.2s;
-}
-.btn-link:hover {
-  color: var(--brand);
-}
-
-.grid {
-  display: grid;
-  gap: 18px;
-}
-@media (max-width: 767px) {
-  .grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (min-width: 768px) and (max-width: 1024px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-@media (min-width: 1025px) {
-  .grid {
-    grid-template-columns: repeat(4, 1fr);
-  }
-}
-
-.empty {
-  text-align: center;
-}
-.pill {
-  display: inline-block;
-  margin: 8px auto 0;
-  padding: 10px 16px;
-  border: 1px solid #e0dbd3;
-  border-radius: 999px;
-  background: #fff;
-}
+/* Único estilo que Bootstrap no cubre: fuente custom del título */
 </style>

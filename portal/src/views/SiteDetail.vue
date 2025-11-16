@@ -1,21 +1,17 @@
 <template>
   <main class="container py-4">
-    <!-- Loading -->
     <div v-if="loading" class="text-center py-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Cargando...</span>
       </div>
     </div>
 
-    <!-- Error -->
     <div v-else-if="error" class="alert alert-danger" role="alert">
       <strong>Error:</strong> {{ error }}
       <button @click="router.back()" class="btn btn-sm btn-outline-danger ms-3">Volver</button>
     </div>
 
-    <!-- Site Detail -->
     <article v-else-if="site" class="row g-4">
-      <!-- Images Carousel -->
       <section class="col-12 col-lg-6">
         <div
           v-if="site.images && site.images.length > 0"
@@ -65,7 +61,6 @@
         </div>
       </section>
 
-      <!-- Site Info -->
       <section class="col-12 col-lg-6">
         <div class="mb-3">
           <h1 class="mb-2">{{ site.name }}</h1>
@@ -96,6 +91,7 @@
         <div class="d-flex gap-2">
           <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
           <button class="btn btn-primary">Ver en mapa</button>
+          <button @click="agregar_favorito()" class="btn btn-sm btn-outline-primary ms-2">Agregar a favoritos</button>
         </div>
       </section>
 
@@ -158,8 +154,20 @@ onMounted(() => {
   logger.log('✅ SiteDetail mounted, id:', id)
   fetchSite()
 })
+
+async function agregar_favorito(){
+  try {
+    logger.log('📦 Agregando sitio a favoritos:', id)
+
+    await SitesAPI.addFav(id)
+
+    logger.log('✅ Sitio agregado a favoritos:', id)
+    alert('Sitio agregado a favoritos')
+  } catch (e: any) {
+    logger.error('Error:', e)
+    alert('Error: ' + (e?.message || 'Error desconocido'))
+  }
+}
 </script>
 
-<style scoped>
-/* Sin estilos custom necesarios */
-</style>
+<style scoped></style>

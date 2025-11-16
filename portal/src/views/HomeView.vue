@@ -36,13 +36,11 @@
 import { onMounted } from 'vue'
 import HeroSearch from '@/components/HeroSearch.vue'
 import SectionStrip from '@/components/SectionStrip.vue'
-import { logger } from '@/utils/logger' // 🔹 Importar logger
+import { logger } from '@/utils/logger'
 
 onMounted(() => {
-  logger.log('✅ HomeView mounted') // 🔹 Usar logger en onMounted
+  logger.log('✅ HomeView mounted')
 })
 </script>
 
-<style scoped>
-/* Ya no necesitas estilos custom, Bootstrap lo maneja */
-</style>
+<style scoped></style>
