@@ -1,4 +1,13 @@
-from flask import redirect, render_template, request, session, url_for, Blueprint, flash
+from flask import (
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    Blueprint,
+    flash,
+    make_response,
+)
 from werkzeug.security import check_password_hash
 from core.users import User, UserRole
 from web.helpers.validations.auth import FormularioInicioSesion
@@ -96,10 +105,12 @@ def login_jwt():
     user = users.get_user_by_email(email)
 
     if user and check_password_hash(user.password_hash, password):
-        access_token = create_access_token(identity=user.id)
-        response = jsonify()
+        access_token = create_access_token(identity=str(user.id))
+        response = make_response(
+            jsonify({"access_token": access_token, "user_id": user.id}), 201
+        )
         set_access_cookies(response, access_token)
-        return response, 201
+        return response
     else:
         return jsonify(message="Unauthorized"), 401
 
