@@ -13,6 +13,7 @@ export interface Site {
   state_of_conservation: string
   inserted_at: Date
   updated_at: Date
+  avg_rating?: number
   cover_url?: string
   cover_image?: string
   images?: SiteImage[]

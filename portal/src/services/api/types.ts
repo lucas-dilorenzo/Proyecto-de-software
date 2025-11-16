@@ -5,11 +5,9 @@ export interface PaginationQuery {
 
 export interface PaginatedResponse<T> {
   data: T[]
-  meta: {
-    page: number
-    per_page: number
-    total: number
-  }
+  page: number
+  per_page: number
+  total: number
 }
 
 export type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest'

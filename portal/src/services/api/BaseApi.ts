@@ -34,7 +34,7 @@ export class BaseApi {
     // )
     const response = await fetch(url, {
       method,
-      body: String(body),
+      body: body && String(body),
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     })
     const responseBody = await response.json()

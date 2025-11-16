@@ -107,11 +107,11 @@
             <div class="row g-3">
               <div class="col-md-6">
                 <strong>Coordenadas:</strong>
-                <p>{{ site.latitude }}, {{ site.longitude }}</p>
+                <p>{{ site.lat }}, {{ site.long }}</p>
               </div>
               <div class="col-md-6">
                 <strong>Estado de conservación:</strong>
-                <p>{{ site.conservation_status || 'No especificado' }}</p>
+                <p>{{ site.state_of_conservation || 'No especificado' }}</p>
               </div>
             </div>
           </div>
@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { SitesAPI, type Site } from '@/services/api'
+import api, { type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
 
 const route = useRoute()
@@ -142,7 +142,7 @@ async function fetchSite() {
   try {
     logger.log('📦 SiteDetail fetching site:', id)
 
-    const data = await SitesAPI.getById(id)
+    const data = await api.getSitesApi().get(id)
     site.value = data
 
     logger.log('✅ SiteDetail loaded:', data)

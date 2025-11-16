@@ -1,11 +1,15 @@
 <template>
-  <div>
-    <header class="topbar">Portal Público</header>
-    <div class="container"><router-view /></div>
-  </div>
+  <AuthProvider>
+    <div>
+      <header class="topbar">Portal Público</header>
+      <div class="container"><router-view /></div>
+    </div>
+  </AuthProvider>
 </template>
 
 <script setup>
+import AuthProvider from './components/auth/AuthProvider.vue'
+
 console.log('✅ App mounted')
 </script>
 
