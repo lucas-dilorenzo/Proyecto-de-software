@@ -117,7 +117,10 @@
           <div class="card-body">
             <h5 class="card-title">Ubicación</h5>
             <!-- mapa de leafleat -->
-            <MapComponent :lat="site.latitude" :lng="site.longitude" :zoom="12" />
+            <!-- si no hay sitios cercanos usar este componente -->
+            <MapComponent v-if="closeSites.length === 0" :lat="site.latitude" :lng="site.longitude" :zoom="12" />
+            <!-- si hay sitios cercanos usar este componente -->
+            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :zoom="12" :closeSites="closeSites" :radius="50" />
           </div>
         </div>
       </section>
@@ -137,6 +140,7 @@ const router = useRouter()
 
 const id = Number(route.params.id)
 const site = ref<Site | null>(null)
+const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
 
@@ -160,9 +164,31 @@ async function fetchSite() {
   }
 }
 
-onMounted(() => {
+async function fetchCloseSites() {
+  if (!site.value) return
+
+  try {
+    logger.log('📦 SiteDetail fetching close sites for site:', site.value.id)
+
+    const data = await SitesAPI.list({
+      lat: site.value.latitude,
+      long: site.value.longitude,
+      radius: 50,    
+    })
+
+    closeSites.value = data.data.filter((s: Site) => s.id !== site.value?.id)
+    logger.log('✅ SiteDetail loaded close sites:', closeSites.value.length)
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error fetching close sites:', err)
+    closeSites.value = []
+  }
+}
+
+onMounted(async () => {
   logger.log('✅ SiteDetail mounted, id:', id)
-  fetchSite()
+  await fetchSite()
+  await fetchCloseSites()
 })
 </script>
 
