@@ -1,6 +1,7 @@
 from flask import jsonify, request, current_app, session
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
+from geoalchemy2.types import Geography
 from . import api_bp
 from .auth import api_auth_required
 from src.core.database import db
@@ -60,10 +61,14 @@ def list_sites():
     if lat is not None and lng is not None and radius_km:
         try:
             radius_m = float(radius_km) * 1000.0
+            # Usar ST_DWithin con geography para trabajar con metros reales
             q = q.filter(
                 geofunc.ST_DWithin(
-                    Site.location,
-                    func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
+                    func.cast(Site.location, Geography),
+                    func.cast(
+                        func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
+                        Geography,
+                    ),
                     radius_m,
                 )
             )
@@ -103,10 +108,16 @@ def list_sites():
             {
                 "id": s.id,
                 "name": s.name,
+                "description_short": s.description_short,
+                "description": s.description,
                 "city": s.city,
                 "province": s.province,
                 "latitude": s.latitude,
                 "longitude": s.longitude,
+                "conservation_status": s.conservation_status,
+                "years_declared": s.year_declared,
+                "category": s.category,
+                "registration_date": s.registration_date,
                 "avg_rating": None,
                 "cover_image": cover_url,
             }
