@@ -90,7 +90,7 @@
 
         <div class="d-flex gap-2">
           <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
-          <button class="btn btn-primary">Ver en mapa</button>
+          <!-- <button class="btn btn-primary">Ver en mapa</button> -->
         </div>
       </section>
 
@@ -112,6 +112,15 @@
           </div>
         </div>
       </section>
+      <section class="col-12 ubication-section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Ubicación</h5>
+            <!-- mapa de leafleat -->
+            <MapComponent :lat="site.latitude" :lng="site.longitude" :zoom="12" />
+          </div>
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -121,6 +130,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SitesAPI, type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
+import MapComponent from '@/components/MapComponent.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -141,9 +151,10 @@ async function fetchSite() {
     site.value = data
 
     logger.log('✅ SiteDetail loaded:', data)
-  } catch (e: any) {
-    logger.error('❌ SiteDetail error:', e)
-    error.value = e?.message || 'Error al cargar el sitio'
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error:', err)
+    error.value = err.message || 'Error al cargar el sitio'
   } finally {
     loading.value = false
   }
