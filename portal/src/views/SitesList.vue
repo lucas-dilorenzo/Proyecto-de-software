@@ -91,7 +91,7 @@ async function fetchPage(p: number) {
     if (p === 1) items.value = pageItems
     else items.value = [...items.value, ...pageItems]
 
-    hasMore.value = p * res.per_page < res.total
+    hasMore.value = p * res.meta.per_page < res.meta.total
 
     logger.log('✅ SitesList loaded:', pageItems.length, 'items') // 🔹 Usar logger
   } catch (e: any) {
