@@ -120,7 +120,7 @@
             <!-- si no hay sitios cercanos usar este componente -->
             <MapComponent v-if="closeSites.length === 0" :lat="site.latitude" :lng="site.longitude" :zoom="12" />
             <!-- si hay sitios cercanos usar este componente -->
-            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :zoom="12" :closeSites="closeSites" :radius="50" />
+            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :zoom="8" :closeSites="closeSites" :radius="radius" />
           </div>
         </div>
       </section>
@@ -143,6 +143,7 @@ const site = ref<Site | null>(null)
 const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
+const radius = ref(50)
 
 async function fetchSite() {
   loading.value = true
@@ -173,7 +174,7 @@ async function fetchCloseSites() {
     const data = await SitesAPI.list({
       lat: site.value.latitude,
       long: site.value.longitude,
-      radius: 50,    
+      radius: radius.value,
     })
 
     closeSites.value = data.data.filter((s: Site) => s.id !== site.value?.id)

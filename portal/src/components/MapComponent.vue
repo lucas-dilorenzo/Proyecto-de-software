@@ -71,7 +71,7 @@ onMounted(() => {
         const circle = L.circle([props.lat, props.lng], {
           color: 'blue',
           fillColor: '#blue',
-          fillOpacity: 0.2,
+          fillOpacity: 0.1,
           radius: props.radius * 1000, // convertir km a metros
         }).addTo(mapInstance);
         circle.bindPopup(`Radio de ${props.radius} km`);
