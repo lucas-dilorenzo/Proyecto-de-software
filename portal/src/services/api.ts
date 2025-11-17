@@ -11,6 +11,10 @@ export interface Site {
   latitude: number
   longitude: number
   description?: string
+  description_short?: string
+  category?: string
+  years_declared?: string
+  registration_date?: string
   conservation_status?: string
   rating?: number
   avg_rating?: number

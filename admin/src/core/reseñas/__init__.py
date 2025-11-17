@@ -175,3 +175,142 @@ def eliminar_reseña(review_id):
         db.session.rollback()
         print(f"Error al eliminar reseña: {e}")
         return False
+
+
+def get_reviews_by_site(site_id):
+    """
+    Devuelve las reseñas correspondientes a un sitio histórico específico.
+    Args:
+        site_id (int): ID del sitio histórico.
+    Returns:
+        list: Una lista de objetos Reseña asociados con el sitio.
+    """
+    try:
+        reviews = db.session.query(Reseña).filter(Reseña.site_id == site_id).all()
+        return reviews
+    except Exception as e:
+        print(f"Error al obtener reseñas por site_id: {e}")
+        return []
+
+
+def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 10):
+    """
+    Devuelve las reseñas de un sitio específico con paginación.
+    Args:
+        site_id (int): ID del sitio histórico.
+        page (int): Número de página (por defecto 1).
+        per_page (int): Cantidad de reseñas por página (por defecto 10).
+    Returns:
+        Pagination: Objeto de paginación de SQLAlchemy con las reseñas.
+        None: Si el sitio no existe o hay error.
+    """
+    try:
+        # Verificar que el sitio existe y es válido
+        from src.core.historicalSites.site import Site
+
+        site = (
+            db.session.query(Site)
+            .filter_by(id=site_id, deleted=False, visibility=True)
+            .first()
+        )
+
+        if not site:
+            return None
+
+        # Construir consulta base con orden por fecha de creación descendente
+        query = (
+            db.session.query(Reseña)
+            .filter(Reseña.site_id == site_id)
+            .order_by(Reseña.fecha_creacion.desc(), Reseña.id.desc())
+        )
+
+        # Aplicar paginación usando SQLAlchemy paginate()
+        return query.paginate(page=page, per_page=per_page, error_out=False)
+
+    except Exception as e:
+        print(f"Error al obtener reseñas paginadas por site_id: {e}")
+        return None
+
+
+def validate_review_data(data, site_id, user_id):
+    """
+    Valida los datos de una reseña para su creación.
+    Args:
+        data (dict): Datos de la reseña a validar.
+        site_id (int): ID del sitio histórico asociado.
+        user_id (int): ID del usuario que crea la reseña.
+    Returns:
+        tuple: (is_valid (bool), errors (list))
+    """
+    errors = []
+
+    # Validar calificacion (entre 1 y 5)
+    calificacion = data.get("calificacion")
+    if calificacion is None:
+        errors.append("La calificación es obligatoria.")
+    elif not isinstance(calificacion, int) or not (1 <= calificacion <= 5):
+        errors.append("La calificación debe estar entre 1 y 5.")
+
+    # Validar contenido
+    contenido = data.get("contenido", "").strip()
+    if contenido is not None and len(contenido) > 500:
+        errors.append("El comentario no puede exceder los 500 caracteres.")
+
+    # Validar unicidad de reseña por usuario y sitio
+    existing_review = (
+        db.session.query(Reseña)
+        .filter(and_(Reseña.site_id == site_id, Reseña.user_id == user_id))
+        .first()
+    )
+    if existing_review:
+        errors.append(
+            "Ya existe una reseña para este sitio por el usuario especificado."
+        )
+
+    return (False, errors) if errors else (True, None)
+
+
+def create_review(site_id, user_id, calificacion, comentario):
+    """
+    Crea una nueva reseña en la base de datos.
+    Args:
+        site_id (int): ID del sitio histórico asociado.
+        user_id (int): ID del usuario que crea la reseña.
+        calificacion (int): Calificación de la reseña.
+        contenido (str): Contenido de la reseña.
+    Returns:
+        Reseña: El objeto Reseña recién creado.
+    """
+    try:
+        review = Reseña(
+            site_id=site_id,
+            user_id=user_id,
+            calificacion=calificacion,
+            contenido=comentario,
+        )
+        session = db.session
+        session.add(review)
+        session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al crear reseña: {e}")
+        raise ValueError(f"No se pudo crear la reseña: {e}")
+    return review
+
+
+def get_review_by_id(review_id):
+    return db.session.query(Reseña).filter(Reseña.id == review_id).first()
+
+
+def delete_review(review_id):
+    try:
+        review = get_review_by_id(review_id)
+        if review:
+            db.session.delete(review)
+            db.session.commit()
+            return True
+        return False
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al eliminar reseña: {e}")
+        return False

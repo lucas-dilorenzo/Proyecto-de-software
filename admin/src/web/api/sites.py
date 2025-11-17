@@ -1,12 +1,23 @@
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, session
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
+from geoalchemy2.types import Geography
 from . import api_bp
 from .validators import validate_params, validate_latitude, validate_longitude
 from .exceptions import NotFoundError, ValidationError
+from .auth import api_auth_required
 from src.core.database import db
 from src.core.historicalSites.site import Site
+from src.core.historicalSites import get_site_by_id
 from src.core.historicalSites.tags.tag import Tag
+from src.core.reseñas.reseña import Reseña
+from src.core.reseñas import (
+    get_reviews_by_site_paginated,
+    validate_review_data,
+    create_review,
+    get_review_by_id,
+    delete_review,
+)
 from src.web import helpers
 
 
@@ -85,10 +96,14 @@ def list_sites():
     if lat is not None and lng is not None and radius_km:
         try:
             radius_m = float(radius_km) * 1000.0
+            # Usar ST_DWithin con geography para trabajar con metros reales
             q = q.filter(
                 geofunc.ST_DWithin(
-                    Site.location,
-                    func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
+                    func.cast(Site.location, Geography),
+                    func.cast(
+                        func.ST_SetSRID(func.ST_MakePoint(lng, lat), 4326),
+                        Geography,
+                    ),
                     radius_m,
                 )
             )
@@ -129,10 +144,16 @@ def list_sites():
             {
                 "id": s.id,
                 "name": s.name,
+                "description_short": s.description_short,
+                "description": s.description,
                 "city": s.city,
                 "province": s.province,
                 "latitude": s.latitude,
                 "longitude": s.longitude,
+                "conservation_status": s.conservation_status,
+                "years_declared": s.year_declared,
+                "category": s.category,
+                "registration_date": s.registration_date,
                 "avg_rating": None,
                 "cover_image": cover_url,
             }
@@ -196,3 +217,268 @@ def get_site(site_id):
             "images": images,
         }
     )
+
+
+@api_bp.route("/sites/<int:site_id>/reviews", methods=["GET"])
+@api_auth_required
+def get_site_reviews(site_id):
+    """
+    GET /api/sites/:id/reviews?page=1&per_page=10
+    Devuelve las reseñas de un sitio específico con paginación.
+    Requiere autenticación - retorna 401 si no está logueado.
+
+    Parámetros:
+    - page: Número de página (por defecto 1)
+    - per_page: Reseñas por página, 1-100 (por defecto 10)
+    """
+    try:
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if not (1 <= per_page <= 100):
+            # Bad request si per_page no está en el rango válido error 400
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": {"per_page": ["Must be between 1 and 100"]},
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Obtener reseñas paginadas usando la función del core
+        reviews_paginated = get_reviews_by_site_paginated(
+            site_id=site_id, page=page, per_page=per_page
+        )
+
+        if reviews_paginated is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "not_found",
+                            "message": "Site not found",
+                        }
+                    }
+                ),
+                404,
+            )
+
+        # Construir respuesta con los datos paginados
+        data = []
+        for r in reviews_paginated.items:
+            data.append(
+                {
+                    "id": r.id,
+                    "site_id": r.site_id,
+                    "rating": r.calificacion,
+                    "comment": r.contenido,
+                    "inserted_at": r.fecha_creacion,
+                    "updated_at": r.fecha_creacion,
+                }
+            )
+
+        return jsonify(
+            {
+                "data": data,
+                "meta": {
+                    "page": reviews_paginated.page,
+                    "per_page": reviews_paginated.per_page,
+                    "total": reviews_paginated.total,
+                },
+            }
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/sites/<int:site_id>/reviews", methods=["POST"])
+@api_auth_required
+def create_site_review(site_id):
+    """
+    POST /api/sites/:id/reviews
+    Crea una nueva reseña para un sitio (requiere autenticación).
+    Retorna 401 si no está autenticado.
+    """
+    try:
+        # Verificación adicional de usuario (por seguridad)
+        user_id = session.get("user")
+        if user_id is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required to create reviews",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        if get_site_by_id(site_id) is None:
+            return (
+                jsonify({"error": {"code": "not_found", "message": "Site not found"}}),
+                404,
+            )
+        # validaciones y creación de la reseña
+        is_valid, errors = validate_review_data(request.json, site_id, user_id)
+        print(f"DEBUG: Validación - is_valid: {is_valid}, errors: {errors}")
+
+        if not is_valid:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": errors,
+                        }
+                    }
+                ),
+                400,
+            )
+
+        print("DEBUG: Datos válidos, creando reseña...")
+        new_review = create_review(
+            site_id=site_id,
+            user_id=user_id,
+            calificacion=request.json.get("calificacion"),
+            comentario=request.json.get("contenido"),
+        )
+
+        return (
+            jsonify(
+                {
+                    "message": "Review created successfully",
+                    "data": {
+                        "site_id": site_id,
+                        "rating": request.json.get("calificacion"),
+                        "comment": request.json.get("contenido"),
+                        "inserted_at": new_review.fecha_creacion,
+                        "updated_at": new_review.fecha_creacion,
+                    },
+                }
+            ),
+            201,
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["DELETE"])
+@api_auth_required
+def delete_site_review(site_id, review_id):
+    """
+    DELETE /api/sites/:site_id/reviews/:review_id
+    Elimina una reseña existente (solo si pertenece al usuario autenticado).
+    """
+
+    try:
+        user_id = session.get("user")
+
+        # Verificación adicional de usuario (por seguridad)
+        if user_id is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required to delete reviews",
+                        }
+                    }
+                ),
+                401,
+            )
+        # Busco la reseña
+        review_to_delete = get_review_by_id(review_id)
+        # Manejo del Error 404 (Reseña no encontrada)
+        if review_to_delete is None:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Esto asegura que la URL sea canónica (ej: /sites/10/reviews/5 no puede eliminar la reseña 5 si pertenece al sitio 20)
+        if review_to_delete.site_id != site_id:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Manejo del Error 403 (No tiene permiso), asumo que solo el dueño de la reseña puede eliminarla
+        if review_to_delete.user_id != user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "forbidden",
+                            "message": "You do not have permission to delete this review",
+                        }
+                    }
+                ),
+                403,
+            )
+
+        # Elimino la reseña
+        success = delete_review(review_id)
+
+        if not success:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "server_error",
+                            "message": "Failed to delete review",
+                        }
+                    }
+                ),
+                500,
+            )
+
+        # Respuesta Exitosa 204 No Content
+        return "", 204
+
+    except Exception:
+        # 8. Manejo del Error 500 (Server Error)
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
+                    }
+                }
+            ),
+            500,
+        )
