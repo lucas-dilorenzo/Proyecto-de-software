@@ -1,12 +1,36 @@
 <template>
   <div>
-    <header class="topbar">Portal Público</header>
+    <header class="topbar">
+      <div class="col d-flex justify-content-between align-items-center">
+        <div class="col-md-1">
+          Portal Público
+        </div>
+        <div class="col-md-10"></div>
+        <div class="col-md-1">
+          <router-link to="/login">Login</router-link>
+        </div>
+      </div>  
+    </header>
     <div class="container"><router-view /></div>
   </div>
 </template>
 
-<script setup>
-console.log('✅ App mounted')
+<script setup lang="ts">
+import { onMounted } from 'vue';
+import { useAuthStore } from '@/stores/auth';
+
+const authStore = useAuthStore();
+
+onMounted(async () => {
+  console.log('✅ App mounted');
+  // Intentar recuperar la sesión al cargar la aplicación
+  try {
+    await authStore.fetchCurrentUser();
+    console.log('✅ Sesión recuperada');
+  } catch {
+    console.log('ℹ️ No hay sesión activa');
+  }
+});
 </script>
 
 <style scoped>

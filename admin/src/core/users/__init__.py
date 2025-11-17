@@ -171,3 +171,16 @@ def get_users_filtered(page=1, per_page=25, email="", activo="", rol="", order="
 
     # Ejecutar la consulta paginada
     return query.paginate(page=page, per_page=per_page, error_out=False)
+
+
+def get_jwt_user_by_id(user_id):
+    """Retrieve a user by their unique ID for JWT authentication."""
+    user = User.query.filter_by(id=user_id).first()
+    if user:
+        nombre_completo = user.nombre + " " + user.apellido
+        user = {
+            "nombre": nombre_completo,
+            "email": user.email,
+            "id": user.id,
+        }
+    return user
