@@ -7,8 +7,8 @@ export interface Site {
   description: string
   city: string
   province: string
-  lat: number
-  long: number
+  latitude: number
+  longitude: number
   tags: string[]
   state_of_conservation: string
   inserted_at: Date

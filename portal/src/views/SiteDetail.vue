@@ -102,7 +102,7 @@
             <div class="row g-3">
               <div class="col-md-6">
                 <strong>Coordenadas:</strong>
-                <p>{{ site.lat }}, {{ site.long }}</p>
+                <p>{{ site.latitude }}, {{ site.longitude }}</p>
               </div>
               <div class="col-md-6">
                 <strong>Estado de conservación:</strong>
@@ -171,7 +171,7 @@ async function fetchCloseSites() {
   try {
     logger.log('📦 SiteDetail fetching close sites for site:', site.value.id)
 
-    const data = await SitesAPI.list({
+    const data = await api.getSitesApi().list({
       lat: site.value.latitude,
       long: site.value.longitude,
       radius: radius.value,

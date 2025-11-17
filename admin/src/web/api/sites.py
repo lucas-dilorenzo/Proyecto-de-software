@@ -1,4 +1,5 @@
 from flask import jsonify, request, current_app, session
+from flask_jwt_extended import jwt_required
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
 from geoalchemy2.types import Geography
@@ -21,16 +22,20 @@ from src.core.reseñas import (
 from src.web import helpers
 
 
-
-@api_bp.route("/sites", methods=["GET"])
-@validate_params({
-    'lat': {'type': float, 'validate': validate_latitude},
-    'long': {'type': float, 'validate': validate_longitude},
-    'radius': {'type': float, 'min': 0.1, 'max': 500},
-    'page': {'type': int, 'min': 1},
-    'per_page': {'type': int, 'min': 1, 'max': 100},
-    'order_by': {'type': str, 'choices': ['latest', 'oldest', 'rating-5-1', 'rating-1-5']},
-})
+@api_bp.route("/sites/", methods=["GET"])
+@validate_params(
+    {
+        "lat": {"type": float, "validate": validate_latitude},
+        "long": {"type": float, "validate": validate_longitude},
+        "radius": {"type": float, "min": 0.1, "max": 500},
+        "page": {"type": int, "min": 1},
+        "per_page": {"type": int, "min": 1, "max": 100},
+        "order_by": {
+            "type": str,
+            "choices": ["latest", "oldest", "rating-5-1", "rating-1-5"],
+        },
+    }
+)
 def list_sites():
     """
     GET /api/sites - Lista sitios con filtros y paginación
@@ -50,12 +55,10 @@ def list_sites():
     if (lat is not None or lng is not None) and radius_km is None:
         raise ValidationError(
             message="Geographic search requires lat, long, and radius parameters",
-            details={
-                "radius": ["Required when using lat/long"]
-            }
+            details={"radius": ["Required when using lat/long"]},
         )
-    
-    if (lat is not None or lng is not None or radius_km is not None):
+
+    if lat is not None or lng is not None or radius_km is not None:
         if lat is None or lng is None or radius_km is None:
             missing = []
             if lat is None:
@@ -64,12 +67,12 @@ def list_sites():
                 missing.append("long")
             if radius_km is None:
                 missing.append("radius")
-            
+
             raise ValidationError(
                 message="Geographic search requires all three parameters: lat, long, and radius",
                 details={
                     param: ["Required for geographic search"] for param in missing
-                }
+                },
             )
 
     q = db.session.query(Site).filter(
@@ -109,8 +112,7 @@ def list_sites():
             )
         except Exception as e:
             raise ValidationError(
-                message="Geographic filter failed",
-                details={"geo": [str(e)]}
+                message="Geographic filter failed", details={"geo": [str(e)]}
             )
 
     # Orden
@@ -167,7 +169,6 @@ def list_sites():
             "total": total,
         }
     )
-
 
 
 @api_bp.route("/sites/<int:site_id>", methods=["GET"])
