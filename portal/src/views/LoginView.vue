@@ -57,6 +57,8 @@ const login = async () => {
         if (isLoggedIn.value) {
             router.push('/login');
         }
+        //redirect to home
+        router.push('/');
     } catch (e) {
         console.log(e);
         error.value = true;

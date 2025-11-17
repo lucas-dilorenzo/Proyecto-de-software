@@ -3,23 +3,30 @@
     <header class="topbar">
       <div class="col d-flex justify-content-between align-items-center">
         <div class="col-md-1">
+          <router-link to="/" class="navbar-brand">
           Portal Público
+          </router-link>
         </div>
         <div class="col-md-10"></div>
-        <div class="col-md-1">
-          <router-link to="/login">Login</router-link>
+        <div class="col-md-1">          
+          <div v-if="isLoggedIn">
+            <UserDropdown :loggedIn="isLoggedIn"/>
+          </div>
+          <router-link v-else to="/login">Log In</router-link>
         </div>
-      </div>  
+      </div>
     </header>
     <div class="container"><router-view /></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, computed } from 'vue';
 import { useAuthStore } from '@/stores/auth';
+import UserDropdown from '@/components/UserDropdown.vue';
 
 const authStore = useAuthStore();
+const isLoggedIn = computed(() => authStore.isLoggedIn);
 
 onMounted(async () => {
   console.log('✅ App mounted');

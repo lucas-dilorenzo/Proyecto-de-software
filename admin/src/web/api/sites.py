@@ -108,10 +108,16 @@ def list_sites():
             {
                 "id": s.id,
                 "name": s.name,
+                "description_short": s.description_short,
+                "description": s.description,
                 "city": s.city,
                 "province": s.province,
                 "latitude": s.latitude,
                 "longitude": s.longitude,
+                "conservation_status": s.conservation_status,
+                "years_declared": s.year_declared,
+                "category": s.category,
+                "registration_date": s.registration_date,
                 "avg_rating": None,
                 "cover_image": cover_url,
             }

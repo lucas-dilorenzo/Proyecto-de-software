@@ -9,7 +9,7 @@
         layer-type="base"
         name="OpenStreetMap"
       ></l-tile-layer>
-      <l-marker :lat-lng="coordinates" draggable> </l-marker>
+      <l-marker :lat-lng="coordinates"> </l-marker>
     </l-map>
   </div>
 </template>
@@ -64,7 +64,7 @@ onMounted(() => {
         // Agregar marcadores al mapa
         props.closeSites.forEach((site: Site) => {
           const marker = L.marker([site.latitude, site.longitude]).addTo(mapInstance);
-          marker.bindPopup(`<b>${site.name}</b><br>${site.description || ''}`);
+          marker.bindPopup(`<b>${site.name}</b><br>${site.description_short || ''}<br><a class='btn btn-primary btn-sm text-white' href='/sitios/${site.id}'>Ver más</a>`);
         });
         
         // Agregar círculo de radio
@@ -75,6 +75,10 @@ onMounted(() => {
           radius: props.radius * 1000, // convertir km a metros
         }).addTo(mapInstance);
         circle.bindPopup(`Radio de ${props.radius} km`);
+        
+        // Ajustar el zoom automáticamente para que el círculo sea visible
+        const bounds = circle.getBounds();
+        mapInstance.fitBounds(bounds, { padding: [1, 1] });
       }
     }, 100);
   } else {

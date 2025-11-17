@@ -118,9 +118,9 @@
             <h5 class="card-title">Ubicación</h5>
             <!-- mapa de leafleat -->
             <!-- si no hay sitios cercanos usar este componente -->
-            <MapComponent v-if="closeSites.length === 0" :lat="site.latitude" :lng="site.longitude" :zoom="12" />
+            <MapComponent v-if="closeSites.length === 0" :lat="site.latitude" :lng="site.longitude" :zoom="12"/>
             <!-- si hay sitios cercanos usar este componente -->
-            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :zoom="8" :closeSites="closeSites" :radius="radius" />
+            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :closeSites="closeSites" :radius="radius" />
           </div>
         </div>
       </section>
