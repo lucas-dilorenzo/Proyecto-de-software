@@ -1,8 +1,26 @@
-from flask import redirect, render_template, request, session, url_for, Blueprint, flash
+from flask import (
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+    Blueprint,
+    flash,
+    make_response,
+)
 from werkzeug.security import check_password_hash
 from core.users import User, UserRole
 from web.helpers.validations.auth import FormularioInicioSesion
 from web.helpers import is_authenticated
+from src.core import users
+from flask_jwt_extended import (
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+    set_access_cookies,
+    unset_jwt_cookies,
+)
+from flask import jsonify
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
@@ -72,3 +90,49 @@ def authenticated(session):
     Returns:
         The authenticated user or None if not found."""
     return session.get("user")
+
+
+@auth_bp.post("/login_jwt")
+def login_jwt():
+    """Handles JWT-based user login.
+    Expects JSON with "email" and "password".
+    Returns:
+        201 with JWT cookies on success, 401 on failure.
+    """
+    data = request.get_json()
+    email = data["email"]
+    password = data["password"]
+    user = users.get_user_by_email(email)
+
+    if user and check_password_hash(user.password_hash, password):
+        access_token = create_access_token(identity=str(user.id))
+        response = make_response(
+            jsonify({"access_token": access_token, "user_id": user.id}), 201
+        )
+        set_access_cookies(response, access_token)
+        return response
+    else:
+        return jsonify(message="Unauthorized"), 401
+
+
+@auth_bp.get("/logout_jwt")
+@jwt_required()
+def logout_jwt():
+    """Handles JWT-based user logout.
+    Returns:
+        200 on success."""
+    response = jsonify()
+    unset_jwt_cookies(response)
+    return response, 200
+
+
+@auth_bp.get("/user_jwt")
+@jwt_required()
+def user_jwt():
+    """Retrieves the authenticated user via JWT.
+    Returns:
+        200 with user data on success."""
+    current_user = get_jwt_identity()
+    user = users.get_jwt_user_by_id(current_user)
+    response = jsonify(user)
+    return response, 200

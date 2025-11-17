@@ -250,18 +250,8 @@ Bootstrap y estilos propios. #}
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link">
-            <div
-              style="
-                width: 24px;
-                height: 24px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-              "
-            >
-              <i class="bi bi-chat me-2"></i>
-            </div>
+          <a href="{{ url_for('reseñas.list_reseñas') }}" class="nav-link">
+              <i class="bi bi-ui-checks-grid"></i>
             <div>
               <span>Moderación de reseñas</span>
             </div>

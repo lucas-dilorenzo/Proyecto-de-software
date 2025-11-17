@@ -1,6 +1,5 @@
 <template>
   <main class="container py-3">
-    <!-- Header con título y filtro -->
     <header class="d-flex justify-content-between align-items-baseline gap-3 mb-3">
       <h1 class="m-0">Listado de Sitios</h1>
       <select
@@ -17,29 +16,24 @@
     </header>
 
     <section>
-      <!-- Error -->
       <div v-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
 
-      <!-- Loading -->
       <div v-else-if="loading" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
         <div class="col" v-for="i in 8" :key="i">
           <SkeletonCard />
         </div>
       </div>
 
-      <!-- No results -->
       <div v-else-if="items.length === 0" class="text-center text-muted py-5">
         No hay resultados
       </div>
 
-      <!-- Results grid -->
       <div v-else class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3">
         <div class="col" v-for="s in items" :key="s.id">
           <SiteCard :site="s" @open="openDetail" />
         </div>
       </div>
 
-      <!-- Load more button -->
       <div v-if="!loading && hasMore" class="d-flex justify-content-center mt-4">
         <button class="btn btn-outline-primary" @click="loadMore">Cargar más</button>
       </div>
@@ -79,7 +73,7 @@ async function fetchPage(p: number) {
   loading.value = true
   error.value = ''
   try {
-    logger.log('📦 SitesList fetchPage:', p, orderBy.value) // 🔹 Usar logger
+    logger.log('📦 SitesList fetchPage:', p, orderBy.value)
 
     const res = await api.getSitesApi().list({
       order_by: orderBy.value as any,
@@ -93,9 +87,9 @@ async function fetchPage(p: number) {
 
     hasMore.value = p * res.meta.per_page < res.meta.total
 
-    logger.log('✅ SitesList loaded:', pageItems.length, 'items') // 🔹 Usar logger
+    logger.log('✅ SitesList loaded:', pageItems.length, 'items')
   } catch (e: any) {
-    logger.error('❌ SitesList error:', e) // 🔹 Usar logger
+    logger.error('❌ SitesList error:', e)
     error.value = e?.message || 'Error al cargar'
   } finally {
     loading.value = false
@@ -128,11 +122,9 @@ watch(
 )
 
 onMounted(() => {
-  logger.log('✅ SitesList mounted') // 🔹 Usar logger
+  logger.log('✅ SitesList mounted')
   reload()
 })
 </script>
 
-<style scoped>
-/* Sin estilos custom necesarios */
-</style>
+<style scoped></style>

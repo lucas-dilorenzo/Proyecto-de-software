@@ -1,4 +1,5 @@
 from select import select
+import random
 
 # from core.database import db
 from src.core.database import db
@@ -6,9 +7,11 @@ from src.core.featureFlags.flag import FeatureFlag
 from src.core import historicalSites
 from src.core.historicalSites.site import Site
 from src.core.historicalSites.tags.tag import Tag
-from datetime import date
+from datetime import date, datetime, timezone
 from src.core.users.user import User, UserRole
 from src.core.permissions.permission import Permission, UserPermission, Role
+from src.core.reseñas.reseña import Reseña
+from src.core.reseñas.estadoReseña import estadoReseña
 from werkzeug.security import generate_password_hash
 
 
@@ -521,6 +524,15 @@ def run():
                     historicalSites.asignar_tags_a_sitio(existing_site, tag_objs)
             print(f"Site already exists: {site_data['name']}")
 
+    roles()
+    print("Roles y permisos creados.")
+
+    users()
+    print("Usuarios de prueba creados.")
+
+    reseñas()
+    print("Reseñas de usuarios públicos creadas.")
+
     print("Database seeding complete.")
 
 
@@ -541,6 +553,22 @@ def users():
         print("Admin creado: admin@example.com / admin123")
     else:
         print("El admin ya existe.")
+
+    # Crear moderador si no existe
+    moderator_exists = User.query.filter_by(email="moderador@example.com").first()
+    if not moderator_exists:
+        moderador = User(
+            email="moderador@example.com",
+            nombre="Moderador",
+            apellido="Principal",
+            password_hash=generate_password_hash("password123"),
+            activo=True,
+            rol=UserRole.MODERATOR,
+        )
+        db.session.add(moderador)
+        print("Moderador creado: moderador@example.com")
+    else:
+        print("El moderador ya existe.")
 
     # Crear 30 usuarios de prueba
     test_users = []
@@ -575,15 +603,27 @@ def users():
                 )
             )
 
-    # 10 usuarios públicos (algunos inactivos)
-    for i in range(1, 11):
-        email = f"user{i}@example.com"
+    # 10 usuarios públicos (algunos inactivos) con nombres reales
+    usuarios_publicos_data = [
+        ("user1@example.com", "María", "García"),
+        ("user2@example.com", "Carlos", "Rodríguez"),
+        ("user3@example.com", "Ana", "Martínez"),
+        ("user4@example.com", "Luis", "López"),
+        ("user5@example.com", "Carmen", "Sánchez"),
+        ("user6@example.com", "Miguel", "Pérez"),
+        ("user7@example.com", "Rosa", "Hernández"),
+        ("user8@example.com", "Antonio", "Jiménez"),
+        ("user9@example.com", "Isabel", "Ruiz"),
+        ("user10@example.com", "Francisco", "Moreno"),
+    ]
+
+    for i, (email, nombre, apellido) in enumerate(usuarios_publicos_data, 1):
         if not User.query.filter_by(email=email).first():
             test_users.append(
                 User(
                     email=email,
-                    nombre=f"Usuario{i}",
-                    apellido=f"Apellido{i}",
+                    nombre=nombre,
+                    apellido=apellido,
                     password_hash=generate_password_hash("password123"),
                     activo=i % 5 != 0,  # Cada quinto usuario inactivo
                     rol=UserRole.PUBLIC,
@@ -599,17 +639,185 @@ def users():
 
 
 def roles():
-    for name in UserRole.__members__.keys():
-        db.session.add(Role(name=name))
+    # Crear roles usando los VALUES del enum, no las keys
+    for role_enum in UserRole:
+        existing_role = Role.query.filter_by(name=role_enum.value).first()
+        if not existing_role:
+            db.session.add(Role(name=role_enum.value))
 
+    db.session.commit()  # Commit roles first
+
+    # Crear permisos y sus relaciones con roles
     for name, roles in UserPermission.__members__.values():
-        perm = Permission(name=name)
-        for r in roles:
-            r = Role.query.filter_by(name=r).first()
-            if r:
-                perm.roles.append(r)
-        db.session.add(perm)
+        existing_perm = Permission.query.filter_by(name=name).first()
+        if not existing_perm:
+            perm = Permission(name=name)
+            for role_enum in roles:
+                r = Role.query.filter_by(name=role_enum.value).first()
+                if r:
+                    perm.roles.append(r)
+            db.session.add(perm)
+
     db.session.commit()
+
+
+def reseñas():
+    """
+    Crea 30 reseñas de usuarios públicos con fechas variadas y estados distribuidos para sitios históricos.
+
+    Estados: 20 pendientes, 5 aprobadas, 5 rechazadas
+    Fechas: Variadas en los últimos 6 meses para facilitar pruebas de filtros de rango
+    """
+    # Obtener usuarios públicos existentes
+    usuarios_publicos = User.query.filter_by(rol=UserRole.PUBLIC, activo=True).all()
+
+    if not usuarios_publicos:
+        print("No hay usuarios públicos activos. Creando reseñas de prueba...")
+        return
+
+    # Obtener sitios históricos existentes
+    sitios = Site.query.filter_by(visibility=True, deleted=False).all()
+
+    if not sitios:
+        print("No hay sitios históricos disponibles. Creando reseñas de prueba...")
+        return
+
+    # Contenidos de ejemplo para las reseñas
+    contenidos_ejemplo = [
+        "Excelente lugar histórico, muy bien conservado y con una historia fascinante.",
+        "Un sitio impresionante que vale la pena visitar. La arquitectura es increíble.",
+        "Lugar muy interesante desde el punto de vista cultural e histórico.",
+        "Hermoso patrimonio, aunque le falta un poco más de información para los visitantes.",
+        "Una experiencia única visitando este sitio tan importante para nuestra historia.",
+        "El lugar está bien mantenido y la vista es espectacular. Muy recomendable.",
+        "Interesante desde el punto de vista arqueológico, aunque podría mejorarse la accesibilidad.",
+        "Un tesoro histórico que deberíamos preservar mejor. La visita fue muy educativa.",
+        "Lugar emblemático con mucha historia. La guía fue excelente y muy informativa.",
+        "Sitio histórico muy bien preservado, perfecto para una visita familiar.",
+        "La importancia histórica del lugar es innegable, aunque necesita mejor señalización.",
+        "Un lugar mágico lleno de historia y belleza natural. Definitivamente volvería.",
+        "Excelente conservación del patrimonio. La experiencia fue muy enriquecedora.",
+        "Lugar histórico fascinante con una arquitectura única. Muy bien mantenido.",
+        "Un sitio que conecta con nuestras raíces históricas. Muy emotiva la visita.",
+        "Increíble experiencia cultural. Los detalles arquitectónicos son impresionantes.",
+        "Un poco decepcionante la falta de mantenimiento en algunas áreas del sitio.",
+        "Perfecto para aprender historia de forma entretenida. Los niños se divirtieron mucho.",
+        "El recorrido es algo extenso pero vale la pena cada minuto. Muy educativo.",
+        "Las vistas desde este lugar histórico son simplemente espectaculares.",
+        "Buena organización del sitio, aunque los precios de entrada son algo elevados.",
+        "Un lugar que te transporta en el tiempo. La ambientación es excelente.",
+        "Esperaba más información histórica disponible. El sitio es hermoso pero falta contexto.",
+        "Fantástica conservación del patrimonio. Se nota el cuidado y dedicación del personal.",
+        "Visita obligatoria para cualquier amante de la historia y la cultura.",
+        "El sitio tiene un gran potencial turístico que debería ser mejor aprovechado.",
+        "Una joya arquitectónica que refleja la grandeza de nuestro pasado.",
+        "Buen lugar para visitar en familia, aunque falta más infraestructura para niños.",
+        "La importancia histórica es evidente, pero necesita modernizar la experiencia del visitante.",
+        "Lugar lleno de historia y tradición. La guía local conoce muchas anécdotas interesantes.",
+        "Excelente estado de conservación considerando la antigüedad del sitio.",
+        "Un tesoro cultural que merece mayor difusión y reconocimiento internacional.",
+        "La visita fue breve pero muy satisfactoria. Perfecto para una escapada de fin de semana.",
+        "Impresionante trabajo de restauración. Se nota la inversión en preservar el patrimonio.",
+        "Lugar ideal para fotografía histórica y arquitectónica. Muy pintoresco.",
+        "Buena experiencia general, aunque el horario de visitas es algo limitado.",
+        "Un sitio que combina perfectamente historia, cultura y belleza natural.",
+        "La entrada es accesible y el personal muy amable y conocedor del lugar.",
+        "Esperaba más actividades interactivas, pero la belleza del lugar compensa.",
+        "Un lugar que todo estudiante de historia debería conocer. Muy enriquecedor académicamente.",
+    ]
+
+    # Generar fechas variadas en los últimos 6 meses
+    from datetime import timedelta
+
+    fecha_base = datetime.now(timezone.utc)
+    fechas_variadas = [
+        fecha_base - timedelta(days=random.randint(1, 180))  # Últimos 6 meses
+        for _ in range(30)
+    ]
+
+    # Definir distribución de estados: 20 pendientes, 5 aprobadas, 5 rechazadas
+    estados = (
+        [estadoReseña.PENDIENTE.code] * 20
+        + [estadoReseña.APROBADA.code] * 5
+        + [estadoReseña.RECHAZADA.code] * 5
+    )
+    random.shuffle(estados)  # Mezclar para distribución aleatoria
+
+    reseñas_creadas = []
+    usuarios_sitios_usados = (
+        set()
+    )  # Para evitar reseñas duplicadas del mismo usuario al mismo sitio
+
+    intentos = 0
+    while (
+        len(reseñas_creadas) < 30 and intentos < 100
+    ):  # Máximo 100 intentos para evitar loop infinito
+        usuario = random.choice(usuarios_publicos)
+        sitio = random.choice(sitios)
+
+        # Verificar que este usuario no haya reseñado este sitio
+        clave_unica = (usuario.id, sitio.id)
+        if clave_unica in usuarios_sitios_usados:
+            intentos += 1
+            continue
+
+        # Verificar en la base de datos que no exista ya una reseña de este usuario para este sitio
+        reseña_existente = Reseña.query.filter_by(
+            user_id=usuario.id, site_id=sitio.id
+        ).first()
+        if reseña_existente:
+            intentos += 1
+            continue
+
+        usuarios_sitios_usados.add(clave_unica)
+
+        # Obtener índice actual para asignar fecha y estado correspondiente
+        indice_actual = len(reseñas_creadas)
+
+        # Crear la reseña con fecha y estado variados
+        nueva_reseña = Reseña(
+            calificacion=random.randint(3, 5),  # Calificaciones entre 3 y 5 estrellas
+            contenido=random.choice(contenidos_ejemplo),
+            user_id=usuario.id,
+            site_id=sitio.id,
+            estado=estados[indice_actual],  # Estado según distribución planificada
+            motivo_rechazo=(
+                "Contenido inapropiado"
+                if estados[indice_actual] == estadoReseña.RECHAZADA.code
+                else None
+            ),
+            fecha_creacion=fechas_variadas[indice_actual],  # Fecha variada
+        )
+
+        reseñas_creadas.append(nueva_reseña)
+        intentos += 1
+
+    if reseñas_creadas:
+        db.session.add_all(reseñas_creadas)
+        db.session.commit()
+
+        # Contar reseñas por estado para mostrar resumen
+        pendientes = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.PENDIENTE.code
+        )
+        aprobadas = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.APROBADA.code
+        )
+        rechazadas = sum(
+            1 for r in reseñas_creadas if r.estado == estadoReseña.RECHAZADA.code
+        )
+
+        print(f"Se crearon {len(reseñas_creadas)} reseñas con fechas variadas:")
+        print(f"  - {pendientes} pendientes")
+        print(f"  - {aprobadas} aprobadas")
+        print(f"  - {rechazadas} rechazadas")
+        print(
+            f"  - Fechas: desde {min(fechas_variadas).strftime('%d/%m/%Y')} hasta {max(fechas_variadas).strftime('%d/%m/%Y')}"
+        )
+    else:
+        print(
+            "No se pudieron crear reseñas (posiblemente por falta de combinaciones únicas usuario-sitio)."
+        )
 
 
 def feature_flags_seed():

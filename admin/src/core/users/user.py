@@ -19,6 +19,7 @@ class UserRole(str, enum.Enum):
 
     PUBLIC = "PUBLIC"
     EDITOR = "EDITOR"
+    MODERATOR = "MODERATOR"
     ADMIN = "ADMIN"
     SYS_ADMIN = "SYS_ADMIN"
 
