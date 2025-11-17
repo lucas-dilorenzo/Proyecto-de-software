@@ -3,6 +3,8 @@ from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
 from geoalchemy2.types import Geography
 from . import api_bp
+from .validators import validate_params, validate_latitude, validate_longitude
+from .exceptions import NotFoundError, ValidationError
 from .auth import api_auth_required
 from src.core.database import db
 from src.core.historicalSites.site import Site
@@ -19,11 +21,19 @@ from src.core.reseñas import (
 from src.web import helpers
 
 
+
 @api_bp.route("/sites", methods=["GET"])
+@validate_params({
+    'lat': {'type': float, 'validate': validate_latitude},
+    'long': {'type': float, 'validate': validate_longitude},
+    'radius': {'type': float, 'min': 0.1, 'max': 500},
+    'page': {'type': int, 'min': 1},
+    'per_page': {'type': int, 'min': 1, 'max': 100},
+    'order_by': {'type': str, 'choices': ['latest', 'oldest', 'rating-5-1', 'rating-1-5']},
+})
 def list_sites():
     """
-    GET /api/sites?name=&description=&city=&province=&tags=&lat=&long=&radius=&order_by=latest&page=1&per_page=12
-    Devuelve sitios visibles filtrados y paginados.
+    GET /api/sites - Lista sitios con filtros y paginación
     """
     name = request.args.get("name", type=str)
     description = request.args.get("description", type=str)
@@ -34,14 +44,39 @@ def list_sites():
     lng = request.args.get("long", type=float)
     radius_km = request.args.get("radius", type=float)
     order_by = request.args.get("order_by", "latest")
-    page = max(1, request.args.get("page", type=int) or 1)
-    per_page = min(max(1, request.args.get("per_page", type=int) or 12), 100)
+    page = request.args.get("page", type=int, default=1)
+    per_page = request.args.get("per_page", type=int, default=12)
+
+    if (lat is not None or lng is not None) and radius_km is None:
+        raise ValidationError(
+            message="Geographic search requires lat, long, and radius parameters",
+            details={
+                "radius": ["Required when using lat/long"]
+            }
+        )
+    
+    if (lat is not None or lng is not None or radius_km is not None):
+        if lat is None or lng is None or radius_km is None:
+            missing = []
+            if lat is None:
+                missing.append("lat")
+            if lng is None:
+                missing.append("long")
+            if radius_km is None:
+                missing.append("radius")
+            
+            raise ValidationError(
+                message="Geographic search requires all three parameters: lat, long, and radius",
+                details={
+                    param: ["Required for geographic search"] for param in missing
+                }
+            )
 
     q = db.session.query(Site).filter(
         Site.deleted.is_(False), Site.visibility.is_(True)
     )
 
-    # ----- filtros
+    # Filtros de texto
     if name:
         q = q.filter(Site.name.ilike(f"%{name.strip()}%"))
     if description:
@@ -51,13 +86,13 @@ def list_sites():
     if province:
         q = q.filter(func.lower(Site.province) == province.strip().lower())
 
-    # ----- tags
+    # Tags
     if tags:
         tag_names = [t.strip().lower() for t in tags.split(",") if t.strip()]
         if tag_names:
             q = q.join(Site.tags).filter(func.lower(Tag.name).in_(tag_names))
 
-    # ----- geolocalización (usa PostGIS)
+    # Geolocalización
     if lat is not None and lng is not None and radius_km:
         try:
             radius_m = float(radius_km) * 1000.0
@@ -73,15 +108,18 @@ def list_sites():
                 )
             )
         except Exception as e:
-            print(f"[WARN] filtro geográfico deshabilitado: {e}")
+            raise ValidationError(
+                message="Geographic filter failed",
+                details={"geo": [str(e)]}
+            )
 
-    # ----- orden
+    # Orden
     if order_by == "oldest":
         q = q.order_by(asc(Site.registration_date))
-    else:  # latest por defecto
+    else:
         q = q.order_by(desc(Site.registration_date))
 
-    # ----- total + paginación
+    # Paginación
     total = q.count()
     sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
@@ -89,7 +127,6 @@ def list_sites():
 
     data = []
     for s in sites:
-        # 🔹 Buscar imagen principal: la de menor order (0 o 1)
         main_image = None
         if s.images:
             # Ordenar por 'order' y tomar la primera
@@ -98,7 +135,6 @@ def list_sites():
             )
             main_image = sorted_images[0] if sorted_images else None
 
-        # Construir URL
         cover_url = None
         if main_image:
             # El campo es 'url', no 'object_name'
@@ -131,6 +167,7 @@ def list_sites():
             "total": total,
         }
     )
+
 
 
 @api_bp.route("/sites/<int:site_id>", methods=["GET"])
