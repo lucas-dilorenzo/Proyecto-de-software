@@ -335,7 +335,6 @@ def create_site_review(site_id):
             )
         # validaciones y creación de la reseña
         is_valid, errors = validate_review_data(request.json, site_id, user_id)
-        print(f"DEBUG: Validación - is_valid: {is_valid}, errors: {errors}")
 
         if not is_valid:
             return (
@@ -496,7 +495,6 @@ def put_site_as_fav(site_id):
     try:
         # user_id = session.get("user")
         user_id = get_jwt_identity()
-        print(f"DEBUG: user_id from JWT: {user_id}")
         if not user_id:
             return (
                 jsonify(
@@ -511,7 +509,6 @@ def put_site_as_fav(site_id):
             )
 
         user = get_user_by_id(int(user_id))
-        print(f"DEBUG: User fetched: {user}")
 
         success = marcar_favorito(user, site_id)
         if not success:
@@ -590,6 +587,105 @@ def delete_site_from_fav(site_id):
 
     except Exception as e:
         print(f"Error desconocido al eliminar el sitio del listado de favoritos: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/me/favorites", methods=["GET"])
+@jwt_required()
+def get_user_favs():
+    """
+    GET /me/favorites?page=1&per_page=20
+    Obtiene todos los sitios favoritos del usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+
+    Parámetros:
+    - page: Número de página (por defecto 1)
+    - per_page: sitios por página, 1-100 (por defecto 10)
+    """
+    from src.core.users import get_user_by_id, get_user_favs
+
+    try:
+        # Obtengo el id del usuario logeado
+        user_id = get_jwt_identity()
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required",
+                        }
+                    }
+                ),
+                401,
+            )
+        # Obtengo el usuario
+        user = get_user_by_id(int(user_id))
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if not (1 <= per_page <= 100):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": {"per_page": ["Must be between 1 and 100"]},
+                        }
+                    }
+                ),
+                400,
+            )
+
+        favs_sites = get_user_favs(user)
+
+        total = len(favs_sites)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_favs = favs_sites[start:end]
+
+        data = []
+        for s in paginated_favs:
+            data.append(
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "short_description": s.description,
+                    "description": s.description,
+                    "city": s.city,
+                    "province": s.province,
+                    "latitude": s.latitude,
+                    "longitude": s.longitude,
+                    "tags": [tag.name for tag in s.tags] if s.tags else [],
+                    "state_conservation": s.conservation_status,
+                }
+            )
+
+        return jsonify(
+            {
+                "data": data,
+                "meta": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total,
+                },
+            }
+        )
+
+    except Exception as e:
+        print(f"Error desconocido al obtener los sitios favoritos del usuario: {e}")
         return (
             jsonify(
                 {
