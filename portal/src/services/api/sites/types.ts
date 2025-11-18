@@ -32,7 +32,7 @@ export type ListSitesQueryParams = PaginationQuery & {
   description?: string
   city?: string
   province?: string
-  tags?: string[]
+  tags?: string // Comma-separated string, e.g. "histórico,religioso"
   order_by?: OrderBy
   lat?: number
   long?: number

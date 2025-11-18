@@ -27,4 +27,9 @@ export class SitesApi extends BaseApi {
   unstar(id: number, token: string) {
     return this.request<void>(`/${id}/favorite`, { method: 'DELETE', token })
   }
+
+  // Provinces
+  listProvinces() {
+    return this.request<string, true>('/provinces/')
+  }
 }

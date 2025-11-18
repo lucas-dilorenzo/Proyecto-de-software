@@ -13,6 +13,7 @@
         <option value="rating-1-5">Peor puntuados</option>
         <option value="oldest">Más antiguos</option>
       </select>
+      <SiteFilters />
     </header>
 
     <section>
@@ -48,6 +49,7 @@ import api, { type Site } from '@/services/api'
 import { logger } from '@/utils/logger' // 🔹 Importar logger
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import SiteCard from '@/components/SiteCard.vue'
+import SiteFilters from '@/components/SiteFilters.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -63,7 +65,7 @@ const error = ref('')
 const hasMore = ref(true)
 
 function syncUrl() {
-  const query: Record<string, string> = {}
+  const query: Record<string, string> = { ...route.query } as Record<string, string>
   if (orderBy.value) query.order_by = orderBy.value
   if (q.value) query.q = q.value
   router.replace({ name: 'sites-list', query })
@@ -75,22 +77,43 @@ async function fetchPage(p: number) {
   try {
     logger.log('📦 SitesList fetchPage:', p, orderBy.value)
 
-    const res = await api.getSitesApi().list({
-      order_by: orderBy.value as any,
+    // Construir parámetros incluyendo filtros de la query string
+    const queryParams: Record<string, string | number> = {
+      order_by: orderBy.value,
       page: p,
       per_page: pageSize,
-    })
+    }
+
+    // Agregar filtros si existen en la URL
+    if (route.query.city) {
+      queryParams.city = route.query.city as string
+    }
+    if (route.query.province) {
+      queryParams.province = route.query.province as string
+    }
+    if (route.query.tags) {
+      // El backend espera tags como string separado por comas
+      queryParams.tags = route.query.tags as string
+    }
+    // TODO: Implementar filtro de favoritos en el backend
+    // if (route.query.favorites === 'true') {
+    //   queryParams.favorites = 'true'
+    // }
+
+    logger.log('🔍 Query params:', queryParams)
+
+    const res = await api.getSitesApi().list(queryParams)
 
     const pageItems = res.data ?? []
     if (p === 1) items.value = pageItems
     else items.value = [...items.value, ...pageItems]
 
-    hasMore.value = p * res.meta.per_page < res.meta.total
+    hasMore.value = p * res.per_page < res.total
 
     logger.log('✅ SitesList loaded:', pageItems.length, 'items')
-  } catch (e: any) {
+  } catch (e: unknown) {
     logger.error('❌ SitesList error:', e)
-    error.value = e?.message || 'Error al cargar'
+    error.value = (e as Error)?.message || 'Error al cargar'
   } finally {
     loading.value = false
   }
