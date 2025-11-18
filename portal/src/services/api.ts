@@ -148,7 +148,37 @@ export const SitesAPI = {
       headers: { 'Content-Type': 'application/json', 
         'Authorization': `Bearer ${authStore.user.token}` },
       
-    })
+    }) 
     if (!res.ok) throw new Error('Error al agregar favorito')
-  }
+    },
+
+  async removeFav(siteId: number): Promise<void>{
+    const url = `${API_BASE}/sites/${siteId}/favorite`
+    // Acceder al store
+    const authStore = useAuthStore();
+    const res = await fetch(url, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authStore.user.token}` },
+        
+    })
+    if (!res.ok) throw new Error('Error al eliminar favorito')
+    },
+
+  async get_favs(): Promise<Site[]> {
+    const url = `${API_BASE}/me/favorites`
+    const authStore = useAuthStore();
+    const res = await fetch(url, { 
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authStore.user.token}` },
+
+      })
+    if (!res.ok) throw new Error('Error al obtener favoritos')
+    else {
+      const data = await res.json()
+      return data.data
+    }
+  },
+
 }

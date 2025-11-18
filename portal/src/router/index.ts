@@ -12,5 +12,6 @@ export const router = createRouter({
     { path: '/sitios', name: 'sites-list', component: SitesList },
     { path: '/sitios/:id', name: 'site-detail', component: SiteDetail },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/me/favorites', name: 'my-favorites', component: SitesList,},
   ],
 })

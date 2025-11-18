@@ -14,6 +14,7 @@
             style="max-width: 640px"
           />
           <button type="submit" class="btn btn-primary btn-lg">Buscar</button>
+          
         </form>
       </div>
     </div>
@@ -34,6 +35,12 @@ function goSearch() {
   logger.log('🔍 HeroSearch: searching for', q.value)
   router.push({ name: 'sites-list', query: { q: q.value } })
 }
+
+function goFavs() {
+  router.push({ name: 'my-favorites',})
+}
+
+
 </script>
 
 <style scoped>

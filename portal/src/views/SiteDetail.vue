@@ -91,7 +91,10 @@
         <div class="d-flex gap-2">
           <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
           <button class="btn btn-primary">Ver en mapa</button>
-          <button @click="agregar_favorito()" class="btn btn-sm btn-outline-primary ms-2">Agregar a favoritos</button>
+          <div v-if="esta_logeado">
+            <button v-if="es_favorito" @click="eliminar_favorito()" class="btn btn-primary" >Eliminar de favoritos</button>
+            <button v-else @click="agregar_favorito()" class="btn btn-outline-primary">Agregar a favoritos</button>
+          </div>
         </div>
       </section>
 
@@ -118,10 +121,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { SitesAPI, type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -130,6 +134,11 @@ const id = Number(route.params.id)
 const site = ref<Site | null>(null)
 const loading = ref(false)
 const error = ref('')
+
+const esta_logeado = computed(() => {
+  return useAuthStore().isLoggedIn
+});
+const es_favorito = ref(false)
 
 async function fetchSite() {
   loading.value = true
@@ -150,24 +159,51 @@ async function fetchSite() {
   }
 }
 
-onMounted(() => {
+onMounted(async() => {
   logger.log('✅ SiteDetail mounted, id:', id)
-  fetchSite()
+  await fetchSite()
+  await comprobar_fav()
 })
+
+async function comprobar_fav(){
+  try{
+    const listado_favoritos = await SitesAPI.get_favs()
+    es_favorito.value = listado_favoritos.some(
+      (fav_site: Site) => fav_site.id === site.value?.id
+    )
+  } catch (e: any) {
+    logger.error('Error al comprobar favoritos:', e)
+    return false
+  }
+
+}
 
 async function agregar_favorito(){
   try {
-    logger.log('📦 Agregando sitio a favoritos:', id)
 
     await SitesAPI.addFav(id)
+    es_favorito.value = true
 
-    logger.log('✅ Sitio agregado a favoritos:', id)
     alert('Sitio agregado a favoritos')
   } catch (e: any) {
     logger.error('Error:', e)
     alert('Error: ' + (e?.message || 'Error desconocido'))
   }
 }
+
+async function eliminar_favorito(){
+  try {
+    
+    await SitesAPI.removeFav(id)
+    es_favorito.value = false
+
+    alert('Sitio eliminado de favoritos')
+  } catch (e: any) {
+    logger.error('Error:', e)
+    alert('Error: ' + (e?.message || 'Error desconocido'))
+  }
+}
+
 </script>
 
 <style scoped></style>
