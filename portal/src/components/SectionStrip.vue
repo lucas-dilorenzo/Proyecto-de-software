@@ -30,12 +30,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, onBeforeUnmount, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import SkeletonCard from './SkeletonCard.vue'
 import SiteCard from './SiteCard.vue'
-import { SitesAPI, type Site } from '@/services/api'
-import { logger } from '@/utils/logger'
+import api, { type Site } from '@/services/api'
+import { logger } from '@/utils/logger' // 🔹 Importar logger
+import { authTokenKey } from '@/utils/providerKeys'
 
 const props = defineProps<{
   title: string
@@ -50,6 +51,7 @@ const items = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
 const rootEl = ref<HTMLElement | null>(null)
+const authToken = props.authRequired ? inject(authTokenKey)!.authToken : null
 let observer: IntersectionObserver | null = null
 
 function goSeeAll() {
@@ -67,12 +69,13 @@ async function fetchData() {
     logger.log('📦 SectionStrip fetch:', props.title, props.sort)
 
     if (props.sort === 'favorites') {
-      const res = await SitesAPI.favorites({ page: 1, per_page: 12 })
-      logger.log('✅ API /me/favorites:', res)
+      if (!authToken) throw { message: 'Inicia sesión para ver tus favoritos.' }
+      const res = await api.getUserApi().getFavorites({ page: 1, per_page: 12 }, authToken.value!)
+      logger.log('✅ API /me/favorites:', res) // 🔹 Usar logger
       items.value = res.data || []
     } else {
-      const res = await SitesAPI.list({ order_by: props.sort as any, per_page: 12 })
-      logger.log('✅ API /sites:', res)
+      const res = await api.getSitesApi().list({ order_by: props.sort as any, per_page: 12 })
+      logger.log('✅ API /sites:', res) // 🔹 Usar logger
       items.value = res.data || []
     }
   } catch (e: any) {

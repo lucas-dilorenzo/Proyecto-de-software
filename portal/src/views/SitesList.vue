@@ -44,8 +44,8 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { SitesAPI, type Site } from '@/services/api'
-import { logger } from '@/utils/logger'
+import api, { type Site } from '@/services/api'
+import { logger } from '@/utils/logger' // 🔹 Importar logger
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import SiteCard from '@/components/SiteCard.vue'
 
@@ -75,7 +75,7 @@ async function fetchPage(p: number) {
   try {
     logger.log('📦 SitesList fetchPage:', p, orderBy.value)
 
-    const res = await SitesAPI.list({
+    const res = await api.getSitesApi().list({
       order_by: orderBy.value as any,
       page: p,
       per_page: pageSize,
@@ -85,7 +85,7 @@ async function fetchPage(p: number) {
     if (p === 1) items.value = pageItems
     else items.value = [...items.value, ...pageItems]
 
-    hasMore.value = p * res.per_page < res.total
+    hasMore.value = p * res.meta.per_page < res.meta.total
 
     logger.log('✅ SitesList loaded:', pageItems.length, 'items')
   } catch (e: any) {

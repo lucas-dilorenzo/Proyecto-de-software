@@ -14,8 +14,8 @@ export const useAuthStore = defineStore('auth', {
   actions: {
   async loginUser(payload: { email: string; password: string }) {
     await authApi.login(payload.email, payload.password).then((response) => {
-      // Guardar el token JWT si es necesario
-      this.user.token = response.access_token;
+      // Guardar el token JWT
+      // this.user.token = response.access_token;
     });
     // Después del login, obtener los datos del usuario desde el backend
     await this.fetchCurrentUser();

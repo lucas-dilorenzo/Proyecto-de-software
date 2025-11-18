@@ -116,6 +116,18 @@
           </div>
         </div>
       </section>
+      <section class="col-12 ubication-section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">Ubicación</h5>
+            <!-- mapa de leafleat -->
+            <!-- si no hay sitios cercanos usar este componente -->
+            <MapComponent v-if="closeSites.length === 0" :lat="site.latitude" :lng="site.longitude" :zoom="12"/>
+            <!-- si hay sitios cercanos usar este componente -->
+            <MapComponent v-else :lat="site.latitude" :lng="site.longitude" :closeSites="closeSites" :radius="radius" />
+          </div>
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -123,8 +135,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { SitesAPI, type Site } from '@/services/api'
+import api, { type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
+import MapComponent from '@/components/MapComponent.vue'
 import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
@@ -132,8 +145,10 @@ const router = useRouter()
 
 const id = Number(route.params.id)
 const site = ref<Site | null>(null)
+const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
+const radius = ref(50)
 
 const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
@@ -147,27 +162,50 @@ async function fetchSite() {
   try {
     logger.log('📦 SiteDetail fetching site:', id)
 
-    const data = await SitesAPI.getById(id)
+    const data = await api.getSitesApi().get(id)
     site.value = data
 
     logger.log('✅ SiteDetail loaded:', data)
-  } catch (e: any) {
-    logger.error('❌ SiteDetail error:', e)
-    error.value = e?.message || 'Error al cargar el sitio'
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error:', err)
+    error.value = err.message || 'Error al cargar el sitio'
   } finally {
     loading.value = false
   }
 }
 
+async function fetchCloseSites() {
+  if (!site.value) return
+
+  try {
+    logger.log('📦 SiteDetail fetching close sites for site:', site.value.id)
+
+    const data = await api.getSitesApi().list({
+      lat: site.value.latitude,
+      long: site.value.longitude,
+      radius: radius.value,
+    })
+
+    closeSites.value = data.data.filter((s: Site) => s.id !== site.value?.id)
+    logger.log('✅ SiteDetail loaded close sites:', closeSites.value.length)
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error fetching close sites:', err)
+    closeSites.value = []
+  }
+}
+
 onMounted(async() => {
   logger.log('✅ SiteDetail mounted, id:', id)
-  await fetchSite()
+  await await fetchSite()
+  await fetchCloseSites()
   await comprobar_fav()
 })
 
 async function comprobar_fav(){
   try{
-    const listado_favoritos = await SitesAPI.get_favs()
+    const listado_favoritos = await api.getUserApi().getFavorites()
     es_favorito.value = listado_favoritos.some(
       (fav_site: Site) => fav_site.id === site.value?.id
     )
@@ -181,7 +219,7 @@ async function comprobar_fav(){
 async function agregar_favorito(){
   try {
 
-    await SitesAPI.addFav(id)
+    await api.getSitesApi().star(site.value!.id)
     es_favorito.value = true
 
     alert('Sitio agregado a favoritos')
@@ -194,7 +232,7 @@ async function agregar_favorito(){
 async function eliminar_favorito(){
   try {
     
-    await SitesAPI.removeFav(id)
+    await api.getSitesApi().unstar(site.value!.id)
     es_favorito.value = false
 
     alert('Sitio eliminado de favoritos')
