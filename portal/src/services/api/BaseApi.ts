@@ -24,17 +24,8 @@ export class BaseApi {
     }
     const headers: HeadersInit = {}
     if (token) headers['Authorization'] = `Bearer ${token}`
-    if (body) headers['Content-Type'] = `application/json`
+    if (body) headers['Content-Type'] = 'application/json'
     const url = `${this.baseUrl}${path}` + (queryParams.size ? `?${queryParams.toString()}` : '')
-    // console.dir(
-    //   {
-    //     method,
-    //     url,
-    //     token,
-    //     body,
-    //   },
-    //   { depth: Infinity },
-    // )
     const response = await fetch(url, {
       method,
       body: body && JSON.stringify(body),

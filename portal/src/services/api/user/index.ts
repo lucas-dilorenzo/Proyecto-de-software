@@ -14,4 +14,6 @@ export class UserApi extends BaseApi {
   getFavorites(query: GetFavoritesQueryParams, token: string) {
     return this.request<Site, true>('/me/favorites', { query, token })
   }
+  
+
 }
