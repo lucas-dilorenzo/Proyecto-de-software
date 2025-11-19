@@ -50,7 +50,11 @@ from src.web.auditoria import site_events
 from src.core.featureFlags.flag import FeatureFlag
 from src.web.controllers.feature_flags import feature_flags_bp
 from src.web.controllers.maintenance import maintenance_bp
+from web.controllers.reseñas_controller import reseñas_bp
 from src.web.storage import storage
+from src.web.api import api_bp
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 """
     Crea la aplicación Flask.
@@ -85,6 +89,30 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.config["SESSION_TYPE"] = "filesystem"
     Session(app)
 
+    # Habilitar CORS para la API y rutas de autenticación
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": "*"}, r"/auth/*": {"origins": "*"}},
+        supports_credentials=True,
+    )
+
+    @app.after_request
+    def add_cors_headers(response):
+        response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
+        response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        return response
+
+    # JWT setup for API authentication
+    app.config["JWT_SECRET_KEY"] = "super-secret"  # Cambiar en producción
+    app.config["JWT_TOKEN_LOCATION"] = ["cookies"]
+    app.config["JWT_ACCESS_COOKIE_NAME"] = "access_token_cookie"
+    app.config["JWT_COOKIE_SECURE"] = False  # Permitir cookies sin HTTPS en desarrollo
+    app.config["JWT_COOKIE_CSRF_PROTECT"] = False  # Desactivar CSRF en desarrollo
+    app.config["JWT_COOKIE_SAMESITE"] = "Lax"  # Permitir cookies cross-site
+    jwt = JWTManager(app)
+
     @app.route("/")
     @login_required
     def home():
@@ -108,6 +136,8 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.register_blueprint(historical_sites_bp)
     app.register_blueprint(feature_flags_bp)
     app.register_blueprint(maintenance_bp)
+    app.register_blueprint(reseñas_bp)
+    app.register_blueprint(api_bp)  # Ya está aquí, solo faltaba el import arriba
 
     # Handlers de error
     app.register_error_handler(404, error_handlers.not_found)

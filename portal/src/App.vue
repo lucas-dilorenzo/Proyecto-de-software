@@ -1,85 +1,54 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+  <AuthProvider>
+    <div>
+      <header class="topbar">
+        <div class="col d-flex justify-content-between align-items-center">
+          <div class="col-md-1">
+            <router-link to="/" class="navbar-brand"> Portal Público </router-link>
+          </div>
+          <div class="col-md-10"></div>
+          <div class="col-md-1">
+            <div v-if="isLoggedIn">
+              <UserDropdown :loggedIn="isLoggedIn" />
+            </div>
+            <router-link v-else to="/login">Log In</router-link>
+          </div>
+        </div>
+      </header>
+      <div class="container"><router-view /></div>
     </div>
-  </header>
-
-  <RouterView />
+  </AuthProvider>
 </template>
 
+<script setup lang="ts">
+import { onMounted, computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import UserDropdown from '@/components/UserDropdown.vue'
+import AuthProvider from './components/auth/AuthProvider.vue'
+
+const authStore = useAuthStore()
+const isLoggedIn = computed(() => authStore.isLoggedIn)
+
+onMounted(async () => {
+  console.log('✅ App mounted')
+  // Intentar recuperar la sesión al cargar la aplicación
+  try {
+    await authStore.fetchCurrentUser()
+    console.log('✅ Sesión recuperada')
+  } catch {
+    console.log('ℹ️ No hay sesión activa')
+  }
+})
+</script>
+
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+.topbar {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  padding: 12px 16px;
+  font-weight: 600;
+  z-index: 10;
 }
 </style>

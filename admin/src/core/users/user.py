@@ -19,6 +19,7 @@ class UserRole(str, enum.Enum):
 
     PUBLIC = "PUBLIC"
     EDITOR = "EDITOR"
+    MODERATOR = "MODERATOR"
     ADMIN = "ADMIN"
     SYS_ADMIN = "SYS_ADMIN"
 
@@ -26,7 +27,7 @@ class UserRole(str, enum.Enum):
 class User(db.Model):
     """
     Modelo de usuario para la base de datos.
-    Incluye información personal, credenciales, estado y rol.
+    Incluye información personal, credenciales, estado, rol y listado de sitios favoritos.
     """
 
     __tablename__ = "users"
@@ -39,6 +40,9 @@ class User(db.Model):
     password_hash = db.Column(String(255), nullable=False)
     activo = db.Column(Boolean, default=True, nullable=False)
     rol = db.Column(String(10), db.ForeignKey("roles.name"), nullable=False)
+    favs = db.relationship(
+        "Site", secondary="sites_users_favorites", backref="usuario_elector"
+    )
     created_at = db.Column(
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False
     )
