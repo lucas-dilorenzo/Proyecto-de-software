@@ -9,6 +9,7 @@
         v-model:zoom="currentZoom" 
         :center="mapCenter"
         @ready="onMapReady"
+        @click="onMapClick"
         :use-global-leaflet="false"
       >
         <l-tile-layer
@@ -17,33 +18,39 @@
           name="OpenStreetMap"
         ></l-tile-layer>
         
-        <!-- Marcador central (ubicación de búsqueda) -->
+        <!-- Marcador central (ubicación seleccionada por el usuario) -->
         <l-marker 
-          v-if="showCenterMarker && closeSites.length > 0"
-          :lat-lng="mapCenter"
+          v-if="userSelectedCenter"
+          :lat-lng="userSelectedCenter"
         >
           <l-popup>
-            <strong>Centro de búsqueda</strong><br>
-            Radio: {{ filters.km || 50 }} km
+            <strong>📍 Punto seleccionado</strong><br>
+            Radio: {{ filters.km || 50 }} km<br>
+            <button 
+              @click="clearSelection" 
+              class="btn btn-sm btn-outline-danger mt-2"
+            >
+              Limpiar selección
+            </button>
           </l-popup>
         </l-marker>
 
         <!-- Círculo de radio de búsqueda -->
         <l-circle
-          v-if="showSearchRadius"
-          :lat-lng="mapCenter"
+          v-if="userSelectedCenter"
+          :lat-lng="userSelectedCenter"
           :radius="radiusInMeters"
-          :color="'#3388ff'"
-          :fill-color="'#3388ff'"
-          :fill-opacity="0.1"
+          :color="'#ff6b6b'"
+          :fill-color="'#ff6b6b'"
+          :fill-opacity="0.15"
           :weight="2"
         >
           <l-popup>Radio de búsqueda: {{ filters.km || 50 }} km</l-popup>
         </l-circle>
 
-        <!-- Marcadores de sitios filtrados -->
+        <!-- Marcadores de sitios filtrados (dentro del radio si hay punto seleccionado) -->
         <l-marker
-          v-for="site in closeSites"
+          v-for="site in filteredSitesByRadius"
           :key="site.id"
           :lat-lng="[site.latitude, site.longitude]"
         >
@@ -51,6 +58,10 @@
             <div class="site-popup">
               <h6 class="mb-1">{{ site.name }}</h6>
               <p class="mb-2 small text-muted">{{ site.description_short || 'Sin descripción' }}</p>
+              <p v-if="userSelectedCenter" class="mb-2 small">
+                <i class="bi bi-geo-alt"></i>
+                Distancia: {{ calculateDistance(site.latitude, site.longitude, userSelectedCenter[0], userSelectedCenter[1]).toFixed(2) }} km
+              </p>
               <a 
                 :href="`/sitios/${site.id}`" 
                 class="btn btn-primary btn-sm"
@@ -65,13 +76,24 @@
     </div>
     
     <!-- Info de resultados -->
-    <div v-if="closeSites.length > 0" class="mt-2 text-muted small">
-      <i class="bi bi-info-circle me-1"></i>
-      Mostrando {{ closeSites.length }} sitio{{ closeSites.length !== 1 ? 's' : '' }} en el mapa
-    </div>
-    <div v-else class="mt-2 text-muted small">
-      <i class="bi bi-info-circle me-1"></i>
-      No se encontraron sitios con los filtros aplicados
+    <div class="mt-2">
+      <div v-if="userSelectedCenter" class="alert alert-info py-2 mb-2">
+        <i class="bi bi-cursor me-1"></i>
+        <strong>Punto seleccionado:</strong> Mostrando {{ filteredSitesByRadius.length }} sitio{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} 
+        dentro de {{ filters.km || 50 }} km del punto.
+        <button @click="clearSelection" class="btn btn-sm btn-link p-0 ms-2">
+          Limpiar selección
+        </button>
+      </div>
+      <div v-else-if="closeSites.length > 0" class="text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        {{ closeSites.length }} sitio{{ closeSites.length !== 1 ? 's' : '' }} disponible{{ closeSites.length !== 1 ? 's' : '' }}.
+        <strong>Haz clic en el mapa</strong> para filtrar por ubicación.
+      </div>
+      <div v-else class="text-muted small">
+        <i class="bi bi-info-circle me-1"></i>
+        No se encontraron sitios con los filtros aplicados
+      </div>
     </div>
   </div>
 </template>
@@ -128,6 +150,7 @@ const map = ref<InstanceType<typeof LMap> | null>(null);
 const currentZoom = ref(props.defaultZoom);
 const mapCenter = ref<[number, number]>([props.defaultLat, props.defaultLng]);
 const isMapReady = ref(false);
+const userSelectedCenter = ref<[number, number] | null>(null); // Centro seleccionado por el usuario
 
 const widthProp = computed(() => props.width);
 const heightProp = computed(() => props.height);
@@ -137,6 +160,47 @@ const radiusInMeters = computed(() => {
   const km = props.filters.km || 50;
   return km * 1000;
 });
+
+// Calcular distancia entre dos puntos usando la fórmula de Haversine
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radio de la Tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Filtrar sitios por radio si hay un punto seleccionado
+const filteredSitesByRadius = computed(() => {
+  if (!userSelectedCenter.value) {
+    return props.closeSites;
+  }
+  
+  const [centerLat, centerLng] = userSelectedCenter.value;
+  const radiusKm = props.filters.km || 50;
+  
+  return props.closeSites.filter(site => {
+    const distance = calculateDistance(centerLat, centerLng, site.latitude, site.longitude);
+    return distance <= radiusKm;
+  });
+});
+
+// Manejar click en el mapa
+function onMapClick(event: L.LeafletMouseEvent) {
+  const { latlng } = event;
+  userSelectedCenter.value = [latlng.lat, latlng.lng];
+  console.log('🎯 Punto seleccionado:', latlng.lat, latlng.lng);
+}
+
+// Limpiar selección del usuario
+function clearSelection() {
+  userSelectedCenter.value = null;
+  console.log('🧹 Selección limpiada');
+}
 
 // Función llamada cuando el mapa está listo
 function onMapReady() {
@@ -161,27 +225,35 @@ function updateMapView() {
   // Invalidar tamaño para asegurar renderizado correcto
   mapInstance.invalidateSize()
 
-  // Si hay sitios filtrados, ajustar el mapa para mostrarlos todos
-  if (props.closeSites && props.closeSites.length > 0) {
-    // Crear bounds que incluyan todos los marcadores
+  // Si el usuario seleccionó un punto, centrar en ese punto y los sitios filtrados
+  if (userSelectedCenter.value && filteredSitesByRadius.value.length > 0) {
+    const bounds = L.latLngBounds(
+      filteredSitesByRadius.value.map(site => [site.latitude, site.longitude] as L.LatLngTuple)
+    );
+    bounds.extend(userSelectedCenter.value);
+    
+    nextTick(() => {
+      mapInstance.fitBounds(bounds, { 
+        padding: [50, 50],
+        maxZoom: 14 
+      });
+    });
+  }
+  // Si hay sitios filtrados pero no hay punto seleccionado, ajustar el mapa para mostrarlos todos
+  else if (props.closeSites && props.closeSites.length > 0) {
     const bounds = L.latLngBounds(
       props.closeSites.map(site => [site.latitude, site.longitude] as L.LatLngTuple)
     );
 
-    // Si hay un centro de búsqueda, incluirlo en los bounds
-    if (props.showCenterMarker) {
-      bounds.extend(mapCenter.value);
-    }
-
-    // Ajustar el mapa a los bounds con padding
     nextTick(() => {
       mapInstance.fitBounds(bounds, { 
         padding: [50, 50],
         maxZoom: 12 
       });
     });
-  } else {
-    // Si no hay sitios, centrar en la ubicación por defecto
+  } 
+  // Si no hay sitios, centrar en la ubicación por defecto
+  else {
     nextTick(() => {
       mapInstance.setView(mapCenter.value, props.defaultZoom);
     });
@@ -217,6 +289,19 @@ watch(() => props.closeSites, (newSites) => {
 // Observar cambios en los filtros (especialmente el radio)
 watch(() => props.filters.km, (newKm) => {
   console.log('📏 MapFilterComponent - Radio actualizado:', newKm);
+  if (isMapReady.value) {
+    nextTick(() => {
+      updateMapView();
+    });
+  }
+});
+
+// Observar cambios en el punto seleccionado por el usuario
+watch(userSelectedCenter, (newCenter) => {
+  if (newCenter) {
+    console.log('🎯 Centro seleccionado actualizado:', newCenter);
+    console.log('📊 Sitios dentro del radio:', filteredSitesByRadius.value.length);
+  }
   if (isMapReady.value) {
     nextTick(() => {
       updateMapView();
@@ -275,6 +360,7 @@ defineExpose({
   min-height: 400px;
   font-family: inherit;
   z-index: 1;
+  cursor: crosshair; /* Indicar que se puede hacer clic para seleccionar */
 }
 
 .site-popup {
@@ -297,5 +383,23 @@ defineExpose({
 /* Asegurar que los tiles se carguen correctamente */
 :deep(.leaflet-tile-container) {
   pointer-events: auto;
+}
+
+/* Estilos para el alert de punto seleccionado */
+.alert-info {
+  border-left: 4px solid #0dcaf0;
+  background-color: #cff4fc;
+  border-color: #b6effb;
+  font-size: 0.9rem;
+}
+
+.alert-info .btn-link {
+  color: #055160;
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.alert-info .btn-link:hover {
+  color: #022830;
 }
 </style>
