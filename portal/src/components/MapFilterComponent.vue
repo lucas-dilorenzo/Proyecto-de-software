@@ -58,10 +58,6 @@
             <div class="site-popup">
               <h6 class="mb-1">{{ site.name }}</h6>
               <p class="mb-2 small text-muted">{{ site.description_short || 'Sin descripción' }}</p>
-              <p v-if="userSelectedCenter" class="mb-2 small">
-                <i class="bi bi-geo-alt"></i>
-                Distancia: {{ calculateDistance(site.latitude, site.longitude, userSelectedCenter[0], userSelectedCenter[1]).toFixed(2) }} km
-              </p>
               <a 
                 :href="`/sitios/${site.id}`" 
                 class="btn btn-primary btn-sm"
@@ -77,10 +73,18 @@
     
     <!-- Info de resultados -->
     <div class="mt-2">
-      <div v-if="userSelectedCenter" class="alert alert-info py-2 mb-2">
+      <div v-if="loadingNearbySites" class="alert alert-info py-2 mb-2">
+        <div class="d-flex align-items-center">
+          <div class="spinner-border spinner-border-sm me-2" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+          <span>Buscando sitios cercanos...</span>
+        </div>
+      </div>
+      <div v-else-if="userSelectedCenter" class="alert alert-info py-2 mb-2">
         <i class="bi bi-cursor me-1"></i>
-        <strong>Punto seleccionado:</strong> Mostrando {{ filteredSitesByRadius.length }} sitio{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} 
-        dentro de {{ filters.km || 50 }} km del punto.
+        <strong>Punto seleccionado:</strong> {{ filteredSitesByRadius.length }} sitio{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} 
+        encontrado{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} dentro de {{ filters.km || 50 }} km.
         <button @click="clearSelection" class="btn btn-sm btn-link p-0 ms-2">
           Limpiar selección
         </button>
@@ -104,6 +108,7 @@ import { useRouter } from 'vue-router';
 import { LMap, LTileLayer, LMarker, LPopup, LCircle } from "@vue-leaflet/vue-leaflet";
 import L from 'leaflet';
 import type { Site } from '@/services/api';
+import api from '@/services/api';
 
 // Configurar iconos de Leaflet
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -151,6 +156,8 @@ const currentZoom = ref(props.defaultZoom);
 const mapCenter = ref<[number, number]>([props.defaultLat, props.defaultLng]);
 const isMapReady = ref(false);
 const userSelectedCenter = ref<[number, number] | null>(null); // Centro seleccionado por el usuario
+const nearbySites = ref<Site[]>([]); // Sitios cercanos al punto seleccionado
+const loadingNearbySites = ref(false); // Estado de carga
 
 const widthProp = computed(() => props.width);
 const heightProp = computed(() => props.height);
@@ -161,45 +168,66 @@ const radiusInMeters = computed(() => {
   return km * 1000;
 });
 
-// Calcular distancia entre dos puntos usando la fórmula de Haversine
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Radio de la Tierra en km
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-// Filtrar sitios por radio si hay un punto seleccionado
+// Sitios a mostrar en el mapa (cercanos si hay punto seleccionado, todos si no)
 const filteredSitesByRadius = computed(() => {
   if (!userSelectedCenter.value) {
     return props.closeSites;
   }
-  
-  const [centerLat, centerLng] = userSelectedCenter.value;
-  const radiusKm = props.filters.km || 50;
-  
-  return props.closeSites.filter(site => {
-    const distance = calculateDistance(centerLat, centerLng, site.latitude, site.longitude);
-    return distance <= radiusKm;
-  });
+  return nearbySites.value;
 });
 
+// Cargar sitios cercanos desde la API
+async function fetchNearbySites(lat: number, lng: number) {
+  loadingNearbySites.value = true;
+  
+  try {
+    const params: Record<string, string | number> = {
+      lat,
+      long: lng,
+      radius: props.filters.km || 50,
+      page: 1,
+      per_page: 100
+    };
+    
+    console.log('🔍 Buscando sitios cercanos:', params);
+    
+    const response = await api.getSitesApi().list(params);
+    nearbySites.value = response.data;
+    
+    console.log(`✅ Encontrados ${response.data.length} sitios cercanos`);
+  } catch (error) {
+    console.error('❌ Error al buscar sitios cercanos:', error);
+    nearbySites.value = [];
+  } finally {
+    loadingNearbySites.value = false;
+  }
+}
+
 // Manejar click en el mapa
-function onMapClick(event: L.LeafletMouseEvent) {
+async function onMapClick(event: L.LeafletMouseEvent) {
   const { latlng } = event;
   userSelectedCenter.value = [latlng.lat, latlng.lng];
   console.log('🎯 Punto seleccionado:', latlng.lat, latlng.lng);
+  
+  // Cargar sitios cercanos desde la API
+  await fetchNearbySites(latlng.lat, latlng.lng);
 }
 
 // Limpiar selección del usuario
 function clearSelection() {
   userSelectedCenter.value = null;
-  console.log('🧹 Selección limpiada');
+  nearbySites.value = [];
+  console.log('🧹 Selección limpiada - Mostrando todos los sitios filtrados');
+  
+  // Recalcular el centro basado en todos los sitios
+  calculateMapCenter();
+  
+  // Actualizar la vista del mapa
+  if (isMapReady.value) {
+    nextTick(() => {
+      updateMapView();
+    });
+  }
 }
 
 // Función llamada cuando el mapa está listo
@@ -225,43 +253,126 @@ function updateMapView() {
   // Invalidar tamaño para asegurar renderizado correcto
   mapInstance.invalidateSize()
 
-  // Si el usuario seleccionó un punto, centrar en ese punto y los sitios filtrados
-  if (userSelectedCenter.value && filteredSitesByRadius.value.length > 0) {
-    const bounds = L.latLngBounds(
-      filteredSitesByRadius.value.map(site => [site.latitude, site.longitude] as L.LatLngTuple)
-    );
-    bounds.extend(userSelectedCenter.value);
-    
-    nextTick(() => {
-      mapInstance.fitBounds(bounds, { 
-        padding: [50, 50],
-        maxZoom: 14 
+  try {
+    // Si el usuario seleccionó un punto, centrar en ese punto y los sitios filtrados por radio
+    if (userSelectedCenter.value) {
+      if (filteredSitesByRadius.value.length > 0) {
+        console.log('🗺️ Ajustando vista a', filteredSitesByRadius.value.length, 'sitios cerca del punto');
+        
+        // Filtrar sitios con coordenadas válidas
+        const sitesCoords = filteredSitesByRadius.value
+          .filter(site => {
+            const hasValidCoords = 
+              site.latitude !== null && 
+              site.latitude !== undefined && 
+              site.longitude !== null && 
+              site.longitude !== undefined &&
+              !isNaN(site.latitude) &&
+              !isNaN(site.longitude);
+            
+            if (!hasValidCoords) {
+              console.warn('⚠️ Sitio con coordenadas inválidas:', site.name);
+            }
+            return hasValidCoords;
+          })
+          .map(site => [site.latitude, site.longitude] as L.LatLngTuple);
+        
+        if (sitesCoords.length > 0) {
+          const bounds = L.latLngBounds(sitesCoords);
+          bounds.extend(userSelectedCenter.value);
+          
+          // Verificar que los bounds sean válidos
+          if (bounds.isValid()) {
+            nextTick(() => {
+              mapInstance.fitBounds(bounds, { 
+                padding: [50, 50],
+                maxZoom: 14 
+              });
+            });
+          } else {
+            console.warn('⚠️ Bounds inválidos, centrando en el punto seleccionado');
+            nextTick(() => {
+              mapInstance.setView(userSelectedCenter.value!, 10);
+            });
+          }
+        } else {
+          console.warn('⚠️ No hay sitios con coordenadas válidas, centrando en punto');
+          nextTick(() => {
+            mapInstance.setView(userSelectedCenter.value!, 10);
+          });
+        }
+      } else {
+        // Si no hay sitios en el radio, solo centrar en el punto seleccionado
+        console.log('🗺️ No hay sitios en el radio, centrando en el punto');
+        nextTick(() => {
+          mapInstance.setView(userSelectedCenter.value!, Math.min(currentZoom.value, 10));
+        });
+      }
+    }
+    // Si NO hay punto seleccionado pero HAY sitios filtrados, mostrar todos los sitios
+    else if (props.closeSites && props.closeSites.length > 0) {
+      console.log('🗺️ Ajustando mapa para mostrar', props.closeSites.length, 'sitios');
+      
+      // Filtrar sitios con coordenadas válidas
+      const sitesCoords = props.closeSites
+        .filter(site => {
+          const hasValidCoords = 
+            site.latitude !== null && 
+            site.latitude !== undefined && 
+            site.longitude !== null && 
+            site.longitude !== undefined &&
+            !isNaN(site.latitude) &&
+            !isNaN(site.longitude);
+          
+          if (!hasValidCoords) {
+            console.warn('⚠️ Sitio con coordenadas inválidas:', site.name, site.latitude, site.longitude);
+          }
+          return hasValidCoords;
+        })
+        .map(site => [site.latitude, site.longitude] as L.LatLngTuple);
+      
+      if (sitesCoords.length > 0) {
+        const bounds = L.latLngBounds(sitesCoords);
+          if (bounds.isValid()) {
+            nextTick(() => {
+              mapInstance.fitBounds(bounds, { 
+                padding: [50, 50],
+                maxZoom: 12 
+              });
+            });
+          } else {
+            console.warn('⚠️ Bounds inválidos para sitios');
+          }         
+      } else {
+        console.warn('⚠️ No hay sitios con coordenadas válidas');
+      }
+    } 
+    // Si no hay sitios, centrar en la ubicación por defecto
+    else {
+      nextTick(() => {
+        mapInstance.setView(mapCenter.value, props.defaultZoom);
       });
-    });
-  }
-  // Si hay sitios filtrados pero no hay punto seleccionado, ajustar el mapa para mostrarlos todos
-  else if (props.closeSites && props.closeSites.length > 0) {
-    const bounds = L.latLngBounds(
-      props.closeSites.map(site => [site.latitude, site.longitude] as L.LatLngTuple)
-    );
-
+    }
+  } catch (error) {
+    console.error('❌ Error al actualizar vista del mapa:', error);
+    // En caso de error, intentar centrar en la ubicación por defecto
     nextTick(() => {
-      mapInstance.fitBounds(bounds, { 
-        padding: [50, 50],
-        maxZoom: 12 
-      });
-    });
-  } 
-  // Si no hay sitios, centrar en la ubicación por defecto
-  else {
-    nextTick(() => {
-      mapInstance.setView(mapCenter.value, props.defaultZoom);
+      if (userSelectedCenter.value) {
+        mapInstance.setView(userSelectedCenter.value, 10);
+      } else {
+        mapInstance.setView(mapCenter.value, props.defaultZoom);
+      }
     });
   }
 }
 
 // Calcular el centro del mapa basado en los sitios filtrados
 function calculateMapCenter() {
+  // Si hay un punto seleccionado por el usuario, no recalcular el centro
+  if (userSelectedCenter.value) {
+    return;
+  }
+  
   if (props.closeSites && props.closeSites.length > 0) {
     // Calcular el centroide de todos los sitios
     const latSum = props.closeSites.reduce((sum, site) => sum + site.latitude, 0);
@@ -278,7 +389,13 @@ function calculateMapCenter() {
 // Observar cambios en los sitios filtrados
 watch(() => props.closeSites, (newSites) => {
   console.log('📍 MapFilterComponent - Sitios actualizados:', newSites?.length || 0);
-  calculateMapCenter();
+  
+  clearSelection();
+  // Solo recalcular el centro si no hay un punto seleccionado por el usuario
+  if (!userSelectedCenter.value) {
+    calculateMapCenter();
+  }
+  
   if (isMapReady.value) {
     nextTick(() => {
       updateMapView();
@@ -287,8 +404,15 @@ watch(() => props.closeSites, (newSites) => {
 }, { deep: true, immediate: true });
 
 // Observar cambios en los filtros (especialmente el radio)
-watch(() => props.filters.km, (newKm) => {
+watch(() => props.filters.km, async (newKm) => {
   console.log('📏 MapFilterComponent - Radio actualizado:', newKm);
+  
+  // Si hay un punto seleccionado, recargar los sitios cercanos con el nuevo radio
+  if (userSelectedCenter.value) {
+    const [lat, lng] = userSelectedCenter.value;
+    await fetchNearbySites(lat, lng);
+  }
+  
   if (isMapReady.value) {
     nextTick(() => {
       updateMapView();
@@ -300,7 +424,8 @@ watch(() => props.filters.km, (newKm) => {
 watch(userSelectedCenter, (newCenter) => {
   if (newCenter) {
     console.log('🎯 Centro seleccionado actualizado:', newCenter);
-    console.log('📊 Sitios dentro del radio:', filteredSitesByRadius.value.length);
+  } else {
+    console.log('🧹 Centro limpiado - volviendo a mostrar todos');
   }
   if (isMapReady.value) {
     nextTick(() => {
