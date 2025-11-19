@@ -192,7 +192,7 @@ const filters = ref<Filters>({
   province: '',
   tags: [],
   onlyFavorites: false,
-  km: 50
+  km: 200
 })
 
 // Estado de los sitios filtrados para el mapa
@@ -320,7 +320,7 @@ function clearFilters() {
     province: '',
     tags: [],
     onlyFavorites: false,
-    km: 50
+    km: 200
   }
 
   // Si hay una búsqueda de texto, mantenerla

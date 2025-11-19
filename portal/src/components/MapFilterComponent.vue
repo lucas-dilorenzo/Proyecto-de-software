@@ -22,10 +22,11 @@
         <l-marker 
           v-if="userSelectedCenter"
           :lat-lng="userSelectedCenter"
+          :icon="UserSelectedIcon"
         >
           <l-popup>
             <strong>📍 Punto seleccionado</strong><br>
-            Radio: {{ filters.km || 50 }} km<br>
+            Radio: {{ filters.km || 200 }} km<br>
             <button 
               @click="clearSelection" 
               class="btn btn-sm btn-outline-danger mt-2"
@@ -45,7 +46,7 @@
           :fill-opacity="0.15"
           :weight="2"
         >
-          <l-popup>Radio de búsqueda: {{ filters.km || 50 }} km</l-popup>
+          <l-popup>Radio de búsqueda: {{ filters.km || 200 }} km</l-popup>
         </l-circle>
 
         <!-- Marcadores de sitios filtrados (dentro del radio si hay punto seleccionado) -->
@@ -84,7 +85,7 @@
       <div v-else-if="userSelectedCenter" class="alert alert-info py-2 mb-2">
         <i class="bi bi-cursor me-1"></i>
         <strong>Punto seleccionado:</strong> {{ filteredSitesByRadius.length }} sitio{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} 
-        encontrado{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} dentro de {{ filters.km || 50 }} km.
+        encontrado{{ filteredSitesByRadius.length !== 1 ? 's' : '' }} dentro de {{ filters.km || 200 }} km.
         <button @click="clearSelection" class="btn btn-sm btn-link p-0 ms-2">
           Limpiar selección
         </button>
@@ -116,6 +117,14 @@ import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 const DefaultIcon = L.icon({
   iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34]
+});
+
+const UserSelectedIcon = L.icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',  
   shadowUrl: iconShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -164,7 +173,7 @@ const heightProp = computed(() => props.height);
 
 // Radio en metros
 const radiusInMeters = computed(() => {
-  const km = props.filters.km || 50;
+  const km = props.filters.km || 200;
   return km * 1000;
 });
 
@@ -184,7 +193,7 @@ async function fetchNearbySites(lat: number, lng: number) {
     const params: Record<string, string | number> = {
       lat,
       long: lng,
-      radius: props.filters.km || 50,
+      radius: props.filters.km || 200,
       page: 1,
       per_page: 100
     };
@@ -243,6 +252,18 @@ function onMapReady() {
   }
 }
 
+// Haversine formula para distancia en km entre dos puntos geográficos
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
 // Actualizar la vista del mapa según los sitios filtrados
 function updateMapView() {
   if (!isMapReady.value) return
@@ -280,15 +301,25 @@ function updateMapView() {
         if (sitesCoords.length > 0) {
           const bounds = L.latLngBounds(sitesCoords);
           bounds.extend(userSelectedCenter.value);
-          
           // Verificar que los bounds sean válidos
           if (bounds.isValid()) {
-            nextTick(() => {
-              mapInstance.fitBounds(bounds, { 
-                padding: [50, 50],
-                maxZoom: 14 
+            // Calcular la distancia máxima entre los extremos de los bounds
+            const sw = bounds.getSouthWest();
+            const ne = bounds.getNorthEast();
+            const maxDistKm = haversine(sw.lat, sw.lng, ne.lat, ne.lng);
+            if (maxDistKm < 2000) {
+              nextTick(() => {
+                mapInstance.fitBounds(bounds, { 
+                  padding: [50, 50],
+                  maxZoom: 14 
+                });
               });
-            });
+            } else {
+              console.warn('⚠️ Bounds demasiado grandes para sitios cercanos, centrando en el punto seleccionado');
+              nextTick(() => {
+                mapInstance.setView(userSelectedCenter.value!, 10);
+              });
+            }
           } else {
             console.warn('⚠️ Bounds inválidos, centrando en el punto seleccionado');
             nextTick(() => {
@@ -312,7 +343,6 @@ function updateMapView() {
     // Si NO hay punto seleccionado pero HAY sitios filtrados, mostrar todos los sitios
     else if (props.closeSites && props.closeSites.length > 0) {
       console.log('🗺️ Ajustando mapa para mostrar', props.closeSites.length, 'sitios');
-      
       // Filtrar sitios con coordenadas válidas
       const sitesCoords = props.closeSites
         .filter(site => {
@@ -323,26 +353,32 @@ function updateMapView() {
             site.longitude !== undefined &&
             !isNaN(site.latitude) &&
             !isNaN(site.longitude);
-          
           if (!hasValidCoords) {
             console.warn('⚠️ Sitio con coordenadas inválidas:', site.name, site.latitude, site.longitude);
           }
           return hasValidCoords;
         })
         .map(site => [site.latitude, site.longitude] as L.LatLngTuple);
-      
+
       if (sitesCoords.length > 0) {
         const bounds = L.latLngBounds(sitesCoords);
-          if (bounds.isValid()) {
-            nextTick(() => {
-              mapInstance.fitBounds(bounds, { 
-                padding: [50, 50],
-                maxZoom: 12 
-              });
+        // Calcular la distancia máxima entre los extremos de los bounds
+        const sw = bounds.getSouthWest();
+        const ne = bounds.getNorthEast();
+        const maxDistKm = haversine(sw.lat, sw.lng, ne.lat, ne.lng);
+        if (bounds.isValid() && maxDistKm < 2000) {
+          nextTick(() => {
+            mapInstance.fitBounds(bounds, { 
+              padding: [50, 50],
+              maxZoom: 12 
             });
-          } else {
-            console.warn('⚠️ Bounds inválidos para sitios');
-          }         
+          });
+        } else {
+          console.warn('⚠️ Bounds demasiado grandes o inválidos, centrando en Buenos Aires');
+          nextTick(() => {
+            mapInstance.setView([props.defaultLat, props.defaultLng], props.defaultZoom);
+          });
+        }
       } else {
         console.warn('⚠️ No hay sitios con coordenadas válidas');
       }
