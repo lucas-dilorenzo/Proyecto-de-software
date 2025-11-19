@@ -24,7 +24,7 @@ export class BaseApi {
     }
     const headers: HeadersInit = {}
     if (token) headers['Authorization'] = `Bearer ${token}`
-    if (body) headers['Content-Type'] = "application/json"
+    if (body) headers['Content-Type'] = 'application/json'
     const url = `${this.baseUrl}${path}` + (queryParams.size ? `?${queryParams.toString()}` : '')
     const response = await fetch(url, {
       method,
@@ -37,4 +37,4 @@ export class BaseApi {
       else return undefined as Paginated extends true ? PaginatedResponse<T> : T
     } else throw new RequestError({ status: response.status, ...(await response.json()) })
   }
-  }
+}
