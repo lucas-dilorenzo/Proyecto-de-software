@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app, session
+from flask import jsonify, request, session
 from flask_jwt_extended import jwt_required
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
@@ -14,6 +14,7 @@ from src.core.historicalSites.tags.tag import Tag
 from src.core.reseñas.reseña import Reseña
 from src.core.reseñas import (
     get_reviews_by_site_paginated,
+    get_reviews_by_site,
     validate_review_data,
     create_review,
     get_review_by_id,
@@ -21,6 +22,7 @@ from src.core.reseñas import (
 )
 from src.web import helpers
 from src.core.historicalSites import tags as tags_service
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 
 @api_bp.route("/sites/", methods=["GET"])
@@ -309,6 +311,48 @@ def get_site_reviews(site_id):
         )
 
 
+# @api_bp.route("/sites/<int:site_id>/reviews", methods=["POST"])
+# @api_auth_required
+# def create_site_review(site_id):
+#     """
+#     POST /api/sites/:id/reviews
+#     Crea una nueva reseña para un sitio (requiere autenticación).
+#     Retorna 401 si no está autenticado.
+#     """
+#     try:
+#         data = request.get_json()
+
+#         if not data:
+#             return jsonify({
+#                 "error": {
+#                     "code": "invalid_data",
+#                     "message": "JSON data required"
+#                 }
+#             }), 400
+
+#         # Aquí irían las validaciones y creación de la reseña
+#         # Por ahora solo devolvemos un ejemplo
+
+#         return jsonify({
+#             "message": "Review created successfully",
+#             "data": {
+#                 "id": 123,
+#                 "site_id": site_id,
+#                 "rating": data.get("rating"),
+#                 "comment": data.get("comment")
+#             }
+#         }), 201
+
+
+#     except Exception as e:
+#         return jsonify({
+#             "error": {
+#                 "code": "internal_error",
+#                 "message": "Internal server error"
+#             }
+#         }), 500
+
+
 @api_bp.route("/sites/<int:site_id>/reviews", methods=["POST"])
 @api_auth_required
 def create_site_review(site_id):
@@ -340,7 +384,6 @@ def create_site_review(site_id):
             )
         # validaciones y creación de la reseña
         is_valid, errors = validate_review_data(request.json, site_id, user_id)
-        print(f"DEBUG: Validación - is_valid: {is_valid}, errors: {errors}")
 
         if not is_valid:
             return (
@@ -526,3 +569,222 @@ def get_provinces():
     province_list = [p.province for p in provinces if p.province]
 
     return jsonify({"data": province_list})
+
+
+@api_bp.route("/sites/<int:site_id>/favorite", methods=["PUT"])
+@jwt_required()
+def put_site_as_fav(site_id):
+    """
+    PUT /sites/{site_id}/favorite
+    Marca un sitio como favorito para el usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+    """
+    from src.core.users import marcar_favorito, get_user_by_id
+
+    print("DEBUG: Llamada a PUT /sites/{site_id}/favorite")
+
+    try:
+        # user_id = session.get("user")
+        user_id = get_jwt_identity()
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        user = get_user_by_id(int(user_id))
+
+        success = marcar_favorito(user, site_id)
+        if not success:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "not_found",
+                            "message": "Site not found",
+                        }
+                    }
+                ),
+                404,
+            )
+        # esta devolución 200, debería ser la 204 que marca la espicificación de API?
+        return "", 204
+
+    except Exception as e:
+        print(f"Error desconocido al cargar el sitio favorito: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/sites/<int:site_id>/favorite", methods=["DELETE"])
+# @api_auth_required
+def delete_site_from_fav(site_id):
+    """
+    DELETE /sites/{site_id}/favorite
+    Quita un sitio de favoritos para el usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+    """
+
+    from src.core.users import eliminar_favorito, get_user_by_id
+
+    try:
+        user_id = session.get("user") or 1
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication requiered",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        user = get_user_by_id(user_id)
+
+        success = eliminar_favorito(user, site_id)
+        if not success:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "not_found",
+                            "message": "Site not found",
+                        }
+                    }
+                ),
+                404,
+            )
+
+        return "", 204
+
+    except Exception as e:
+        print(f"Error desconocido al eliminar el sitio del listado de favoritos: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/me/favorites", methods=["GET"])
+@jwt_required()
+def get_user_favs():
+    """
+    GET /me/favorites?page=1&per_page=20
+    Obtiene todos los sitios favoritos del usuario autenticado.
+    Requiere autenticación - retorna 401 si no está logueado.
+
+    Parámetros:
+    - page: Número de página (por defecto 1)
+    - per_page: sitios por página, 1-100 (por defecto 10)
+    """
+    from src.core.users import get_user_by_id, get_user_favs
+
+    try:
+        # Obtengo el id del usuario logeado
+        user_id = get_jwt_identity()
+        if not user_id:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required",
+                        }
+                    }
+                ),
+                401,
+            )
+        # Obtengo el usuario
+        user = get_user_by_id(int(user_id))
+
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if not (1 <= per_page <= 100):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": {"per_page": ["Must be between 1 and 100"]},
+                        }
+                    }
+                ),
+                400,
+            )
+
+        favs_sites = get_user_favs(user)
+
+        total = len(favs_sites)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_favs = favs_sites[start:end]
+
+        data = []
+        for s in paginated_favs:
+            data.append(
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "short_description": s.description,
+                    "description": s.description,
+                    "city": s.city,
+                    "province": s.province,
+                    "latitude": s.latitude,
+                    "longitude": s.longitude,
+                    "tags": [tag.name for tag in s.tags] if s.tags else [],
+                    "state_conservation": s.conservation_status,
+                }
+            )
+
+        return jsonify(
+            {
+                "data": data,
+                "meta": {
+                    "page": page,
+                    "per_page": per_page,
+                    "total": total,
+                },
+            }
+        )
+
+    except Exception as e:
+        print(f"Error desconocido al obtener los sitios favoritos del usuario: {e}")
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )

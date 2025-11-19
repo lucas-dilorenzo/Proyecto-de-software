@@ -22,23 +22,19 @@ export class BaseApi {
         ([key, value]) => value !== undefined && queryParams.set(key, String(value)),
       )
     }
+    const headers: HeadersInit = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    if (body) headers['Content-Type'] = "application/json"
     const url = `${this.baseUrl}${path}` + (queryParams.size ? `?${queryParams.toString()}` : '')
-    // console.dir(
-    //   {
-    //     method,
-    //     url,
-    //     token,
-    //     body,
-    //   },
-    //   { depth: Infinity },
-    // )
     const response = await fetch(url, {
       method,
-      body: body && String(body),
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      body: body && JSON.stringify(body),
+      headers,
+      credentials: 'include',
     })
-    const responseBody = await response.json()
-    if (response.ok) return responseBody
-    else throw new RequestError({ status: response.status, ...responseBody })
+    if (response.ok) {
+      if (response.status != 204) return await response.json()
+      else return undefined as Paginated extends true ? PaginatedResponse<T> : T
+    } else throw new RequestError({ status: response.status, ...(await response.json()) })
   }
-}
+  }
