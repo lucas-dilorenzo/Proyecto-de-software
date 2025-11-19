@@ -89,8 +89,7 @@
         </div>
 
         <div class="d-flex gap-2">
-          <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
-          <button class="btn btn-primary">Ver en mapa</button>
+          <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>          
           <div v-if="esta_logeado">
             <button v-if="es_favorito" @click="eliminar_favorito()" class="btn btn-primary" >Eliminar de favoritos</button>
             <button v-else @click="agregar_favorito()" class="btn btn-outline-primary">Agregar a favoritos</button>
@@ -205,7 +204,7 @@ onMounted(async() => {
 
 async function comprobar_fav(){
   try{
-    const listado_favoritos = await api.getUserApi().getFavorites()
+    const listado_favoritos = await api.getUserApi().getFavorites({}, '') //revisar esto (argumentos de getFavorites)
     es_favorito.value = listado_favoritos.data.some(
       (fav_site: Site) => fav_site.id === site.value?.id
     )
@@ -219,7 +218,7 @@ async function comprobar_fav(){
 async function agregar_favorito(){
   try {
 
-    await api.getSitesApi().star(site.value!.id)
+    await api.getSitesApi().star(site.value!.id, '')
     es_favorito.value = true
 
     alert('Sitio agregado a favoritos')
@@ -232,7 +231,7 @@ async function agregar_favorito(){
 async function eliminar_favorito(){
   try {
     
-    await api.getSitesApi().unstar(site.value!.id)
+    await api.getSitesApi().unstar(site.value!.id, '')
     es_favorito.value = false
 
     alert('Sitio eliminado de favoritos')

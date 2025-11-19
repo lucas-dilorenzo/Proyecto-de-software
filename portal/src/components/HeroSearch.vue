@@ -18,6 +18,7 @@
         </form>
       </div>
     </div>
+    <SiteFilters class="border-top" />
   </section>
 </template>
 
@@ -25,6 +26,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { logger } from '@/utils/logger'
+import SiteFilters from './SiteFilters.vue'
 
 const q = ref('')
 const router = useRouter()

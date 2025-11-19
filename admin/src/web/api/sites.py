@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app, session
+from flask import jsonify, request, session
 from flask_jwt_extended import jwt_required
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
@@ -21,7 +21,7 @@ from src.core.reseñas import (
     delete_review,
 )
 from src.web import helpers
-from flask import session
+from src.core.historicalSites import tags as tags_service
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 
@@ -527,6 +527,48 @@ def delete_site_review(site_id, review_id):
             ),
             500,
         )
+
+
+@api_bp.route("/tags/", methods=["GET"])
+def get_tags():
+    """
+    GET /api/tags
+    Devuelve la lista de todos los tags disponibles.
+    """
+    tags = tags_service.get_tags()
+
+    data = []
+    for tag in tags:
+        data.append(
+            {
+                "id": tag.id,
+                "name": tag.name,
+                "slug": tag.slug,
+                "description": tag.description,
+                "created_at": tag.created_at,
+            }
+        )
+
+    return jsonify({"data": data})
+
+
+@api_bp.route("/sites/provinces/", methods=["GET"])
+def get_provinces():
+    """
+    GET /api/sites/provinces
+    Devuelve la lista de todas las provincias de los sitios registrados.
+    """
+    provinces = (
+        db.session.query(Site.province)
+        .filter(Site.deleted.is_(False), Site.visibility.is_(True))
+        .distinct()
+        .order_by(asc(Site.province))
+        .all()
+    )
+
+    province_list = [p.province for p in provinces if p.province]
+
+    return jsonify({"data": province_list})
 
 
 @api_bp.route("/sites/<int:site_id>/favorite", methods=["PUT"])

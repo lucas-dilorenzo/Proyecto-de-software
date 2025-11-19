@@ -3,12 +3,14 @@ export { RequestError } from './RequestError'
 import { AuthApi } from './auth'
 import { SitesApi } from './sites'
 import { ReviewsApi } from './sites/reviews'
+import { TagsApi } from './tags'
 import { UserApi } from './user'
 
 interface ApiStore {
   sites?: SitesApi
   siteReviews?: ReviewsApi[]
   user?: UserApi
+  tags?: TagsApi
   auth?: AuthApi
 }
 const store: ApiStore = {}
@@ -25,6 +27,9 @@ export default {
   },
   getUserApi() {
     return store.user || (store.user = new UserApi())
+  },
+  getTagsApi() {
+    return store.tags || (store.tags = new TagsApi())
   },
   getAuthApi() {
     return store.auth || (store.auth = new AuthApi())
