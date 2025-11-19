@@ -206,7 +206,7 @@ onMounted(async() => {
 async function comprobar_fav(){
   try{
     const listado_favoritos = await api.getUserApi().getFavorites()
-    es_favorito.value = listado_favoritos.some(
+    es_favorito.value = listado_favoritos.data.some(
       (fav_site: Site) => fav_site.id === site.value?.id
     )
   } catch (e: any) {
