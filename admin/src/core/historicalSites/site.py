@@ -117,3 +117,11 @@ class SiteLog(db.Model):
 
     def __repr__(self) -> str:
         return f"<SiteLog(id={self.id}, site_id={self.site_id}, user_id={self.user_id}, action={self.action})>"
+
+
+# Tabla de asociación para favoritos entre sitios y usuarios
+sites_users_favorites = db.Table(
+    "sites_users_favorites",
+    db.Column("site_id", db.Integer, db.ForeignKey("sites.id"), primary_key=True),
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id"), primary_key=True),
+)

@@ -90,7 +90,11 @@
 
         <div class="d-flex gap-2">
           <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
-          <!-- <button class="btn btn-primary">Ver en mapa</button> -->
+          <button class="btn btn-primary">Ver en mapa</button>
+          <div v-if="esta_logeado">
+            <button v-if="es_favorito" @click="eliminar_favorito()" class="btn btn-primary" >Eliminar de favoritos</button>
+            <button v-else @click="agregar_favorito()" class="btn btn-outline-primary">Agregar a favoritos</button>
+          </div>
         </div>
       </section>
 
@@ -106,7 +110,7 @@
               </div>
               <div class="col-md-6">
                 <strong>Estado de conservación:</strong>
-                <p>{{ site.state_of_conservation || 'No especificado' }}</p>
+                <p>{{ site.conservation_status || 'No especificado' }}</p>
               </div>
             </div>
           </div>
@@ -129,11 +133,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api, { type Site } from '@/services/api'
 import { logger } from '@/utils/logger'
 import MapComponent from '@/components/MapComponent.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +149,11 @@ const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
 const radius = ref(50)
+
+const esta_logeado = computed(() => {
+  return useAuthStore().isLoggedIn
+});
+const es_favorito = ref(false)
 
 async function fetchSite() {
   loading.value = true
@@ -186,11 +196,52 @@ async function fetchCloseSites() {
   }
 }
 
-onMounted(async () => {
+onMounted(async() => {
   logger.log('✅ SiteDetail mounted, id:', id)
-  await fetchSite()
+  await await fetchSite()
   await fetchCloseSites()
+  await comprobar_fav()
 })
+
+async function comprobar_fav(){
+  try{
+    const listado_favoritos = await api.getUserApi().getFavorites()
+    es_favorito.value = listado_favoritos.some(
+      (fav_site: Site) => fav_site.id === site.value?.id
+    )
+  } catch (e: any) {
+    logger.error('Error al comprobar favoritos:', e)
+    return false
+  }
+
+}
+
+async function agregar_favorito(){
+  try {
+
+    await api.getSitesApi().star(site.value!.id)
+    es_favorito.value = true
+
+    alert('Sitio agregado a favoritos')
+  } catch (e: any) {
+    logger.error('Error:', e)
+    alert('Error: ' + (e?.message || 'Error desconocido'))
+  }
+}
+
+async function eliminar_favorito(){
+  try {
+    
+    await api.getSitesApi().unstar(site.value!.id)
+    es_favorito.value = false
+
+    alert('Sitio eliminado de favoritos')
+  } catch (e: any) {
+    logger.error('Error:', e)
+    alert('Error: ' + (e?.message || 'Error desconocido'))
+  }
+}
+
 </script>
 
 <style scoped></style>
