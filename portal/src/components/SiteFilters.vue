@@ -120,6 +120,29 @@
                   </label>
                 </div>
               </div> -->
+              <!-- Radio de kilometros a buscar en el mapa -->
+              <div class="col-md-6">
+                <label for="filter-km" class="form-label">
+                  <i class="bi bi-geo-alt me-1"></i>Radio de búsqueda (km)
+                </label>
+                <input
+                  id="filter-km"
+                  v-model.number="filters.km"
+                  type="number"
+                  class="form-control"
+                  placeholder="Ej: 50"
+                  min="1"
+                  step="1"
+                />
+              </div>
+              <!-- Componente de mapa interactivo, reactivo a los filtros -->
+              <div class="col-12">
+                <MapFilterComponent 
+                  ref="mapFilter"
+                  :filters="filters" 
+                  :closeSites="filteredSites" 
+                />
+              </div>
 
               <!-- Botones de acción -->
               <div class="col-12">
@@ -145,28 +168,70 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import api from '@/services/api'
 import { logger } from '@/utils/logger'
+import MapFilterComponent from './MapFilterComponent.vue'
 
 interface Filters {
   city: string
   province: string
   tags: string[]
   onlyFavorites: boolean
+  km: number
 }
 
 const router = useRouter()
 const route = useRoute()
+const mapFilter = ref<InstanceType<typeof MapFilterComponent> | null>(null)
 
 // Estado de los filtros
 const filters = ref<Filters>({
   city: '',
   province: '',
   tags: [],
-  onlyFavorites: false
+  onlyFavorites: false,
+  km: 50
 })
+
+// Estado de los sitios filtrados para el mapa
+const filteredSites = ref<any[]>([])
+
+// Función para cargar los sitios filtrados desde la API
+async function fetchFilteredSites() {
+  const params: Record<string, string | number> = {
+    page: 1,
+    per_page: 100 // Obtener todos los sitios para mostrar en el mapa
+  }
+  
+  if (filters.value.city) params.city = filters.value.city
+  if (filters.value.province) params.province = filters.value.province
+  if (filters.value.tags.length > 0) params.tags = filters.value.tags.join(',')
+  
+  // NOTA: El filtro de radio (radius) requiere lat y long para funcionar
+  // Como no tenemos un punto central específico, no incluimos radius aquí
+  // El radio solo se usa visualmente en el mapa para mostrar el círculo
+  // if (filters.value.km && filters.value.km > 0) params.radius = filters.value.km
+  
+  try {
+    logger.log('🗺️ Cargando sitios filtrados para el mapa:', params)
+    const response = await api.getSitesApi().list(params)
+    filteredSites.value = response.data
+    logger.log('✅ Sitios cargados para el mapa:', response.data.length)
+  } catch (error) {
+    logger.error('❌ Error al cargar sitios filtrados:', error)
+    filteredSites.value = []
+  }
+}
+
+// Cargar sitios filtrados al montar
+onMounted(() => {
+  fetchFilteredSites()
+})
+
+// Observar cambios en los filtros para recargar los sitios
+watch(filters, fetchFilteredSites, { deep: true })
 
 // Datos para los selectores
 const provinces = ref<string[]>([])
@@ -186,6 +251,20 @@ onMounted(async () => {
 
   // Cargar filtros desde la URL si existen
   loadFiltersFromQuery()
+
+  // Agregar listener para cuando se expande el acordeón
+  const accordionElement = document.getElementById('collapseFilters')
+  if (accordionElement) {
+    accordionElement.addEventListener('shown.bs.collapse', () => {
+      // Esperar un poco para que el mapa se renderice
+      setTimeout(() => {
+        if (mapFilter.value) {
+          mapFilter.value.invalidateMapSize()
+          logger.log('🗺️ Mapa redimensionado después de expandir acordeón')
+        }
+      }, 100)
+    })
+  }
 })
 
 // Cargar filtros desde la query string
@@ -240,7 +319,8 @@ function clearFilters() {
     city: '',
     province: '',
     tags: [],
-    onlyFavorites: false
+    onlyFavorites: false,
+    km: 50
   }
 
   // Si hay una búsqueda de texto, mantenerla

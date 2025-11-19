@@ -3,14 +3,14 @@ import { OrderBy, PaginationQuery } from '../types'
 export interface Site {
   id: number
   name: string
-  short_description: string
+  description_short: string
   description: string
   city: string
   province: string
   latitude: number
   longitude: number
   tags: string[]
-  state_of_conservation: string
+  conservation_status: string
   inserted_at: Date
   updated_at: Date
   avg_rating?: number
