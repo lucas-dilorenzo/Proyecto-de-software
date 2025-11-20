@@ -24,11 +24,20 @@ def create_image(
     return image
 
 
-def delete_image(image: Image) -> None:
-    """Delete an Image instance.
+def delete_image(image: Image, storage_client=None, bucket_name=None) -> None:
+    """Delete an Image instance and optionally its file from storage.
     Args:
         image (Image): The Image instance to be deleted.
+        storage_client: MinIO client instance (optional).
+        bucket_name (str): Name of the MinIO bucket (optional).
     """
+    # Si se proporciona cliente de storage, eliminar el archivo físico
+    if storage_client and bucket_name and image.url:
+        try:
+            storage_client.remove_object(bucket_name=bucket_name, object_name=image.url)
+        except Exception as e:
+            # Log el error pero continuar con la eliminación del registro
+            print(f"Error al eliminar archivo de storage: {e}")
 
     db.session.delete(image)
     db.session.commit()
