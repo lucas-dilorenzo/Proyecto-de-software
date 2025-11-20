@@ -37,11 +37,11 @@
                 Todavía no hiciste una reseña, ¡apurate a hacer una!
             </span>
         </div>
-        <div v-else >
-            <div v-for="reviews in reviews" :key="reviews.id" class="mb-4">
-                <ReviewComponent :review="reviews" :is-editable="true" @update="handleUpdateReview" 
-                    @delete="handleDeleteReview"/>
-            </div>
+    <div v-else >
+      <div v-for="review in reviews" :key="review.id" class="mb-4">
+        <ReviewComponent :review="review" :is-editable="true" :allow-edit="false" @update="handleUpdateReview" 
+          @delete="handleDeleteReview"/>
+      </div>
         </div>
 
     </div>
@@ -98,8 +98,26 @@ function handleUpdateReview(reviewId: number, rating: number, comment: string) {
   emit('updateReview', reviewId, rating, comment)
 }
 
-function handleDeleteReview(reviewId: number) {
-  emit('deleteReview', reviewId)
+async function handleDeleteReview(reviewId: number) {
+  try {
+    // find the review to get site_id
+    const idx = reviews.value.findIndex((r) => r.id === reviewId)
+    if (idx === -1) {
+      console.warn('Review not found in list', reviewId)
+      return
+    }
+
+    const siteId = reviews.value[idx].site_id
+    await api.getSiteReviewsApi(siteId).delete(reviewId, '')
+
+    // remove from UI
+    reviews.value = reviews.value.filter((r) => r.id !== reviewId)
+    alert('Reseña eliminada correctamente')
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ Error al eliminar reseña:', err)
+    alert('Error al eliminar la reseña: ' + err.message)
+  }
 }
 
 async function getFavs(){
