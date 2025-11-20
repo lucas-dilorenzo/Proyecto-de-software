@@ -314,3 +314,27 @@ def delete_review(review_id):
         db.session.rollback()
         print(f"Error al eliminar reseña: {e}")
         return False
+
+
+def get_reviews_by_user_paginated(user_id: int, page: int = 1, per_page: int = 10):
+    """
+    Devuelve las reseñas creadas por un usuario específico con paginación.
+    Args:
+        user_id (int): ID del usuario.
+        page (int): Número de página (por defecto 1).
+        per_page (int): Cantidad de reseñas por página (por defecto 10).
+    Returns:
+        Pagination: Objeto de paginación de SQLAlchemy con las reseñas.
+    """
+    try:
+        query = (
+            db.session.query(Reseña)
+            .filter(Reseña.user_id == user_id)
+            .order_by(Reseña.fecha_creacion.desc(), Reseña.id.desc())
+        )
+
+        return query.paginate(page=page, per_page=per_page, error_out=False)
+
+    except Exception as e:
+        print(f"Error al obtener reseñas paginadas por user_id: {e}")
+        return None

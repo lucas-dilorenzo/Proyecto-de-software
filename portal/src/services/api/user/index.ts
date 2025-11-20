@@ -1,5 +1,6 @@
 import { BaseApi } from '../BaseApi'
 import type { Site } from '../sites/types'
+import { Review } from '../types'
 import type { GetFavoritesQueryParams, GetTokenData, TokenResponse } from './types'
 
 export class UserApi extends BaseApi {
@@ -13,6 +14,10 @@ export class UserApi extends BaseApi {
 
   getFavorites(query: GetFavoritesQueryParams, token: string) {
     return this.request<Site, true>('/me/favorites', { query, token })
+  }
+
+  getReviews(token: string) {
+    return this.request<Review, true>('/me/reviews', { token })
   }
   
 
