@@ -25,15 +25,10 @@
         </div>
         </div>
 
-        <!-- <div v-else-if="items.length === 0" class="text-center py-3">
-            <span class="badge rounded-pill bg-light text-muted border px-3 py-2">
-                Todavía no elegiste sitios favoritos.
-            </span>
-        </div> -->
     </div>
     <div v-else>
         <header class="d-flex justify-content-between align-items-baseline mb-3">
-            <h2 class="h4 mb-0" style="font-family: 'Playfair Display', serif">Reseñas hechas</h2>
+            <h2 class="h4 mb-0" style="font-family: 'Playfair Display', serif">Tus reseñas hechas</h2>
         </header>
     </div>
 

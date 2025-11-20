@@ -6,8 +6,8 @@
                 <h1 class="display-5 fw-bold mb-2">¡Bienvenido {user}!</h1>
                 <p class="text-muted mb-4">Descubrí lugares destacados y experiencias cerca tuyo.</p>
                 <div class="d-flex gap-2 justify-content-center">
-                    <button class="btn btn-primary btn-lg" @click="goFavs()">Mis sitios favoritos</button>
-                    <button class="btn btn-primary btn-lg" @click="goReviews()">Mis reseñas</button>
+                    <button class="btn btn-primary btn-lg" @click="goFavs()">Tus sitios favoritos</button>
+                    <button class="btn btn-primary btn-lg" @click="goReviews()">Tus reseñas</button>
                 </div>
             </div>
         </div>
