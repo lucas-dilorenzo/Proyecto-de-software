@@ -4,7 +4,7 @@
                 data-bs-toggle="dropdown" aria-expanded="false"> <img src="https://api.iconify.design/bi/person-fill.svg" alt="Usuario"
                   width="24" height="24" class="rounded-circle"> </a>
               <ul v-if="props.loggedIn" class="dropdown-menu text-small shadow" style="">
-                <li><a class="dropdown-item" href="#">Profile</a></li>
+                <li><router-link :to="{ name: 'user-dashboard' }" class="dropdown-item">Profile</router-link></li>
                 <li>
                   <hr class="dropdown-divider">
                 </li>
