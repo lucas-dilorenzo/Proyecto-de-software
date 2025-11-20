@@ -54,6 +54,12 @@
               </span>
             </div>
 
+            <div v-if="props.isEditable" class="mb-2">
+              <span :class="['badge', badgeClass]">
+                Estado: {{ (props.review.state ?? '').toUpperCase() }}
+              </span>
+            </div>
+
             <p class="mb-2">
               {{ props.review.comment }}
             </p>
@@ -82,7 +88,7 @@
 
 <script setup lang="ts">
 import { Review } from '@/services/api'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps<{
   review: Review
@@ -97,6 +103,20 @@ const emit = defineEmits<{
 const isEditing = ref(false)
 const editedRating = ref(props.review.rating)
 const editedComment = ref(props.review.comment)
+
+const badgeClass = computed(() => {
+  const state = (props.review.state ?? '').toUpperCase()
+  switch (state) {
+    case 'PENDIENTE':
+      return 'bg-warning text-dark'
+    case 'APROBADA':
+      return 'bg-success text-white'
+    case 'RECHAZADA':
+      return 'bg-danger text-white'
+    default:
+      return 'bg-info text-dark'
+  }
+})
 
 function calculateTimePublished(date: Date): string {
   const publishedDate = new Date(date)

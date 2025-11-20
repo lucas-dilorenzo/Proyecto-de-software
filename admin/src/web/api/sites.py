@@ -824,6 +824,7 @@ def get_reviews_user():
                     "site_id": r.site_id,
                     "rating": r.calificacion,
                     "comment": r.contenido,
+                    "state": r.estado,
                     "inserted_at": r.fecha_creacion,
                     "updated_at": r.fecha_creacion,
                 }

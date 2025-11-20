@@ -5,6 +5,7 @@ export interface Review {
   site_id: number
   rating: number
   comment: string
+  state: string
   inserted_at: Date
   updated_at: Date
 }
