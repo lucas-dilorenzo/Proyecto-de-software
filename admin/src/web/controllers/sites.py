@@ -823,10 +823,27 @@ def edit_site(site_id):
 
             # Manejar eliminación de imágenes
             images_to_delete = request.form.getlist("delete_images[]")
-            for image_id in images_to_delete:
-                image = images.get_image_by_id(int(image_id))
-                if image and image.site_id == site.id:
-                    images.delete_image(image)
+            print(
+                f"DEBUG: Imágenes marcadas para eliminar: {images_to_delete}"
+            )  # Debug log
+
+            if images_to_delete:
+                storage_client = current_app.storage
+                bucket_name = current_app.config["MINIO_BUCKET_NAME"]
+
+                for image_id in images_to_delete:
+                    try:
+                        image = images.get_image_by_id(int(image_id))
+                        if image and image.site_id == site.id:
+                            print(
+                                f"DEBUG: Eliminando imagen ID {image_id}, URL: {image.url}"
+                            )  # Debug log
+                            # Eliminar tanto de la BD como de MinIO
+                            images.delete_image(image, storage_client, bucket_name)
+                            flash(f"Imagen eliminada correctamente", "success")
+                    except Exception as e:
+                        print(f"ERROR al eliminar imagen {image_id}: {e}")  # Debug log
+                        flash(f"Error al eliminar imagen: {e}", "danger")
 
             # Actualizar orden de imágenes existentes
             image_orders = request.form.to_dict(flat=False)

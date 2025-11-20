@@ -721,7 +721,7 @@ Imagen principal del sitio histórico</textarea
       // Marcar para eliminación
       const input = document.createElement("input");
       input.type = "hidden";
-      input.name = "images_to_delete";
+      input.name = "delete_images[]";
       input.value = imageId;
       hiddenInput.appendChild(input);
       // Cambiar opacidad para indicar que será eliminada
