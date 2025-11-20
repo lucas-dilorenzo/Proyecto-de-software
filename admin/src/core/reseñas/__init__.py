@@ -4,6 +4,7 @@ from src.core.users.user import User
 from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 from datetime import datetime
+from src.core.historicalSites.site import Site
 
 
 def get_review_by_id(review_id):
@@ -206,7 +207,6 @@ def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 1
     """
     try:
         # Verificar que el sitio existe y es válido
-        from src.core.historicalSites.site import Site
 
         site = (
             db.session.query(Site)
@@ -217,10 +217,13 @@ def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 1
         if not site:
             return None
 
-        # Construir consulta base con orden por fecha de creación descendente
+        # Construir consulta base con orden por fecha de creación descendente (solo reseñas aprobadas)
+        from src.core.reseñas.estadoReseña import estadoReseña
+
         query = (
             db.session.query(Reseña)
             .filter(Reseña.site_id == site_id)
+            .filter(Reseña.estado == estadoReseña.APROBADA.code)
             .order_by(Reseña.fecha_creacion.desc(), Reseña.id.desc())
         )
 
