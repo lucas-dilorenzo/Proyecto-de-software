@@ -20,7 +20,7 @@
 
         <div v-else class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
             <div class="col" v-for="s in items" :key="s.id">
-            <SiteCard :site="s" @open="openDetail" />
+                <SiteCard :site="s" @open="openDetail" />
             </div>
         </div>
         </div>
@@ -30,6 +30,19 @@
         <header class="d-flex justify-content-between align-items-baseline mb-3">
             <h2 class="h4 mb-0" style="font-family: 'Playfair Display', serif">Tus reseñas hechas</h2>
         </header>
+
+        <div v-if="si_favs" class="alert alert-danger" role="alert">Error: {{ error }}</div>
+        <div v-else-if="items.length === 0" class="text-center py-3">
+            <span class="badge rounded-pill bg-light text-muted border px-3 py-2">
+                Todavía no hiciste una reseña, ¡apurate a hacer una!.
+            </span>
+        </div>
+        <div v-else >
+            <div>
+                <ListadoReseñas :review="reviews || []"/>
+            </div>
+        </div>
+
     </div>
 
 </template>
@@ -38,6 +51,7 @@
 import SkeletonCard from './SkeletonCard.vue';
 import SiteCard from './SiteCard.vue';
 import api from '@/services/api';
+import ListadoReseñas from './ListadoReseñas.vue';
 import { computed, onMounted, ref } from 'vue';
 import { router } from '@/router';
 import { type Site } from '@/services/api';
