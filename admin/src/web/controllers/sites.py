@@ -2,6 +2,14 @@ from src.core import historicalSites
 from src.web.auth import permission_required
 from src.core.permissions.permission import UserPermission
 from src.web.helpers.validations.sites import SiteForm
+from src.web.helpers.validations.images import (
+    validate_image,
+    validate_images_batch,
+    validate_images_count,
+    get_allowed_extensions_str,
+    get_max_file_size_mb,
+    MAX_IMAGES_PER_SITE,
+)
 from src.core.historicalSites.tags import get_all_tags
 from src.core.historicalSites.enums import ConservationStatus, SiteCategory
 from src.core import images
@@ -250,7 +258,7 @@ def show_site_history(site_id):
     site = historicalSites.get_site_by_id(site_id)
     if site is None:
         return "Site not found", 404
-    
+
     # filtros elegidos desde query
     user_filtrado = request.args.get("user", "", type=str)
     action_filtrado = request.args.get("action", "", type=str)
@@ -258,19 +266,22 @@ def show_site_history(site_id):
     fecha_hasta_filtrado = request.args.get("date_to", "", type=str)
 
     # diccionario sobre si los filtros para usar como comprobación
-    has_filters = any (
-        [
-            user_filtrado,
-            action_filtrado,
-            fecha_desde_filtrado,
-            fecha_hasta_filtrado
-        ]
+    has_filters = any(
+        [user_filtrado, action_filtrado, fecha_desde_filtrado, fecha_hasta_filtrado]
     )
 
-    # otros parametros 
-    all_actions = historicalSites.get_all_log_actions(site_id=site_id)  # Filtrar acciones por sitio
-    all_users = historicalSites.get_site_log_users(site_id=site_id) #test
-    logs = historicalSites.get_site_logs(site_id, user_filtrado, action_filtrado, fecha_desde_filtrado, fecha_hasta_filtrado)
+    # otros parametros
+    all_actions = historicalSites.get_all_log_actions(
+        site_id=site_id
+    )  # Filtrar acciones por sitio
+    all_users = historicalSites.get_site_log_users(site_id=site_id)  # test
+    logs = historicalSites.get_site_logs(
+        site_id,
+        user_filtrado,
+        action_filtrado,
+        fecha_desde_filtrado,
+        fecha_hasta_filtrado,
+    )
 
     # Normalizar 'details' para render
     for l in logs:
@@ -296,7 +307,7 @@ def show_site_history(site_id):
                     new = change
                 display_changes.append((field, old, new))
         setattr(l, "parsed_changes", display_changes)
-   
+
     return render_template(
         "historicalSites/site_history.html",
         site=site,
@@ -306,7 +317,6 @@ def show_site_history(site_id):
         has_filters=has_filters,
         date_from=fecha_desde_filtrado,
         date_to=fecha_hasta_filtrado,
-        
     )
 
 
@@ -322,6 +332,55 @@ def create_site():
         if form.validate_on_submit():
             formulario = request.form
             visibility_ = True if formulario.get("visibility") is not None else False
+
+            # Validar imágenes antes de crear el sitio
+            validation_errors = []
+
+            # Validar imagen principal
+            if "main_image" in request.files:
+                primary_img = request.files["main_image"]
+                if primary_img and primary_img.filename:
+                    is_valid, error = validate_image(primary_img)
+                    if not is_valid:
+                        validation_errors.append(f"Imagen principal: {error}")
+
+            # Validar imágenes secundarias
+            if "secondary_images" in request.files:
+                secondary_images = request.files.getlist("secondary_images")
+                valid_secondary = [
+                    img for img in secondary_images if img and img.filename
+                ]
+
+                if valid_secondary:
+                    # Calcular total de imágenes (principal + secundarias)
+                    total_images = (
+                        1
+                        if "main_image" in request.files
+                        and request.files["main_image"].filename
+                        else 0
+                    ) + len(valid_secondary)
+                    is_valid_count, count_error = validate_images_count(0, total_images)
+
+                    if not is_valid_count:
+                        validation_errors.append(count_error)
+                    else:
+                        # Validar cada imagen secundaria
+                        all_valid, errors = validate_images_batch(valid_secondary, 0)
+                        if not all_valid:
+                            validation_errors.extend(errors)
+
+            # Si hay errores de validación, mostrarlos y no continuar
+            if validation_errors:
+                for error in validation_errors:
+                    flash(error, "danger")
+                visibility_ = (
+                    True if request.form.get("visibility") is not None else False
+                )
+                return render_template(
+                    "historicalSites/create_site.html",
+                    tags=tags,
+                    visibility=visibility_,
+                )
 
             if historicalSites.get_site_by_name(formulario.get("name")) is None:
                 site = historicalSites.create_site(
@@ -523,6 +582,67 @@ def edit_site(site_id):
         form = SiteForm()
         if form.validate_on_submit():
             formulario = request.form
+
+            # Validar imágenes antes de actualizar el sitio
+            validation_errors = []
+
+            # Obtener cantidad actual de imágenes del sitio
+            current_images = images.get_images_by_site(site_id)
+            current_count = len(current_images) if current_images else 0
+
+            # Contar cuántas imágenes se van a eliminar
+            images_to_delete = request.form.getlist("delete_images[]")
+            images_to_delete_count = len(images_to_delete)
+
+            # Validar imagen principal
+            new_main_image = False
+            if "main_image" in request.files:
+                primary_img = request.files["main_image"]
+                if primary_img and primary_img.filename:
+                    is_valid, error = validate_image(primary_img)
+                    if not is_valid:
+                        validation_errors.append(f"Imagen principal: {error}")
+                    else:
+                        new_main_image = True
+
+            # Validar imágenes secundarias
+            new_secondary_count = 0
+            if "secondary_images" in request.files:
+                secondary_images = request.files.getlist("secondary_images")
+                valid_secondary = [
+                    img for img in secondary_images if img and img.filename
+                ]
+                new_secondary_count = len(valid_secondary)
+
+                if valid_secondary:
+                    # Validar cada imagen secundaria
+                    all_valid, errors = validate_images_batch(valid_secondary, 0)
+                    if not all_valid:
+                        validation_errors.extend(errors)
+
+            # Calcular total de imágenes después de la edición
+            # current_count - imágenes a eliminar + nuevas imágenes
+            total_after_edit = (
+                current_count
+                - images_to_delete_count
+                + (1 if new_main_image else 0)
+                + new_secondary_count
+            )
+
+            if total_after_edit > MAX_IMAGES_PER_SITE:
+                validation_errors.append(
+                    f"El sitio no puede tener más de {MAX_IMAGES_PER_SITE} imágenes. "
+                    f"Actualmente tiene {current_count}, va a eliminar {images_to_delete_count} "
+                    f"y está intentando agregar {(1 if new_main_image else 0) + new_secondary_count}. "
+                    f"Total resultante: {total_after_edit}"
+                )
+
+            # Si hay errores de validación, mostrarlos y no continuar
+            if validation_errors:
+                for error in validation_errors:
+                    flash(error, "danger")
+                return redirect(url_for("sites.edit_site", site_id=site.id))
+
             historicalSites.update_site(
                 site_id,
                 name=formulario.get("name"),
