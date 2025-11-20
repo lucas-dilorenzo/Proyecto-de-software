@@ -31,15 +31,16 @@
             <h2 class="h4 mb-0" style="font-family: 'Playfair Display', serif">Tus reseñas hechas</h2>
         </header>
 
-        <div v-if="si_favs" class="alert alert-danger" role="alert">Error: {{ error }}</div>
-        <div v-else-if="items.length === 0" class="text-center py-3">
+        <div v-if="error" class="alert alert-danger" role="alert">Error: {{ error }}</div>
+        <div v-else-if="reviews.length === 0" class="text-center py-3">
             <span class="badge rounded-pill bg-light text-muted border px-3 py-2">
-                Todavía no hiciste una reseña, ¡apurate a hacer una!.
+                Todavía no hiciste una reseña, ¡apurate a hacer una!
             </span>
         </div>
         <div v-else >
-            <div>
-                <ListadoReseñas :review="reviews || []"/>
+            <div v-for="reviews in reviews" :key="reviews.id" class="mb-4">
+                <ReviewComponent :review="reviews" :is-editable="true" @update="handleUpdateReview" 
+                    @delete="handleDeleteReview"/>
             </div>
         </div>
 
@@ -50,16 +51,22 @@
 <script setup lang="ts">
 import SkeletonCard from './SkeletonCard.vue';
 import SiteCard from './SiteCard.vue';
-import api from '@/services/api';
-import ListadoReseñas from './ListadoReseñas.vue';
+import api, { Review } from '@/services/api';
+import ListReviews from './ListReviews.vue';
 import { computed, onMounted, ref } from 'vue';
 import { router } from '@/router';
 import { type Site } from '@/services/api';
 import { logger } from '@/utils/logger';
+import ReviewComponent from './ReviewComponent.vue';
 
 const error = ref('')
 const loading = ref(false)
 const items = ref<Site[]>([])
+const reviews = ref<Review[]>([])
+const emit = defineEmits<{
+  updateReview: [reviewId: number, rating: number, comment: string]
+  deleteReview: [reviewId: number]
+}>()
 const props = defineProps<{
     si_favs: boolean;
 }>();
@@ -69,12 +76,15 @@ onMounted(async () => {
   loading.value = true
   try {
     const response = await getFavs()
+    const responseReviews = await getReviews() 
     items.value = response.data
+    reviews.value = responseReviews.data
     error.value = ''
   } catch (err) {
-    logger.log('❌ Error fetching favorites:', err)
-    error.value = 'No se pudieron cargar los sitios favoritos'
+    logger.log('❌ Error:', err)
+    error.value = String(err)
     items.value = []
+    reviews.value = []
   } finally {
     loading.value = false
   }
@@ -84,8 +94,20 @@ function openDetail(site: Site) {
   router.push({ name: 'site-detail', params: { id: site.id } })
 }
 
+function handleUpdateReview(reviewId: number, rating: number, comment: string) {
+  emit('updateReview', reviewId, rating, comment)
+}
+
+function handleDeleteReview(reviewId: number) {
+  emit('deleteReview', reviewId)
+}
+
 async function getFavs(){
   return await api.getUserApi().getFavorites({},'')
+}
+
+async function getReviews(){
+  return await api.getUserApi().getReviews('')
 }
 
 
