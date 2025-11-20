@@ -71,7 +71,7 @@
 
               <!-- Botones de edición/borrado (solo si es editable) -->
               <div v-if="props.isEditable" class="btn-group btn-group-sm">
-                <button @click="startEdit" class="btn btn-outline-primary" title="Editar">
+                <button v-if="props.allowEdit !== false" @click="startEdit" class="btn btn-outline-primary" title="Editar">
                   <i class="bi bi-pencil"></i>Editar
                 </button>
                 <button @click="confirmDelete" class="btn btn-outline-danger" title="Eliminar">
@@ -93,6 +93,8 @@ import { ref, computed } from 'vue'
 const props = defineProps<{
   review: Review
   isEditable: boolean
+  // allowEdit: controls whether the Edit button is shown (defaults to true)
+  allowEdit?: boolean
 }>()
 
 const emit = defineEmits<{
