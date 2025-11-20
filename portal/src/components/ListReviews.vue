@@ -1,22 +1,5 @@
 <template>
-  <!-- <div>class="listado-resenas">
-        <h2>Listado de Reseñas</h2>
-        <div v-if="review.length === 0" class="alert alert-info">
-            No hay review disponibles.
-        </div>
-        <div v-else>
-            <div v-for="reseña in review" :key="reseña.id" class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ reseña.titulo }}</h5>
-                    <p class="card-text">{{ reseña.contenido }}</p>
-                    <p class="card-text">
-                        <small class="text-muted">Calificación: {{ reseña.calificacion }} / 5</small>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div> -->
-  <div class="container my-5">
+  <div class="container my-5">    
     <div v-if="props.review.length === 0" class="alert alert-info">No hay review disponibles.</div>
     <div v-else>
       <div v-for="review_ in props.review" :key="review_.id" class="card mb-3 shadow-sm">
@@ -59,7 +42,6 @@
 <script setup lang="ts">
 import { Review } from '@/services/api'
 import { onMounted } from 'vue'
-// const review = computed(() => props.review)
 const props = defineProps<{
   review: Review[]
 }>()
@@ -79,7 +61,7 @@ function calculateTimePublished(date: Date): string {
   }
 }
 
-onMounted(() => {
+onMounted( () => {
   console.log('Reseñas recibidas:', props.review)
 })
 </script>

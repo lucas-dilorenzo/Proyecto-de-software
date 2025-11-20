@@ -131,17 +131,27 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title mb-4">Reseñas</h5>
-            
-            <!-- Componente para agregar una nueva reseña -->
-            <div v-if="esta_logeado" class="mt-4">
-              <NuevaReseña :siteId="site?.id" />
+            <div v-if="esta_logeado">
+              <!-- Si estoy logueado y tengo una reseña sobre este sitio -->
+              <div v-if="myReview" class="card">
+                <div class="card-body">
+                  <div class="card-title">
+                    <h6>Mi reseña:</h6>
+                  </div>
+                  <ListReviews :review="[myReview]"/>
+                </div>
+              </div>
+              <!-- Componente para agregar una nueva reseña -->
+              <div v-else class="mt-4">
+                <NewReview :siteId="site?.id" />
+              </div>
             </div>
             <div v-else class="alert alert-info mt-4">
               Inicie sesión para agregar una reseña.
             </div>
-
+            <!-- Mostrar Primero las reseñas del usuario logueado -->
             <!-- Componente para mostrar las reseñas -->
-            <ListadoReseñas :review="reviews || []"/>            
+            <ListReviews :review="reviews || []"/>            
           </div>
         </div>
       </section>
@@ -156,8 +166,8 @@ import api, { type Site, Review } from '@/services/api'
 import { logger } from '@/utils/logger'
 import MapComponent from '@/components/MapComponent.vue'
 import { useAuthStore } from '@/stores/auth'
-import ListadoReseñas from '@/components/ListadoReseñas.vue'
-import NuevaReseña from '@/components/NuevaReseña.vue'
+import ListReviews from '@/components/ListReviews.vue'
+import NewReview from '@/components/NewReview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -169,6 +179,8 @@ const loading = ref(false)
 const error = ref('')
 const radius = ref(50)
 const reviews = ref<Review[] | null>(null)
+const myReviews = ref<Review[]>([])
+const myReview = ref<Review>()
 const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
@@ -221,6 +233,10 @@ onMounted(async() => {
   await fetchCloseSites()
   await comprobar_fav()
   await fetchReviews()
+  if(esta_logeado.value){
+    await fetchMyReviewsOnSite()
+    await filterReviews()
+  }
 })
 
 async function comprobar_fav(){
@@ -277,6 +293,28 @@ async function fetchReviews() {
     const err = e instanceof Error ? e : new Error(String(e))
     logger.error('❌ SiteDetail error fetching reviews:', err)
     reviews.value = null
+  }
+}
+
+async function fetchMyReviewsOnSite() {
+  try {
+    const response = await api.getUserApi().getReviews('')
+    myReviews.value = response.data
+    if(myReviews.value.length > 0){
+      myReview.value = myReviews.value.filter((review) => review.site_id === site.value?.id)[0]
+      console.log('Mi reseña:', myReview.value)
+    } else {
+      console.log('Reseñas del usuario(debería tener una sola):', myReviews)
+    }
+  } catch (error) {
+    console.error('Error al obtener mis reseñas:', error)
+  }
+}
+
+async function filterReviews() {
+  if (reviews.value && myReview.value) {
+    reviews.value = reviews.value.filter((review) => review.id !== myReview.value!.id)
+    console.log('Reseñas filtradas (sin la del usuario):', reviews.value)
   }
 }
 

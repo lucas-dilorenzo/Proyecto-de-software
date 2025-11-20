@@ -19,6 +19,7 @@ from src.core.reseñas import (
     create_review,
     get_review_by_id,
     delete_review,
+    get_reviews_by_user_paginated,
 )
 from src.web import helpers
 from src.core.historicalSites import tags as tags_service
@@ -782,6 +783,70 @@ def get_user_favs():
                     "error": {
                         "code": "server_error",
                         "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/me/reviews", methods=["GET"])
+@jwt_required()
+def get_reviews_user():
+    user_id = get_jwt_identity()
+    try:
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if not (1 <= per_page <= 100):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": {"per_page": ["Must be between 1 and 100"]},
+                        }
+                    }
+                ),
+                400,
+            )
+
+        reviews_paginated = get_reviews_by_user_paginated(
+            user_id=user_id, page=page, per_page=per_page
+        )
+
+        data = []
+        for r in reviews_paginated.items:
+            data.append(
+                {
+                    "id": r.id,
+                    "site_id": r.site_id,
+                    "rating": r.calificacion,
+                    "comment": r.contenido,
+                    "inserted_at": r.fecha_creacion,
+                    "updated_at": r.fecha_creacion,
+                }
+            )
+
+        return jsonify(
+            {
+                "data": data,
+                "meta": {
+                    "page": reviews_paginated.page,
+                    "per_page": reviews_paginated.per_page,
+                    "total": reviews_paginated.total,
+                },
+            }
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
                     }
                 }
             ),
