@@ -16,12 +16,9 @@ def handle_api_exception(error):
 @api_bp.errorhandler(404)
 def handle_not_found(error):
     """Maneja 404 en endpoints de API (devuelve JSON en lugar de HTML)"""
-    response = jsonify({
-        "error": {
-            "code": "not_found",
-            "message": "Resource not found"
-        }
-    })
+    response = jsonify(
+        {"error": {"code": "not_found", "message": "Resource not found"}}
+    )
     response.status_code = 404
     return response
 
@@ -29,12 +26,14 @@ def handle_not_found(error):
 @api_bp.errorhandler(HTTPException)
 def handle_http_exception(error):
     """Maneja excepciones HTTP de Werkzeug"""
-    response = jsonify({
-        "error": {
-            "code": error.name.lower().replace(" ", "_"),
-            "message": error.description,
+    response = jsonify(
+        {
+            "error": {
+                "code": error.name.lower().replace(" ", "_"),
+                "message": error.description,
+            }
         }
-    })
+    )
     response.status_code = error.code
     return response
 
@@ -44,9 +43,10 @@ def handle_unexpected_exception(error):
     """Maneja errores inesperados (500)"""
     # Log del error real (no exponerlo al cliente)
     import traceback
+
     print(f"❌ Unexpected error: {error}")
     traceback.print_exc()
-    
+
     # Respuesta genérica al cliente
     server_error = ServerError()
     response = jsonify(server_error.to_dict())
@@ -56,3 +56,4 @@ def handle_unexpected_exception(error):
 
 # Importar rutas después de definir error handlers
 from . import sites
+from . import authenticate

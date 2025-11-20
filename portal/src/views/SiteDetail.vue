@@ -89,8 +89,7 @@
         </div>
 
         <div class="d-flex gap-2">
-          <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>
-          <button class="btn btn-primary">Ver en mapa</button>
+          <button @click="router.back()" class="btn btn-outline-secondary">Volver</button>          
           <div v-if="esta_logeado">
             <button v-if="es_favorito" @click="eliminar_favorito()" class="btn btn-primary" >Eliminar de favoritos</button>
             <button v-else @click="agregar_favorito()" class="btn btn-outline-primary">Agregar a favoritos</button>
@@ -128,6 +127,39 @@
           </div>
         </div>
       </section>
+      <section class="col-12 reviews-section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Reseñas</h5>
+            <div v-if="esta_logeado">
+              <!-- Si estoy logueado y tengo una reseña sobre este sitio -->
+              <div v-if="myReview" class="card">
+                <div class="card-body">
+                  <div class="card-title">
+                    <h6>Mi reseña:</h6>
+                  </div>
+                  <ListReviews 
+                    :review="[myReview]"
+                    :current-user-review-id="myReview.id"
+                    @update-review="handleUpdateReview"
+                    @delete-review="handleDeleteReview"
+                  />
+                </div>
+              </div>
+              <!-- Componente para agregar una nueva reseña -->
+              <div v-else class="mt-4">
+                <NewReview :siteId="site?.id" />
+              </div>
+            </div>
+            <div v-else class="alert alert-info mt-4">
+              Inicie sesión para agregar una reseña.
+            </div>
+            <!-- Mostrar Primero las reseñas del usuario logueado -->
+            <!-- Componente para mostrar las reseñas -->
+            <ListReviews :review="reviews || []"/>            
+          </div>
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -135,10 +167,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api, { type Site } from '@/services/api'
+import api, { type Site, Review } from '@/services/api'
 import { logger } from '@/utils/logger'
 import MapComponent from '@/components/MapComponent.vue'
 import { useAuthStore } from '@/stores/auth'
+import ListReviews from '@/components/ListReviews.vue'
+import NewReview from '@/components/NewReview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,7 +183,9 @@ const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
 const radius = ref(50)
-
+const reviews = ref<Review[] | null>(null)
+const myReviews = ref<Review[]>([])
+const myReview = ref<Review>()
 const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
@@ -201,44 +237,138 @@ onMounted(async() => {
   await await fetchSite()
   await fetchCloseSites()
   await comprobar_fav()
+  await fetchReviews()
+  if(esta_logeado.value){
+    await fetchMyReviewsOnSite()
+    await filterReviews()
+  }
 })
 
 async function comprobar_fav(){
-  try{
-    const listado_favoritos = await api.getUserApi().getFavorites()
-    es_favorito.value = listado_favoritos.some(
-      (fav_site: Site) => fav_site.id === site.value?.id
-    )
-  } catch (e: any) {
-    logger.error('Error al comprobar favoritos:', e)
-    return false
-  }
-
+  if(esta_logeado.value == true){
+    try{
+      const listado_favoritos = await api.getUserApi().getFavorites({}, '') //revisar esto (argumentos de getFavorites)
+      es_favorito.value = listado_favoritos.data.some(
+        (fav_site: Site) => fav_site.id === site.value?.id
+      )
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      logger.error('Error al comprobar favoritos:', err)
+      return false
+    }
+  }  
 }
 
 async function agregar_favorito(){
   try {
 
-    await api.getSitesApi().star(site.value!.id)
+    await api.getSitesApi().star(site.value!.id, '')
     es_favorito.value = true
 
     alert('Sitio agregado a favoritos')
-  } catch (e: any) {
-    logger.error('Error:', e)
-    alert('Error: ' + (e?.message || 'Error desconocido'))
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('Error:', err)
+    alert('Error: ' + err.message)
   }
 }
 
 async function eliminar_favorito(){
   try {
     
-    await api.getSitesApi().unstar(site.value!.id)
+    await api.getSitesApi().unstar(site.value!.id, '')
     es_favorito.value = false
 
     alert('Sitio eliminado de favoritos')
-  } catch (e: any) {
-    logger.error('Error:', e)
-    alert('Error: ' + (e?.message || 'Error desconocido'))
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('Error:', err)
+    alert('Error: ' + err.message)
+  }
+}
+
+async function fetchReviews() {
+  if (!site.value) return
+
+  try {
+    logger.log('📦 SiteDetail fetching reviews for site:', site.value.id)
+
+    const data = await api.getSiteReviewsApi(site.value.id).list()
+
+    reviews.value = data.data
+    logger.log('✅ SiteDetail loaded reviews:', reviews.value.length)
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error fetching reviews:', err)
+    reviews.value = null
+  }
+}
+
+async function fetchMyReviewsOnSite() {
+  try {
+    const response = await api.getUserApi().getReviews('')
+    myReviews.value = response.data
+    if(myReviews.value.length > 0){
+      myReview.value = myReviews.value.filter((review) => review.site_id === site.value?.id)[0]
+      console.log('Mi reseña:', myReview.value)
+    } else {
+      console.log('Reseñas del usuario(debería tener una sola):', myReviews)
+    }
+  } catch (error) {
+    console.error('Error al obtener mis reseñas:', error)
+  }
+}
+
+async function filterReviews() {
+  if (reviews.value && myReview.value) {
+    reviews.value = reviews.value.filter((review) => review.id !== myReview.value!.id)
+    console.log('Reseñas filtradas (sin la del usuario):', reviews.value)
+  }
+}
+
+async function handleUpdateReview(reviewId: number, rating: number, comment: string) {
+  if (!site.value) return
+
+  try {
+    logger.log('📝 Actualizando reseña:', { reviewId, rating, comment })
+    
+    // TODO: Implementar método PUT en la API del backend
+    // Por ahora, actualizar localmente la reseña
+    if (myReview.value && myReview.value.id === reviewId) {
+      myReview.value = {
+        ...myReview.value,
+        rating,
+        comment,
+        updated_at: new Date()
+      }
+    }
+
+    alert('Reseña actualizada (pendiente implementar en backend)')
+    // await fetchSite() // Actualizar el rating promedio del sitio
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ Error al actualizar reseña:', err)
+    alert('Error al actualizar la reseña: ' + err.message)
+  }
+}
+
+async function handleDeleteReview(reviewId: number) {
+  if (!site.value) return
+
+  try {
+    logger.log('🗑️ Eliminando reseña:', reviewId)
+    
+    await api.getSiteReviewsApi(site.value.id).delete(reviewId, '')
+
+    // Limpiar la reseña del usuario
+    myReview.value = undefined
+
+    alert('Reseña eliminada exitosamente')
+    await fetchSite() // Actualizar el rating promedio del sitio
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ Error al eliminar reseña:', err)
+    alert('Error al eliminar la reseña: ' + err.message)
   }
 }
 

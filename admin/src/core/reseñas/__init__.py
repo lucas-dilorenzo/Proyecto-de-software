@@ -4,6 +4,7 @@ from src.core.users.user import User
 from sqlalchemy import or_, func, and_
 from sqlalchemy.orm import joinedload
 from datetime import datetime
+from src.core.historicalSites.site import Site
 
 
 def get_review_by_id(review_id):
@@ -206,7 +207,6 @@ def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 1
     """
     try:
         # Verificar que el sitio existe y es válido
-        from src.core.historicalSites.site import Site
 
         site = (
             db.session.query(Site)
@@ -217,10 +217,13 @@ def get_reviews_by_site_paginated(site_id: int, page: int = 1, per_page: int = 1
         if not site:
             return None
 
-        # Construir consulta base con orden por fecha de creación descendente
+        # Construir consulta base con orden por fecha de creación descendente (solo reseñas aprobadas)
+        from src.core.reseñas.estadoReseña import estadoReseña
+
         query = (
             db.session.query(Reseña)
             .filter(Reseña.site_id == site_id)
+            .filter(Reseña.estado == estadoReseña.APROBADA.code)
             .order_by(Reseña.fecha_creacion.desc(), Reseña.id.desc())
         )
 
@@ -245,14 +248,14 @@ def validate_review_data(data, site_id, user_id):
     errors = []
 
     # Validar calificacion (entre 1 y 5)
-    calificacion = data.get("calificacion")
+    calificacion = data.get("rating")
     if calificacion is None:
         errors.append("La calificación es obligatoria.")
     elif not isinstance(calificacion, int) or not (1 <= calificacion <= 5):
         errors.append("La calificación debe estar entre 1 y 5.")
 
     # Validar contenido
-    contenido = data.get("contenido", "").strip()
+    contenido = data.get("comment", "").strip()
     if contenido is not None and len(contenido) > 500:
         errors.append("El comentario no puede exceder los 500 caracteres.")
 
@@ -314,3 +317,27 @@ def delete_review(review_id):
         db.session.rollback()
         print(f"Error al eliminar reseña: {e}")
         return False
+
+
+def get_reviews_by_user_paginated(user_id: int, page: int = 1, per_page: int = 10):
+    """
+    Devuelve las reseñas creadas por un usuario específico con paginación.
+    Args:
+        user_id (int): ID del usuario.
+        page (int): Número de página (por defecto 1).
+        per_page (int): Cantidad de reseñas por página (por defecto 10).
+    Returns:
+        Pagination: Objeto de paginación de SQLAlchemy con las reseñas.
+    """
+    try:
+        query = (
+            db.session.query(Reseña)
+            .filter(Reseña.user_id == user_id)
+            .order_by(Reseña.fecha_creacion.desc(), Reseña.id.desc())
+        )
+
+        return query.paginate(page=page, per_page=per_page, error_out=False)
+
+    except Exception as e:
+        print(f"Error al obtener reseñas paginadas por user_id: {e}")
+        return None

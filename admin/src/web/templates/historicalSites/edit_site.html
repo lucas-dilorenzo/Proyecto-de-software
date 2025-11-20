@@ -249,9 +249,12 @@
               type="file"
               id="main_image"
               name="main_image"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.webp"
             />
-            <div class="form-text">Sube la imagen principal (se mostrará como portada).</div>
+            <div class="form-text">
+              Sube la imagen principal (se mostrará como portada).<br>
+              <strong>Formatos permitidos:</strong> JPG, PNG, WEBP | <strong>Tamaño máximo:</strong> 5 MB
+            </div>
             
             <!-- Metadatos imagen principal -->
             <div class="image-metadata mt-2">
@@ -362,10 +365,13 @@
               type="file"
               id="secondary_images"
               name="secondary_images"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.webp"
               multiple
             />
-            <div class="form-text">Puedes subir múltiples imágenes secundarias nuevas.</div>
+            <div class="form-text">
+              Puedes subir múltiples imágenes secundarias nuevas.<br>
+              <strong>Formatos permitidos:</strong> JPG, PNG, WEBP | <strong>Tamaño máximo por imagen:</strong> 5 MB | <strong>Límite total:</strong> 10 imágenes por sitio
+            </div>
 
             <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview"></div>
 
@@ -460,10 +466,48 @@
     }
   });
 
+  // Configuración de validaciones
+  const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_IMAGES = 10;
+
+  // Función de validación de archivo
+  function validateImageFile(file) {
+    const errors = [];
+    
+    // Validar extensión
+    const extension = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      errors.push(`Formato no permitido. Solo se aceptan: ${ALLOWED_EXTENSIONS.join(', ').toUpperCase()}`);
+    }
+    
+    // Validar tamaño
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      errors.push(`El archivo excede el tamaño máximo de 5 MB (tamaño: ${sizeMB} MB)`);
+    }
+    
+    return errors;
+  }
+
+  // Contar imágenes actuales del sitio
+  function countCurrentImages() {
+    const existingImages = document.querySelectorAll('.secondary-image-item:not(.marked-for-deletion)');
+    return existingImages.length;
+  }
+
   // Vista previa de imagen principal
   document.getElementById('main_image').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
+      // Validar archivo
+      const errors = validateImageFile(file);
+      if (errors.length > 0) {
+        alert('Error en imagen principal:\n' + errors.join('\n'));
+        this.value = ''; // Limpiar input
+        return;
+      }
+      
       const reader = new FileReader();
       reader.onload = function(event) {
         const preview = document.getElementById('main_image_preview');
@@ -484,8 +528,40 @@
     
     if (files.length === 0) return;
     
+    // Validar cada archivo antes de agregarlo
+    const validationErrors = [];
+    const validFiles = [];
+    
     for (let i = 0; i < files.length; i++) {
-      selectedFiles.push(files[i]);
+      const file = files[i];
+      const errors = validateImageFile(file);
+      
+      if (errors.length > 0) {
+        validationErrors.push(`${file.name}: ${errors.join(', ')}`);
+      } else {
+        validFiles.push(file);
+      }
+    }
+    
+    // Validar límite total de imágenes
+    const currentCount = countCurrentImages();
+    const newMainImage = document.getElementById('main_image').files.length > 0 ? 1 : 0;
+    const totalImages = currentCount + newMainImage + selectedFiles.length + validFiles.length;
+    
+    if (totalImages > MAX_IMAGES) {
+      validationErrors.push(`El sitio no puede tener más de ${MAX_IMAGES} imágenes. Actualmente tiene ${currentCount}, está agregando ${newMainImage + selectedFiles.length + validFiles.length}`);
+    }
+    
+    // Mostrar errores si existen
+    if (validationErrors.length > 0) {
+      alert('Errores en imágenes secundarias:\n' + validationErrors.join('\n'));
+      this.value = ''; // Limpiar input
+      return;
+    }
+    
+    // Si todo está bien, agregar archivos válidos
+    for (let i = 0; i < validFiles.length; i++) {
+      selectedFiles.push(validFiles[i]);
     }
     
     updateInputFiles();
@@ -603,7 +679,7 @@
       // Marcar para eliminación
       const input = document.createElement('input');
       input.type = 'hidden';
-      input.name = 'images_to_delete';
+      input.name = 'delete_images[]';
       input.value = imageId;
       hiddenInput.appendChild(input);
       // Cambiar opacidad para indicar que será eliminada

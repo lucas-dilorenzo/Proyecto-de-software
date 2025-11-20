@@ -1,4 +1,4 @@
-from flask import jsonify, request, current_app, session
+from flask import jsonify, request, session
 from flask_jwt_extended import jwt_required
 from sqlalchemy import func, desc, asc
 from geoalchemy2 import functions as geofunc
@@ -19,9 +19,10 @@ from src.core.reseñas import (
     create_review,
     get_review_by_id,
     delete_review,
+    get_reviews_by_user_paginated,
 )
 from src.web import helpers
-from flask import session
+from src.core.historicalSites import tags as tags_service
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 
@@ -224,7 +225,6 @@ def get_site(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews", methods=["GET"])
-@api_auth_required
 def get_site_reviews(site_id):
     """
     GET /api/sites/:id/reviews?page=1&per_page=10
@@ -354,7 +354,7 @@ def get_site_reviews(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews", methods=["POST"])
-@api_auth_required
+@jwt_required()
 def create_site_review(site_id):
     """
     POST /api/sites/:id/reviews
@@ -363,7 +363,7 @@ def create_site_review(site_id):
     """
     try:
         # Verificación adicional de usuario (por seguridad)
-        user_id = session.get("user")
+        user_id = get_jwt_identity()
         if user_id is None:
             return (
                 jsonify(
@@ -403,8 +403,8 @@ def create_site_review(site_id):
         new_review = create_review(
             site_id=site_id,
             user_id=user_id,
-            calificacion=request.json.get("calificacion"),
-            comentario=request.json.get("contenido"),
+            calificacion=request.json.get("rating"),
+            comentario=request.json.get("comment"),
         )
 
         return (
@@ -413,8 +413,8 @@ def create_site_review(site_id):
                     "message": "Review created successfully",
                     "data": {
                         "site_id": site_id,
-                        "rating": request.json.get("calificacion"),
-                        "comment": request.json.get("contenido"),
+                        "rating": request.json.get("rating"),
+                        "comment": request.json.get("comment"),
                         "inserted_at": new_review.fecha_creacion,
                         "updated_at": new_review.fecha_creacion,
                     },
@@ -438,7 +438,7 @@ def create_site_review(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["DELETE"])
-@api_auth_required
+@jwt_required()
 def delete_site_review(site_id, review_id):
     """
     DELETE /api/sites/:site_id/reviews/:review_id
@@ -527,6 +527,48 @@ def delete_site_review(site_id, review_id):
             ),
             500,
         )
+
+
+@api_bp.route("/tags/", methods=["GET"])
+def get_tags():
+    """
+    GET /api/tags
+    Devuelve la lista de todos los tags disponibles.
+    """
+    tags = tags_service.get_tags()
+
+    data = []
+    for tag in tags:
+        data.append(
+            {
+                "id": tag.id,
+                "name": tag.name,
+                "slug": tag.slug,
+                "description": tag.description,
+                "created_at": tag.created_at,
+            }
+        )
+
+    return jsonify({"data": data})
+
+
+@api_bp.route("/sites/provinces/", methods=["GET"])
+def get_provinces():
+    """
+    GET /api/sites/provinces
+    Devuelve la lista de todas las provincias de los sitios registrados.
+    """
+    provinces = (
+        db.session.query(Site.province)
+        .filter(Site.deleted.is_(False), Site.visibility.is_(True))
+        .distinct()
+        .order_by(asc(Site.province))
+        .all()
+    )
+
+    province_list = [p.province for p in provinces if p.province]
+
+    return jsonify({"data": province_list})
 
 
 @api_bp.route("/sites/<int:site_id>/favorite", methods=["PUT"])
@@ -741,6 +783,71 @@ def get_user_favs():
                     "error": {
                         "code": "server_error",
                         "message": "An unexpected error ocurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
+@api_bp.route("/me/reviews", methods=["GET"])
+@jwt_required()
+def get_reviews_user():
+    user_id = get_jwt_identity()
+    try:
+        page = request.args.get("page", 1, type=int)
+        per_page = request.args.get("per_page", 10, type=int)
+
+        if not (1 <= per_page <= 100):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Invalid input data",
+                            "details": {"per_page": ["Must be between 1 and 100"]},
+                        }
+                    }
+                ),
+                400,
+            )
+
+        reviews_paginated = get_reviews_by_user_paginated(
+            user_id=user_id, page=page, per_page=per_page
+        )
+
+        data = []
+        for r in reviews_paginated.items:
+            data.append(
+                {
+                    "id": r.id,
+                    "site_id": r.site_id,
+                    "rating": r.calificacion,
+                    "comment": r.contenido,
+                    "state": r.estado,
+                    "inserted_at": r.fecha_creacion,
+                    "updated_at": r.fecha_creacion,
+                }
+            )
+
+        return jsonify(
+            {
+                "data": data,
+                "meta": {
+                    "page": reviews_paginated.page,
+                    "per_page": reviews_paginated.per_page,
+                    "total": reviews_paginated.total,
+                },
+            }
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
                     }
                 }
             ),

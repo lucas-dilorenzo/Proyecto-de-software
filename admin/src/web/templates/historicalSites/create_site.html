@@ -22,7 +22,10 @@
   rel="stylesheet"
   href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"
 />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+/>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script
   src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
@@ -45,8 +48,12 @@ titulo_body %}
 </h1>
 {% endblock %} {% block body %}
 <div class="card shadow-sm border-0 rounded-0 bg-white">
-  <div class="card-body">        
-    <form method="POST" action="{{ url_for('sites.create_site') }}" enctype="multipart/form-data">
+  <div class="card-body">
+    <form
+      method="POST"
+      action="{{ url_for('sites.create_site') }}"
+      enctype="multipart/form-data"
+    >
       <div class="row">
         <!-- Primera columna -->
         <div class="col-md-6">
@@ -241,7 +248,12 @@ titulo_body %}
         <label for="tags" class="form-label">
           <i class="bi bi-tags me-1"></i>Tags
         </label>
-        <select name="tags" id="tags" class="form-select form-select-sm" multiple>
+        <select
+          name="tags"
+          id="tags"
+          class="form-select form-select-sm"
+          multiple
+        >
           {% for tag in tags %}
           <option value="{{ tag.id }}">{{ tag.name }}</option>
           {% endfor %}
@@ -260,7 +272,6 @@ titulo_body %}
       <br />
       <!-- FIN MAPA -->
 
-
       <!-- Imágenes -->
       <div class="row">
         <!-- Imagen Principal -->
@@ -275,7 +286,12 @@ titulo_body %}
                 src=""
                 alt="Imagen principal"
                 class="img-fluid rounded"
-                style="max-height:200px; width:100%; object-fit:contain; display:none;"
+                style="
+                  max-height: 200px;
+                  width: 100%;
+                  object-fit: contain;
+                  display: none;
+                "
               />
             </div>
             <input
@@ -283,14 +299,20 @@ titulo_body %}
               type="file"
               id="main_image"
               name="main_image"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.webp"
             />
-            <div class="form-text">Sube la imagen principal (se mostrará como portada).</div>
-            
+            <div class="form-text">
+              Sube la imagen principal (se mostrará como portada).<br />
+              <strong>Formatos permitidos:</strong> JPG, PNG, WEBP |
+              <strong>Tamaño máximo:</strong> 5 MB
+            </div>
+
             <!-- Metadatos imagen principal -->
             <div class="image-metadata mt-2">
               <div class="mb-2">
-                <label for="main_image_title" class="form-label small">Título de la imagen</label>
+                <label for="main_image_title" class="form-label small"
+                  >Título de la imagen</label
+                >
                 <input
                   type="text"
                   class="form-control form-control-sm"
@@ -301,14 +323,18 @@ titulo_body %}
                 />
               </div>
               <div class="mb-0">
-                <label for="main_image_description" class="form-label small">Descripción</label>
+                <label for="main_image_description" class="form-label small"
+                  >Descripción</label
+                >
                 <textarea
                   class="form-control form-control-sm"
                   id="main_image_description"
                   name="main_image_description"
                   rows="2"
                   placeholder="Descripción de la imagen"
-                >Imagen principal del sitio histórico</textarea>
+                >
+Imagen principal del sitio histórico</textarea
+                >
               </div>
             </div>
           </div>
@@ -317,16 +343,17 @@ titulo_body %}
         <!-- Imágenes Secundarias -->
         <div class="col-md-6">
           <div class="mb-3">
-            <label for="secondary_images" class="form-label">
-            </label>
-            
+            <label for="secondary_images" class="form-label"> </label>
+
             <!-- Lista de imágenes existentes con drag and drop -->
-            <div id="existing-secondary-images" class="mt-2 d-flex flex-wrap gap-2">
-            </div>
-            
+            <div
+              id="existing-secondary-images"
+              class="mt-2 d-flex flex-wrap gap-2"
+            ></div>
+
             <!-- Campos ocultos para imágenes a eliminar -->
             <div id="images-to-delete"></div>
-            
+
             <label for="secondary_images" class="form-label">
               <i class="bi bi-plus-circle me-1"></i>Agregar Imágenes Secundarias
             </label>
@@ -335,12 +362,20 @@ titulo_body %}
               type="file"
               id="secondary_images"
               name="secondary_images"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.webp"
               multiple
             />
-            <div class="form-text">Puedes subir múltiples imágenes secundarias nuevas.</div>
+            <div class="form-text">
+              Puedes subir múltiples imágenes secundarias nuevas.<br />
+              <strong>Formatos permitidos:</strong> JPG, PNG, WEBP |
+              <strong>Tamaño máximo por imagen:</strong> 5 MB |
+              <strong>Límite total:</strong> 10 imágenes por sitio
+            </div>
 
-            <div class="mt-2 d-flex flex-wrap gap-2" id="secondary_images_preview"></div>
+            <div
+              class="mt-2 d-flex flex-wrap gap-2"
+              id="secondary_images_preview"
+            ></div>
 
             <!-- Contenedor para metadatos de imágenes secundarias nuevas -->
             <div id="secondary_metadata_container" class="mt-3"></div>
@@ -351,7 +386,11 @@ titulo_body %}
       <!-- Botones de acción -->
       <div class="card-actions p-3 d-flex justify-content-end">
         <div class="col-2">
-          <button type="submit" class="btn btn-azul" onclick="return validateForm()">
+          <button
+            type="submit"
+            class="btn btn-azul"
+            onclick="return validateForm()"
+          >
             Crear <i class="bi bi-caret-right small"></i>
           </button>
         </div>
@@ -397,18 +436,18 @@ titulo_body %}
   function validateForm() {
     var lat = document.getElementById("lat").value;
     var lng = document.getElementById("lng").value;
-    
+
     if (!lat || !lng) {
       Swal.fire({
-        title: '¡Ubicación requerida!',
-        text: 'Por favor, selecciona una ubicación en el mapa antes de crear el sitio.',
-        icon: 'warning',
-        confirmButtonText: 'Entendido',
-        confirmButtonColor: '#3085d6'
+        title: "¡Ubicación requerida!",
+        text: "Por favor, selecciona una ubicación en el mapa antes de crear el sitio.",
+        icon: "warning",
+        confirmButtonText: "Entendido",
+        confirmButtonColor: "#3085d6",
       });
       return false;
     }
-    
+
     return true;
   }
 </script>
@@ -428,11 +467,11 @@ titulo_body %}
         silent: false,
         renderChoiceLimit: -1,
       });
-      
+
       // Asegurar que el formulario envíe los valores seleccionados
-      const form = document.querySelector('form');
+      const form = document.querySelector("form");
       if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener("submit", function (e) {
           // Choices.js ya mantiene el select original actualizado
         });
       }
@@ -440,97 +479,194 @@ titulo_body %}
   });
 </script>
 <script>
-    // Vista previa de imagen principal
-  document.getElementById('main_image').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const preview = document.getElementById('main_image_preview');
-        preview.src = event.target.result;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+  // Configuración de validaciones
+  const ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_IMAGES = 10;
+
+  // Función de validación de archivo
+  function validateImageFile(file) {
+    const errors = [];
+
+    // Validar extensión
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(extension)) {
+      errors.push(
+        `Formato no permitido. Solo se aceptan: ${ALLOWED_EXTENSIONS.join(
+          ", "
+        ).toUpperCase()}`
+      );
     }
-  });
+
+    // Validar tamaño
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      errors.push(
+        `El archivo excede el tamaño máximo de 5 MB (tamaño: ${sizeMB} MB)`
+      );
+    }
+
+    return errors;
+  }
+
+  // Vista previa de imagen principal
+  document
+    .getElementById("main_image")
+    .addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        // Validar archivo
+        const errors = validateImageFile(file);
+        if (errors.length > 0) {
+          Swal.fire({
+            title: "Error en imagen principal",
+            html: errors.join("<br>"),
+            icon: "error",
+            confirmButtonText: "Entendido",
+          });
+          this.value = ""; // Limpiar input
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          const preview = document.getElementById("main_image_preview");
+          preview.src = event.target.result;
+          preview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
   // Manejo de imágenes secundarias con metadatos
   let selectedFiles = [];
 
-  document.getElementById('secondary_images').addEventListener('change', function(e) {
-    const files = e.target.files;
-    const previewContainer = document.getElementById('secondary_images_preview');
-    const metadataContainer = document.getElementById('secondary_metadata_container');
-    
-    if (files.length === 0) return;
-    
-    for (let i = 0; i < files.length; i++) {
-      selectedFiles.push(files[i]);
-    }
-    
-    updateInputFiles();
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileIndex = selectedFiles.length - files.length + i;
-      const reader = new FileReader();
-      
-      reader.onload = function(event) {
-        // Preview de imagen
-        const div = document.createElement('div');
-        div.className = 'border rounded position-relative new-preview';
-        div.style.cssText = 'width:120px; height:80px; overflow:hidden;';
-        div.dataset.fileIndex = fileIndex;
-        
-        const img = document.createElement('img');
-        img.src = event.target.result;
-        img.alt = 'Imagen secundaria nueva';
-        img.className = 'img-fluid';
-        img.style.cssText = 'object-fit:contain; width:100%; height:100%;';
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1';
-        deleteBtn.style.cssText = 'width:25px; height:25px; font-size:12px;';
-        deleteBtn.innerHTML = '<span class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;"><i class="bi bi-x"></i></span>';
-        deleteBtn.onclick = function() {
-          const idx = parseInt(div.dataset.fileIndex);
-          selectedFiles.splice(idx, 1);
-          
-          document.querySelectorAll('.new-preview').forEach(el => {
-            const elIdx = parseInt(el.dataset.fileIndex);
-            if (elIdx > idx) el.dataset.fileIndex = elIdx - 1;
-          });
-          
-          // Remover metadatos correspondientes
-          const metaDiv = document.querySelector(`[data-meta-index="${idx}"]`);
-          if (metaDiv) metaDiv.remove();
-          
-          // Reindexar metadatos
-          document.querySelectorAll('[data-meta-index]').forEach(el => {
-            const elIdx = parseInt(el.dataset.metaIndex);
-            if (elIdx > idx) {
-              el.dataset.metaIndex = elIdx - 1;
-              const inputs = el.querySelectorAll('input, textarea');
-              inputs.forEach(input => {
-                input.name = input.name.replace(/\[\d+\]/, `[${elIdx - 1}]`);
-              });
-            }
-          });
-          
-          updateInputFiles();
-          div.remove();
-        };
-        
-        div.appendChild(img);
-        div.appendChild(deleteBtn);
-        previewContainer.appendChild(div);
+  document
+    .getElementById("secondary_images")
+    .addEventListener("change", function (e) {
+      const files = e.target.files;
+      const previewContainer = document.getElementById(
+        "secondary_images_preview"
+      );
+      const metadataContainer = document.getElementById(
+        "secondary_metadata_container"
+      );
 
-        // Formulario de metadatos
-        const metaDiv = document.createElement('div');
-        metaDiv.className = 'image-metadata mb-2';
-        metaDiv.dataset.metaIndex = fileIndex;
-        metaDiv.innerHTML = `
+      if (files.length === 0) return;
+
+      // Validar cada archivo antes de agregarlo
+      const validationErrors = [];
+      const validFiles = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const errors = validateImageFile(file);
+
+        if (errors.length > 0) {
+          validationErrors.push(`${file.name}: ${errors.join(", ")}`);
+        } else {
+          validFiles.push(file);
+        }
+      }
+
+      // Validar límite total de imágenes
+      const mainImageCount =
+        document.getElementById("main_image").files.length > 0 ? 1 : 0;
+      const totalImages =
+        mainImageCount + selectedFiles.length + validFiles.length;
+
+      if (totalImages > MAX_IMAGES) {
+        validationErrors.push(
+          `El sitio no puede tener más de ${MAX_IMAGES} imágenes. Ya tienes ${
+            mainImageCount + selectedFiles.length
+          } y estás intentando agregar ${validFiles.length}`
+        );
+      }
+
+      // Mostrar errores si existen
+      if (validationErrors.length > 0) {
+        Swal.fire({
+          title: "Errores en imágenes secundarias",
+          html: validationErrors.join("<br>"),
+          icon: "error",
+          confirmButtonText: "Entendido",
+        });
+        this.value = ""; // Limpiar input
+        return;
+      }
+
+      // Si todo está bien, agregar archivos válidos
+      for (let i = 0; i < validFiles.length; i++) {
+        selectedFiles.push(validFiles[i]);
+      }
+
+      updateInputFiles();
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const fileIndex = selectedFiles.length - files.length + i;
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+          // Preview de imagen
+          const div = document.createElement("div");
+          div.className = "border rounded position-relative new-preview";
+          div.style.cssText = "width:120px; height:80px; overflow:hidden;";
+          div.dataset.fileIndex = fileIndex;
+
+          const img = document.createElement("img");
+          img.src = event.target.result;
+          img.alt = "Imagen secundaria nueva";
+          img.className = "img-fluid";
+          img.style.cssText = "object-fit:contain; width:100%; height:100%;";
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.type = "button";
+          deleteBtn.className =
+            "btn btn-danger btn-sm position-absolute top-0 end-0 m-1 p-1";
+          deleteBtn.style.cssText = "width:25px; height:25px; font-size:12px;";
+          deleteBtn.innerHTML =
+            '<span class="d-flex align-items-center justify-content-center" style="width:100%; height:100%;"><i class="bi bi-x"></i></span>';
+          deleteBtn.onclick = function () {
+            const idx = parseInt(div.dataset.fileIndex);
+            selectedFiles.splice(idx, 1);
+
+            document.querySelectorAll(".new-preview").forEach((el) => {
+              const elIdx = parseInt(el.dataset.fileIndex);
+              if (elIdx > idx) el.dataset.fileIndex = elIdx - 1;
+            });
+
+            // Remover metadatos correspondientes
+            const metaDiv = document.querySelector(
+              `[data-meta-index="${idx}"]`
+            );
+            if (metaDiv) metaDiv.remove();
+
+            // Reindexar metadatos
+            document.querySelectorAll("[data-meta-index]").forEach((el) => {
+              const elIdx = parseInt(el.dataset.metaIndex);
+              if (elIdx > idx) {
+                el.dataset.metaIndex = elIdx - 1;
+                const inputs = el.querySelectorAll("input, textarea");
+                inputs.forEach((input) => {
+                  input.name = input.name.replace(/\[\d+\]/, `[${elIdx - 1}]`);
+                });
+              }
+            });
+
+            updateInputFiles();
+            div.remove();
+          };
+
+          div.appendChild(img);
+          div.appendChild(deleteBtn);
+          previewContainer.appendChild(div);
+
+          // Formulario de metadatos
+          const metaDiv = document.createElement("div");
+          metaDiv.className = "image-metadata mb-2";
+          metaDiv.dataset.metaIndex = fileIndex;
+          metaDiv.innerHTML = `
           <h6 class="small mb-2">Imagen ${fileIndex + 1}: ${file.name}</h6>
           <div class="mb-2">
             <label class="form-label small">Título</label>
@@ -552,159 +688,164 @@ titulo_body %}
             >Imagen secundaria del sitio histórico</textarea>
           </div>
         `;
-        metadataContainer.appendChild(metaDiv);
-      };
-      
-      reader.readAsDataURL(file);
-    }
-  });
+          metadataContainer.appendChild(metaDiv);
+        };
+
+        reader.readAsDataURL(file);
+      }
+    });
 
   function updateInputFiles() {
-    const input = document.getElementById('secondary_images');
+    const input = document.getElementById("secondary_images");
     const dt = new DataTransfer();
-    selectedFiles.forEach(file => dt.items.add(file));
+    selectedFiles.forEach((file) => dt.items.add(file));
     input.files = dt.files;
   }
 
   // Funciones para manejo de imágenes existentes
   function markImageForDeletion(imageId, btn) {
-    const existingImageDiv = btn.closest('.secondary-image-item');
-    
+    const existingImageDiv = btn.closest(".secondary-image-item");
+
     // No permitir eliminar si está marcada como principal
-    if (existingImageDiv.classList.contains('marked-as-main')) {
-      alert('No puedes eliminar la imagen principal. Primero marca otra como principal.');
+    if (existingImageDiv.classList.contains("marked-as-main")) {
+      alert(
+        "No puedes eliminar la imagen principal. Primero marca otra como principal."
+      );
       return;
     }
-    
-    existingImageDiv.classList.toggle('marked-for-deletion');
-    
-    const hiddenInput = document.getElementById('images-to-delete');
-    if (existingImageDiv.classList.contains('marked-for-deletion')) {
+
+    existingImageDiv.classList.toggle("marked-for-deletion");
+
+    const hiddenInput = document.getElementById("images-to-delete");
+    if (existingImageDiv.classList.contains("marked-for-deletion")) {
       // Marcar para eliminación
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = 'images_to_delete';
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "delete_images[]";
       input.value = imageId;
       hiddenInput.appendChild(input);
       // Cambiar opacidad para indicar que será eliminada
-      existingImageDiv.style.opacity = '0.5';
+      existingImageDiv.style.opacity = "0.5";
     } else {
       // Desmarcar
       const input = hiddenInput.querySelector(`input[value="${imageId}"]`);
       if (input) hiddenInput.removeChild(input);
-      existingImageDiv.style.opacity = '1';
+      existingImageDiv.style.opacity = "1";
     }
   }
 
   function markAsMainImage(imageId, btn) {
-    const clickedItem = btn.closest('.secondary-image-item');
-    const allItems = document.querySelectorAll('.secondary-image-item');
-    
+    const clickedItem = btn.closest(".secondary-image-item");
+    const allItems = document.querySelectorAll(".secondary-image-item");
+
     // Remover marca de principal de todos los elementos
-    allItems.forEach(item => {
-      item.classList.remove('marked-as-main');
-      const badge = item.querySelector('.main-badge');
+    allItems.forEach((item) => {
+      item.classList.remove("marked-as-main");
+      const badge = item.querySelector(".main-badge");
       if (badge) badge.remove();
-      const markBtn = item.querySelector('.mark-as-main-btn');
+      const markBtn = item.querySelector(".mark-as-main-btn");
       if (markBtn) {
         markBtn.innerHTML = '<i class="bi bi-star"></i>';
-        markBtn.classList.remove('btn-warning');
-        markBtn.classList.add('btn-outline-warning');
+        markBtn.classList.remove("btn-warning");
+        markBtn.classList.add("btn-outline-warning");
       }
     });
-    
+
     // Marcar el elemento clickeado como principal
-    clickedItem.classList.add('marked-as-main');
-    
+    clickedItem.classList.add("marked-as-main");
+
     // Cambiar el botón a estado activo
     btn.innerHTML = '<i class="bi bi-star-fill"></i>';
-    btn.classList.remove('btn-outline-warning');
-    btn.classList.add('btn-warning');
-    
+    btn.classList.remove("btn-outline-warning");
+    btn.classList.add("btn-warning");
+
     // Agregar badge visual
-    const badge = document.createElement('div');
-    badge.className = 'position-absolute top-0 start-0 bg-warning text-dark px-2 main-badge';
-    badge.style.cssText = 'font-size:10px; font-weight:bold; z-index:5;';
-    badge.textContent = 'PRINCIPAL';
+    const badge = document.createElement("div");
+    badge.className =
+      "position-absolute top-0 start-0 bg-warning text-dark px-2 main-badge";
+    badge.style.cssText = "font-size:10px; font-weight:bold; z-index:5;";
+    badge.textContent = "PRINCIPAL";
     clickedItem.insertBefore(badge, clickedItem.firstChild);
-    
+
     // Actualizar el campo oculto para indicar que esta imagen es la nueva principal
-    const orderInput = clickedItem.querySelector('.order-input');
+    const orderInput = clickedItem.querySelector(".order-input");
     if (orderInput) {
       orderInput.value = 0;
       clickedItem.dataset.order = 0;
-      clickedItem.querySelector('.order-display').textContent = '0 (Principal)';
+      clickedItem.querySelector(".order-display").textContent = "0 (Principal)";
     }
-    
+
     // Actualizar la vista previa de la imagen principal
-    const imgSrc = clickedItem.querySelector('img').src;
-    document.getElementById('main_image_preview').src = imgSrc;
-    
+    const imgSrc = clickedItem.querySelector("img").src;
+    document.getElementById("main_image_preview").src = imgSrc;
+
     // Crear un campo oculto para indicar el cambio de imagen principal
-    let newMainInput = document.getElementById('new_main_image_id');
+    let newMainInput = document.getElementById("new_main_image_id");
     if (!newMainInput) {
-      newMainInput = document.createElement('input');
-      newMainInput.type = 'hidden';
-      newMainInput.id = 'new_main_image_id';
-      newMainInput.name = 'new_main_image_id';
-      document.querySelector('form').appendChild(newMainInput);
+      newMainInput = document.createElement("input");
+      newMainInput.type = "hidden";
+      newMainInput.id = "new_main_image_id";
+      newMainInput.name = "new_main_image_id";
+      document.querySelector("form").appendChild(newMainInput);
     }
     newMainInput.value = imageId;
   }
 
   // Drag and drop para reordenar imágenes secundarias
-  const existingImagesContainer = document.getElementById('existing-secondary-images');
+  const existingImagesContainer = document.getElementById(
+    "existing-secondary-images"
+  );
   let draggedItem = null;
 
   if (existingImagesContainer) {
-    existingImagesContainer.addEventListener('dragstart', function(e) {
-      const item = e.target.closest('.secondary-image-item');
+    existingImagesContainer.addEventListener("dragstart", function (e) {
+      const item = e.target.closest(".secondary-image-item");
       if (item) {
         draggedItem = item;
-        item.style.opacity = '0.4';
+        item.style.opacity = "0.4";
       }
     });
 
-    existingImagesContainer.addEventListener('dragend', function(e) {
-      const item = e.target.closest('.secondary-image-item');
+    existingImagesContainer.addEventListener("dragend", function (e) {
+      const item = e.target.closest(".secondary-image-item");
       if (item) {
-        item.style.opacity = '1';
+        item.style.opacity = "1";
       }
     });
 
-    existingImagesContainer.addEventListener('dragover', function(e) {
+    existingImagesContainer.addEventListener("dragover", function (e) {
       e.preventDefault();
-      const item = e.target.closest('.secondary-image-item');
+      const item = e.target.closest(".secondary-image-item");
       if (item && item !== draggedItem) {
         const rect = item.getBoundingClientRect();
         const offsetY = e.clientY - rect.top;
         const middle = rect.height / 2;
-        
+
         if (offsetY < middle) {
           // Arrastrando hacia arriba
-          item.style.transform = 'translateY(-4px)';
+          item.style.transform = "translateY(-4px)";
         } else {
           // Arrastrando hacia abajo
-          item.style.transform = 'translateY(4px)';
+          item.style.transform = "translateY(4px)";
         }
       }
     });
 
-    existingImagesContainer.addEventListener('dragleave', function(e) {
-      const item = e.target.closest('.secondary-image-item');
+    existingImagesContainer.addEventListener("dragleave", function (e) {
+      const item = e.target.closest(".secondary-image-item");
       if (item) {
-        item.style.transform = '';
+        item.style.transform = "";
       }
     });
 
-    existingImagesContainer.addEventListener('drop', function(e) {
+    existingImagesContainer.addEventListener("drop", function (e) {
       e.preventDefault();
-      const item = e.target.closest('.secondary-image-item');
+      const item = e.target.closest(".secondary-image-item");
       if (item && item !== draggedItem) {
         const rect = item.getBoundingClientRect();
         const offsetY = e.clientY - rect.top;
         const middle = rect.height / 2;
-        
+
         if (offsetY < middle) {
           // Arrastrando hacia arriba
           item.parentNode.insertBefore(draggedItem, item);
@@ -712,7 +853,7 @@ titulo_body %}
           // Arrastrando hacia abajo
           item.parentNode.insertBefore(draggedItem, item.nextSibling);
         }
-        
+
         // Actualizar orden en el DOM
         updateImageOrder();
       }
@@ -720,13 +861,14 @@ titulo_body %}
   }
 
   function updateImageOrder() {
-    const items = document.querySelectorAll('.secondary-image-item');
+    const items = document.querySelectorAll(".secondary-image-item");
     items.forEach((item, index) => {
-      const orderInput = item.querySelector('.order-input');
+      const orderInput = item.querySelector(".order-input");
       if (orderInput) {
         orderInput.value = index;
         item.dataset.order = index;
-        item.querySelector('.order-display').textContent = index === 0 ? '0 (Principal)' : index;
+        item.querySelector(".order-display").textContent =
+          index === 0 ? "0 (Principal)" : index;
       }
     });
   }
