@@ -32,17 +32,17 @@
       </li>
       <li><hr class="dropdown-divider" /></li>
       <li>
-        <router-link to="/profile" class="dropdown-item d-flex align-items-center">
+        <router-link :to="{ name: 'user-dashboard' }" class="dropdown-item d-flex align-items-center">
           <i class="bi bi-person me-2"></i>
           Perfil
         </router-link>
       </li>
-      <li>
+      <!-- <li>
         <router-link to="/settings" class="dropdown-item d-flex align-items-center">
           <i class="bi bi-gear me-2"></i>
           Configuración
         </router-link>
-      </li>
+      </li> -->
       <li>
         <hr class="dropdown-divider" />
       </li>

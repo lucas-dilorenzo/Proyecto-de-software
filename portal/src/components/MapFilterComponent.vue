@@ -61,7 +61,7 @@
               <p class="mb-2 small text-muted">{{ site.description_short || 'Sin descripción' }}</p>
               <a 
                 :href="`/sitios/${site.id}`" 
-                class="btn btn-primary btn-sm"
+                class="btn btn-primary btn-sm text-white"
                 @click.prevent="navigateToSite(site.id)"
               >
                 Ver más
