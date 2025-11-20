@@ -138,7 +138,12 @@
                   <div class="card-title">
                     <h6>Mi reseña:</h6>
                   </div>
-                  <ListReviews :review="[myReview]"/>
+                  <ListReviews 
+                    :review="[myReview]"
+                    :current-user-review-id="myReview.id"
+                    @update-review="handleUpdateReview"
+                    @delete-review="handleDeleteReview"
+                  />
                 </div>
               </div>
               <!-- Componente para agregar una nueva reseña -->
@@ -246,8 +251,9 @@ async function comprobar_fav(){
       es_favorito.value = listado_favoritos.data.some(
         (fav_site: Site) => fav_site.id === site.value?.id
       )
-    } catch (e: any) {
-      logger.error('Error al comprobar favoritos:', e)
+    } catch (e: unknown) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      logger.error('Error al comprobar favoritos:', err)
       return false
     }
   }  
@@ -260,9 +266,10 @@ async function agregar_favorito(){
     es_favorito.value = true
 
     alert('Sitio agregado a favoritos')
-  } catch (e: any) {
-    logger.error('Error:', e)
-    alert('Error: ' + (e?.message || 'Error desconocido'))
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('Error:', err)
+    alert('Error: ' + err.message)
   }
 }
 
@@ -273,9 +280,10 @@ async function eliminar_favorito(){
     es_favorito.value = false
 
     alert('Sitio eliminado de favoritos')
-  } catch (e: any) {
-    logger.error('Error:', e)
-    alert('Error: ' + (e?.message || 'Error desconocido'))
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('Error:', err)
+    alert('Error: ' + err.message)
   }
 }
 
@@ -315,6 +323,52 @@ async function filterReviews() {
   if (reviews.value && myReview.value) {
     reviews.value = reviews.value.filter((review) => review.id !== myReview.value!.id)
     console.log('Reseñas filtradas (sin la del usuario):', reviews.value)
+  }
+}
+
+async function handleUpdateReview(reviewId: number, rating: number, comment: string) {
+  if (!site.value) return
+
+  try {
+    logger.log('📝 Actualizando reseña:', { reviewId, rating, comment })
+    
+    // TODO: Implementar método PUT en la API del backend
+    // Por ahora, actualizar localmente la reseña
+    if (myReview.value && myReview.value.id === reviewId) {
+      myReview.value = {
+        ...myReview.value,
+        rating,
+        comment,
+        updated_at: new Date()
+      }
+    }
+
+    alert('Reseña actualizada (pendiente implementar en backend)')
+    // await fetchSite() // Actualizar el rating promedio del sitio
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ Error al actualizar reseña:', err)
+    alert('Error al actualizar la reseña: ' + err.message)
+  }
+}
+
+async function handleDeleteReview(reviewId: number) {
+  if (!site.value) return
+
+  try {
+    logger.log('🗑️ Eliminando reseña:', reviewId)
+    
+    await api.getSiteReviewsApi(site.value.id).delete(reviewId, '')
+
+    // Limpiar la reseña del usuario
+    myReview.value = undefined
+
+    alert('Reseña eliminada exitosamente')
+    await fetchSite() // Actualizar el rating promedio del sitio
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ Error al eliminar reseña:', err)
+    alert('Error al eliminar la reseña: ' + err.message)
   }
 }
 
