@@ -127,6 +127,24 @@
           </div>
         </div>
       </section>
+      <section class="col-12 reviews-section">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title mb-4">Reseñas</h5>
+            
+            <!-- Componente para agregar una nueva reseña -->
+            <div v-if="esta_logeado" class="mt-4">
+              <NuevaReseña :siteId="site?.id" />
+            </div>
+            <div v-else class="alert alert-info mt-4">
+              Inicie sesión para agregar una reseña.
+            </div>
+
+            <!-- Componente para mostrar las reseñas -->
+            <ListadoReseñas :review="reviews || []"/>            
+          </div>
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -134,10 +152,12 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api, { type Site } from '@/services/api'
+import api, { type Site, Review } from '@/services/api'
 import { logger } from '@/utils/logger'
 import MapComponent from '@/components/MapComponent.vue'
 import { useAuthStore } from '@/stores/auth'
+import ListadoReseñas from '@/components/ListadoReseñas.vue'
+import NuevaReseña from '@/components/NuevaReseña.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -148,7 +168,7 @@ const closeSites = ref<Site[]>([])
 const loading = ref(false)
 const error = ref('')
 const radius = ref(50)
-
+const reviews = ref<Review[] | null>(null)
 const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
@@ -200,19 +220,21 @@ onMounted(async() => {
   await await fetchSite()
   await fetchCloseSites()
   await comprobar_fav()
+  await fetchReviews()
 })
 
 async function comprobar_fav(){
-  try{
-    const listado_favoritos = await api.getUserApi().getFavorites({}, '') //revisar esto (argumentos de getFavorites)
-    es_favorito.value = listado_favoritos.data.some(
-      (fav_site: Site) => fav_site.id === site.value?.id
-    )
-  } catch (e: any) {
-    logger.error('Error al comprobar favoritos:', e)
-    return false
-  }
-
+  if(esta_logeado.value == true){
+    try{
+      const listado_favoritos = await api.getUserApi().getFavorites({}, '') //revisar esto (argumentos de getFavorites)
+      es_favorito.value = listado_favoritos.data.some(
+        (fav_site: Site) => fav_site.id === site.value?.id
+      )
+    } catch (e: any) {
+      logger.error('Error al comprobar favoritos:', e)
+      return false
+    }
+  }  
 }
 
 async function agregar_favorito(){
@@ -238,6 +260,23 @@ async function eliminar_favorito(){
   } catch (e: any) {
     logger.error('Error:', e)
     alert('Error: ' + (e?.message || 'Error desconocido'))
+  }
+}
+
+async function fetchReviews() {
+  if (!site.value) return
+
+  try {
+    logger.log('📦 SiteDetail fetching reviews for site:', site.value.id)
+
+    const data = await api.getSiteReviewsApi(site.value.id).list()
+
+    reviews.value = data.data
+    logger.log('✅ SiteDetail loaded reviews:', reviews.value.length)
+  } catch (e: unknown) {
+    const err = e instanceof Error ? e : new Error(String(e))
+    logger.error('❌ SiteDetail error fetching reviews:', err)
+    reviews.value = null
   }
 }
 
