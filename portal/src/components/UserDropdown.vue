@@ -1,5 +1,5 @@
 <template>
-    <div class="dropdown border-top"> <a href="#"
+    <div class="dropdown"> <a href="#"
                 class="d-flex align-items-center justify-content-center p-3 link-body-emphasis text-decoration-none dropdown-toggle"
                 data-bs-toggle="dropdown" aria-expanded="false"> <img src="https://api.iconify.design/bi/person-fill.svg" alt="Usuario"
                   width="24" height="24" class="rounded-circle"> </a>
