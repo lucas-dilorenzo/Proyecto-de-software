@@ -224,7 +224,6 @@ def get_site(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews", methods=["GET"])
-@api_auth_required
 def get_site_reviews(site_id):
     """
     GET /api/sites/:id/reviews?page=1&per_page=10
@@ -354,7 +353,7 @@ def get_site_reviews(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews", methods=["POST"])
-@api_auth_required
+@jwt_required()
 def create_site_review(site_id):
     """
     POST /api/sites/:id/reviews
@@ -363,7 +362,7 @@ def create_site_review(site_id):
     """
     try:
         # Verificación adicional de usuario (por seguridad)
-        user_id = session.get("user")
+        user_id = get_jwt_identity()
         if user_id is None:
             return (
                 jsonify(
@@ -403,8 +402,8 @@ def create_site_review(site_id):
         new_review = create_review(
             site_id=site_id,
             user_id=user_id,
-            calificacion=request.json.get("calificacion"),
-            comentario=request.json.get("contenido"),
+            calificacion=request.json.get("rating"),
+            comentario=request.json.get("comment"),
         )
 
         return (
@@ -413,8 +412,8 @@ def create_site_review(site_id):
                     "message": "Review created successfully",
                     "data": {
                         "site_id": site_id,
-                        "rating": request.json.get("calificacion"),
-                        "comment": request.json.get("contenido"),
+                        "rating": request.json.get("rating"),
+                        "comment": request.json.get("comment"),
                         "inserted_at": new_review.fecha_creacion,
                         "updated_at": new_review.fecha_creacion,
                     },
@@ -438,7 +437,7 @@ def create_site_review(site_id):
 
 
 @api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["DELETE"])
-@api_auth_required
+@jwt_required()
 def delete_site_review(site_id, review_id):
     """
     DELETE /api/sites/:site_id/reviews/:review_id

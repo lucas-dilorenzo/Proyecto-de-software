@@ -7,11 +7,11 @@ export class ReviewsApi extends BaseApi {
   }
 
   list(query?: ListReviewsQueryParams) {
-    return this.request<Review, true>(`/`, { query })
+    return this.request<Review, true>(``, { query })
   }
 
   create(data: CreateReviewData, token: string) {
-    return this.request<Review>(`/`, { method: 'POST', body: data, token })
+    return this.request<Review>(``, { method: 'POST', body: data, token })
   }
 
   get(id: number, token: string) {

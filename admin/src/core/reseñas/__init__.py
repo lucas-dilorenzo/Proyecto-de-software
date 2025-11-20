@@ -245,14 +245,14 @@ def validate_review_data(data, site_id, user_id):
     errors = []
 
     # Validar calificacion (entre 1 y 5)
-    calificacion = data.get("calificacion")
+    calificacion = data.get("rating")
     if calificacion is None:
         errors.append("La calificación es obligatoria.")
     elif not isinstance(calificacion, int) or not (1 <= calificacion <= 5):
         errors.append("La calificación debe estar entre 1 y 5.")
 
     # Validar contenido
-    contenido = data.get("contenido", "").strip()
+    contenido = data.get("comment", "").strip()
     if contenido is not None and len(contenido) > 500:
         errors.append("El comentario no puede exceder los 500 caracteres.")
 
