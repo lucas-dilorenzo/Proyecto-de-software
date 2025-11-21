@@ -98,7 +98,10 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
     @app.after_request
     def add_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = "http://localhost:5173"
+        response.headers["Access-Control-Allow-Origin"] = [
+            "http://localhost:5173",
+            "https://grupo37.proyecto2025.linti.unlp.edu.ar",
+        ]
         response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         response.headers["Access-Control-Allow-Credentials"] = "true"
