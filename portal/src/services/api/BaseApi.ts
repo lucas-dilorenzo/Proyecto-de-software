@@ -2,7 +2,7 @@ import { RequestError } from './RequestError'
 import type { PaginatedResponse, RequestOptions } from './types'
 
 // Base configurable por .env (VITE_API_BASE="/api" con proxy de Vite, o URL absoluta)
-export const API_BASE: string = String(import.meta.env?.VITE_API_BASE ?? '/api').replace(/\/+$/, '')
+export const API_BASE: string = String(import.meta.env?.VITE_API_BASE ?? 'https://admin-grupo37.proyecto2025.linti.unlp.edu.ar').replace(/\/+$/, '') 
 
 export class BaseApi {
   baseUrl: string
