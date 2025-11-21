@@ -1,12 +1,11 @@
-<script lang="ts">
 import { useAuthStore } from '@/stores/auth'; // Tu store de autenticación
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router';
 
-export const authGuard = (
+export default function authGuard(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
   next: NavigationGuardNext
-) => {
+) {
   // Instanciamos el store AQUÍ DENTRO
   const authStore = useAuthStore();
 
@@ -18,5 +17,4 @@ export const authGuard = (
     // Si está logueado o la ruta es pública, continuar
     next();
   }
-};
-</script>
+}

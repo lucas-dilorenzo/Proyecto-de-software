@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
-import { authGuard } from '@/guards/authGuard.vue'
+import authGuard from '@/guards/authGuard'
 
 const SitesList = () => import('@/views/SitesList.vue') // TODO: crear
 const SiteDetail = () => import('@/views/SiteDetail.vue') // TODO: crear
