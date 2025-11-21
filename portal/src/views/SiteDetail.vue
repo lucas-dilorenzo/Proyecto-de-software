@@ -377,8 +377,13 @@ async function handleUpdateReview(reviewId: number, rating: number, comment: str
   try {
     logger.log('📝 Actualizando reseña:', { reviewId, rating, comment })
     
-    // TODO: Implementar método PUT en la API del backend
-    // Por ahora, actualizar localmente la reseña
+    // Llamar a la API para actualizar la reseña
+    await api.getSiteReviewsApi(site.value.id).update(reviewId, { 
+      rating, 
+      comment 
+    }, '')
+
+    // Actualizar la reseña localmente si es la del usuario actual
     if (myReview.value && myReview.value.id === reviewId) {
       myReview.value = {
         ...myReview.value,
@@ -388,8 +393,8 @@ async function handleUpdateReview(reviewId: number, rating: number, comment: str
       }
     }
 
-    alert('Reseña actualizada (pendiente implementar en backend)')
-    // await fetchSite() // Actualizar el rating promedio del sitio
+    alert('Reseña actualizada exitosamente')
+    await fetchSite() // Actualizar el rating promedio del sitio
   } catch (e: unknown) {
     const err = e instanceof Error ? e : new Error(String(e))
     logger.error('❌ Error al actualizar reseña:', err)

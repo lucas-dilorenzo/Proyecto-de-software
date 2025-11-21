@@ -20,6 +20,7 @@ from src.core.reseñas import (
     get_review_by_id,
     delete_review,
     get_reviews_by_user_paginated,
+    update_review,
 )
 from src.core.reseñas.estadoReseña import estadoReseña
 from src.web import helpers
@@ -509,6 +510,170 @@ def create_site_review(site_id):
         )
 
 
+@api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["PUT"])
+@jwt_required()
+def update_site_review(site_id, review_id):
+    """
+    PUT /api/sites/:site_id/reviews/:review_id
+    Actualiza una reseña existente (solo si pertenece al usuario autenticado y está en estado pendiente).
+    """
+
+    try:
+        user_id = get_jwt_identity()
+
+        # Verificación adicional de usuario (por seguridad)
+        if user_id is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required to update reviews",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        data = request.get_json()
+        if not data:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "JSON data required",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Buscar la reseña
+        review_to_update = get_review_by_id(review_id)
+        if review_to_update is None:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Verificar que la URL sea canónica
+        if review_to_update.site_id != site_id:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Verificar que el usuario sea el dueño de la reseña
+        if review_to_update.user_id != int(user_id):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "forbidden",
+                            "message": "You do not have permission to update this review",
+                        }
+                    }
+                ),
+                403,
+            )
+
+        # Validar los datos de entrada
+        calificacion = data.get("rating")
+        comentario = data.get("comment", "").strip()
+
+        if calificacion is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Rating is required",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        if not isinstance(calificacion, int) or not (1 <= calificacion <= 5):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Rating must be between 1 and 5",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        if comentario and len(comentario) > 500:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Comment cannot exceed 500 characters",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Actualizar la reseña
+        updated_review = update_review(review_id, calificacion, comentario)
+
+        if updated_review is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "forbidden",
+                            "message": "Review can only be updated when in pending state",
+                        }
+                    }
+                ),
+                403,
+            )
+
+        # Respuesta exitosa
+        return (
+            jsonify(
+                {
+                    "message": "Review updated successfully",
+                    "data": {
+                        "id": updated_review.id,
+                        "site_id": updated_review.site_id,
+                        "rating": updated_review.calificacion,
+                        "comment": updated_review.contenido,
+                        "state": updated_review.estado,
+                        "inserted_at": updated_review.fecha_creacion,
+                        "updated_at": updated_review.fecha_creacion,
+                    },
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
 @api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["DELETE"])
 @jwt_required()
 def delete_site_review(site_id, review_id):
@@ -518,7 +683,7 @@ def delete_site_review(site_id, review_id):
     """
 
     try:
-        user_id = session.get("user")
+        user_id = get_jwt_identity()
 
         # Verificación adicional de usuario (por seguridad)
         if user_id is None:
@@ -554,7 +719,7 @@ def delete_site_review(site_id, review_id):
             )
 
         # Manejo del Error 403 (No tiene permiso), asumo que solo el dueño de la reseña puede eliminarla
-        if review_to_delete.user_id != user_id:
+        if review_to_delete.user_id != int(user_id):
             return (
                 jsonify(
                     {
