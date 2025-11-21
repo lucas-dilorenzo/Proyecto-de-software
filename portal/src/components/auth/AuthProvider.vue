@@ -12,5 +12,5 @@ function setAuthToken(token: string) {
   authToken.value = token
 }
 
-provide(authTokenKey, [authToken, setAuthToken])
+provide(authTokenKey, {authToken, setAuthToken})
 </script>

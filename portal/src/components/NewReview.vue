@@ -43,6 +43,7 @@ async function sendReview() {
     site_id: site_id.value,  // Debes asignar el ID del sitio correspondiente
     rating: rating.value,
     comment: contenido.value,
+    state: 'pending',
     inserted_at: new Date(),
     updated_at: new Date()
   }
