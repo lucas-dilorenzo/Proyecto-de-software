@@ -21,9 +21,34 @@ from src.core.reseñas import (
     delete_review,
     get_reviews_by_user_paginated,
 )
+from src.core.reseñas.estadoReseña import estadoReseña
 from src.web import helpers
 from src.core.historicalSites import tags as tags_service
 from flask_jwt_extended import get_jwt_identity, jwt_required
+
+
+def get_site_average_rating(site_id):
+    """
+    Calcula el promedio de calificaciones de un sitio basado en reseñas aprobadas.
+    Returns:
+        float or None: Promedio de calificaciones o None si no hay reseñas
+    """
+    try:
+        approved_reviews = (
+            db.session.query(Reseña)
+            .filter(Reseña.site_id == site_id)
+            .filter(Reseña.estado == estadoReseña.APROBADA.code)
+            .all()
+        )
+
+        if not approved_reviews:
+            return None
+
+        total_rating = sum(review.calificacion for review in approved_reviews)
+        return round(total_rating / len(approved_reviews), 1)
+    except Exception as e:
+        print(f"Error calculando promedio de rating para sitio {site_id}: {e}")
+        return None
 
 
 @api_bp.route("/sites/", methods=["GET"])
@@ -36,7 +61,14 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
         "per_page": {"type": int, "min": 1, "max": 100},
         "order_by": {
             "type": str,
-            "choices": ["latest", "oldest", "rating-5-1", "rating-1-5", "name-a-z", "name-z-a"],
+            "choices": [
+                "latest",
+                "oldest",
+                "rating-5-1",
+                "rating-1-5",
+                "name-a-z",
+                "name-z-a",
+            ],
         },
     }
 )
@@ -119,19 +151,55 @@ def list_sites():
                 message="Geographic filter failed", details={"geo": [str(e)]}
             )
 
-    # Orden
-    if order_by == "oldest":
-        q = q.order_by(asc(Site.registration_date))
-    elif order_by == "name-a-z":
-        q = q.order_by(asc(Site.name))
-    elif order_by == "name-z-a":
-        q = q.order_by(desc(Site.name))
-    else:  # latest, rating-5-1, rating-1-5
-        q = q.order_by(desc(Site.registration_date))
+    # Para ordenamiento por rating, necesitamos obtener todos los sitios primero
+    if order_by in ["rating-5-1", "rating-1-5"]:
+        # No aplicar ORDER BY aquí, lo haremos después
+        all_sites = q.all()
+        total = len(all_sites)
 
-    # Paginación
-    total = q.count()
-    sites = q.offset((page - 1) * per_page).limit(per_page).all()
+        # Calcular rating para cada sitio y crear lista con tuplas (sitio, rating)
+        sites_with_ratings = []
+        for site in all_sites:
+            # Calcular promedio de reseñas aprobadas
+            approved_reviews = (
+                db.session.query(Reseña)
+                .filter(Reseña.site_id == site.id)
+                .filter(Reseña.estado == estadoReseña.APROBADA.code)
+                .all()
+            )
+
+            if approved_reviews:
+                avg_rating = sum(r.calificacion for r in approved_reviews) / len(
+                    approved_reviews
+                )
+            else:
+                avg_rating = 0  # Sitios sin reseñas van al final
+
+            sites_with_ratings.append((site, avg_rating))
+
+        # Ordenar por rating
+        reverse_order = order_by == "rating-5-1"  # True para mejores primero
+        sites_with_ratings.sort(key=lambda x: x[1], reverse=reverse_order)
+
+        # Aplicar paginación después del ordenamiento
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        sites = [site for site, rating in sites_with_ratings[start_idx:end_idx]]
+
+    else:
+        # Orden normal para otros casos
+        if order_by == "oldest":
+            q = q.order_by(asc(Site.registration_date))
+        elif order_by == "name-a-z":
+            q = q.order_by(asc(Site.name))
+        elif order_by == "name-z-a":
+            q = q.order_by(desc(Site.name))
+        else:  # latest
+            q = q.order_by(desc(Site.registration_date))
+
+        # Paginación normal
+        total = q.count()
+        sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
     # ----- respuesta
 
@@ -164,7 +232,7 @@ def list_sites():
                 "years_declared": s.year_declared,
                 "category": s.category,
                 "registration_date": s.registration_date,
-                "avg_rating": None,
+                "avg_rating": get_site_average_rating(s.id),
                 "cover_image": cover_url,
             }
         )
