@@ -68,10 +68,24 @@
             <i class="bi bi-geo-alt"></i>
             {{ site.city }}, {{ site.province }}
           </p>
-          <p class="text-muted">
-            <i class="bi bi-star-fill text-warning"></i>
-            {{ site.avg_rating ?? 'Sin calificación' }}
-          </p>
+          <div class="d-flex align-items-center text-muted">
+            <!-- Mostrar estrellas basadas en el promedio de calificaciones -->
+            <div v-if="promedioEstrellasCalificaciones !== null" class="d-flex align-items-center">
+              <div class="me-2">
+                <i 
+                  v-for="star in 5" 
+                  :key="star"
+                  class="bi me-1"
+                  :class="star <= Math.round(promedioEstrellasCalificaciones) ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+                ></i>
+              </div>
+              <span>{{ promedioEstrellasCalificaciones.toFixed(1) }} ({{ totalReviewsCount }} reseñas)</span>
+            </div>
+            <span v-else>
+              <i class="bi bi-star text-muted me-1"></i>
+              Sin calificaciones
+            </span>
+          </div>
         </div>
 
         <div class="mb-3">
@@ -190,6 +204,31 @@ const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
 const es_favorito = ref(false)
+
+// Cálculo del promedio de calificaciones basado en las reseñas aprobadas
+const promedioEstrellasCalificaciones = computed(() => {
+  const allReviews = []
+  
+  if (myReview.value) {
+    allReviews.push(myReview.value)
+  }
+  if (reviews.value) {
+    allReviews.push(...reviews.value)
+  }
+  
+  if (allReviews.length === 0) return null
+  
+  // Calcular promedio de calificaciones
+  const totalPromedio = allReviews.reduce((sum, review) => sum + (review.rating || 0), 0)
+  return totalPromedio / allReviews.length
+})
+
+const totalReviewsCount = computed(() => {
+  let count = 0
+  if (myReview.value) count++
+  if (reviews.value) count += reviews.value.length
+  return count
+})
 
 async function fetchSite() {
   loading.value = true
