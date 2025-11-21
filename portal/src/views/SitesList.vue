@@ -12,6 +12,8 @@
         <option value="rating-5-1">Mejor puntuados</option>
         <option value="rating-1-5">Peor puntuados</option>
         <option value="oldest">Más antiguos</option>
+        <option value="name-a-z">Nombre (A-Z)</option>
+        <option value="name-z-a">Nombre (Z-A)</option>
       </select>
       <SiteFilters />
     </header>

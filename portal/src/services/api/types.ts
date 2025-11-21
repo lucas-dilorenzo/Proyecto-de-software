@@ -10,7 +10,7 @@ export interface PaginatedResponse<T> {
   total: number
 }
 
-export type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest'
+export type OrderBy = 'rating-5-1' | 'rating-1-5' | 'latest' | 'oldest' | 'name-a-z' | 'name-z-a'
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
 export type QueryParams = object

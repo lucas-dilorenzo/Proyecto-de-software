@@ -21,31 +21,6 @@ from src.core.reseñas import (
     delete_review,
     get_reviews_by_user_paginated,
 )
-from src.core.reseñas.estadoReseña import estadoReseña
-
-
-def get_site_average_rating(site_id):
-    """
-    Calcula el promedio de calificaciones de un sitio basado en reseñas aprobadas.
-    Returns:
-        float or None: Promedio de calificaciones o None si no hay reseñas
-    """
-    try:
-        approved_reviews = (
-            db.session.query(Reseña)
-            .filter(Reseña.site_id == site_id)
-            .filter(Reseña.estado == estadoReseña.APROBADA.code)
-            .all()
-        )
-        
-        if not approved_reviews:
-            return None
-            
-        total_rating = sum(review.calificacion for review in approved_reviews)
-        return round(total_rating / len(approved_reviews), 1)
-    except Exception as e:
-        print(f"Error calculando promedio de rating para sitio {site_id}: {e}")
-        return None
 from src.web import helpers
 from src.core.historicalSites import tags as tags_service
 from flask_jwt_extended import get_jwt_identity, jwt_required
@@ -61,7 +36,7 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
         "per_page": {"type": int, "min": 1, "max": 100},
         "order_by": {
             "type": str,
-            "choices": ["latest", "oldest", "rating-5-1", "rating-1-5"],
+            "choices": ["latest", "oldest", "rating-5-1", "rating-1-5", "name-a-z", "name-z-a"],
         },
     }
 )
@@ -147,7 +122,11 @@ def list_sites():
     # Orden
     if order_by == "oldest":
         q = q.order_by(asc(Site.registration_date))
-    else:
+    elif order_by == "name-a-z":
+        q = q.order_by(asc(Site.name))
+    elif order_by == "name-z-a":
+        q = q.order_by(desc(Site.name))
+    else:  # latest, rating-5-1, rating-1-5
         q = q.order_by(desc(Site.registration_date))
 
     # Paginación
@@ -171,9 +150,6 @@ def list_sites():
             # El campo es 'url', no 'object_name'
             cover_url = helpers.get_image_url(main_image.url)
 
-        # Calcular promedio de calificaciones
-        avg_rating = get_site_average_rating(s.id)
-        
         data.append(
             {
                 "id": s.id,
@@ -188,7 +164,7 @@ def list_sites():
                 "years_declared": s.year_declared,
                 "category": s.category,
                 "registration_date": s.registration_date,
-                "avg_rating": avg_rating,
+                "avg_rating": None,
                 "cover_image": cover_url,
             }
         )
@@ -245,7 +221,7 @@ def get_site(site_id):
             "latitude": float(site.latitude) if site.latitude else None,
             "longitude": float(site.longitude) if site.longitude else None,
             "conservation_status": site.conservation_status,
-            "avg_rating": get_site_average_rating(site.id),
+            "avg_rating": None,  # TODO: calcular promedio real de ratings
             "tags": [tag.name for tag in site.tags] if site.tags else [],
             "images": images,
         }
