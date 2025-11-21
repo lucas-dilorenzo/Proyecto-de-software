@@ -244,6 +244,7 @@ onMounted(async () => {
   // TODO: Implementar llamada a la API para obtener tags
   const tagsResponse = await api.getTagsApi().list()
   tags.value = tagsResponse.data.map(tag => tag.name)
+  logger.log('🏷️ Tags disponibles cargados:', tags.value)
   
   const provincesResponse = await api.getSitesApi().listProvinces()
   logger.log('Provincias cargadas:', provincesResponse)
@@ -267,9 +268,25 @@ onMounted(async () => {
   }
 })
 
+// Escuchar cambios en la ruta para actualizar filtros
+watch(
+  () => route.query,
+  (newQuery) => {
+    logger.log('🔄 SiteFilters: Detectado cambio en ruta:', newQuery)
+    loadFiltersFromQuery()
+  },
+  { deep: true }
+)
+
 // Cargar filtros desde la query string
 function loadFiltersFromQuery() {
   const query = route.query  
+
+  // Limpiar filtros primero
+  filters.value.city = ''
+  filters.value.province = ''
+  filters.value.tags = []
+  filters.value.onlyFavorites = false
 
   if (query.city) {
     filters.value.city = query.city as string
@@ -279,7 +296,8 @@ function loadFiltersFromQuery() {
   }
   if (query.tags) {
     const tagsParam = query.tags as string
-    filters.value.tags = tagsParam.split(',').filter(t => t.trim())
+    filters.value.tags = tagsParam.split(',').filter(t => t.trim()).map(t => t.toLowerCase())
+    logger.log('🏷️ Tags cargados desde URL:', filters.value.tags)
   }
   // TODO: Implementar filtro de favoritos en el backend
   // if (query.favorites === 'true') {

@@ -96,9 +96,15 @@
         <div v-if="site.tags && site.tags.length > 0" class="mb-3">
           <h5>Etiquetas</h5>
           <div class="d-flex flex-wrap gap-2">
-            <span v-for="tag in site.tags" :key="tag" class="badge bg-secondary">
+            <button 
+              v-for="tag in site.tags" 
+              :key="tag" 
+              @click="filterByTag(tag)"
+              class="badge bg-secondary text-decoration-none border-0 clickable-tag"
+              :title="`Ver todos los sitios con etiqueta: ${tag}`"
+            >
               {{ tag }}
-            </span>
+            </button>
           </div>
         </div>
 
@@ -411,6 +417,33 @@ async function handleDeleteReview(reviewId: number) {
   }
 }
 
+// Función para filtrar sitios por tag al clickearlo
+function filterByTag(tag: string) {
+  logger.log('🏷️ Filtering by tag:', tag)
+  router.push({ 
+    
+    name: 'sites-list', 
+    query: { 
+      tags: tag.toLowerCase()  
+    } 
+  })
+}
+
 </script>
 
-<style scoped></style>
+<style scoped>
+.clickable-tag {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #495057 !important;
+}
+
+.clickable-tag:active {
+  transform: translateY(0);
+}
+</style>
