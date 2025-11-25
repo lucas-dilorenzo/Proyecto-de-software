@@ -30,8 +30,14 @@ const emit = defineEmits<{
 }>()
 
 function isReviewEditable(review: Review): boolean {
-  // Una reseña es editable si el ID coincide con la reseña del usuario actual
-  return props.currentUserReviewId !== undefined && review.id === props.currentUserReviewId
+  // Una reseña es editable si:
+  // 1. El ID coincide con la reseña del usuario actual
+  // 2. La reseña está en estado 'pendiente' (se puede editar solo en este estado)
+  
+  const isCurrentUser = props.currentUserReviewId !== undefined && review.id === props.currentUserReviewId
+  const isPending = review.state?.toLowerCase() === 'pendiente'
+  
+  return isCurrentUser && isPending
 }
 
 function handleUpdateReview(reviewId: number, rating: number, comment: string) {

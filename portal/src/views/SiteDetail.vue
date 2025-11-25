@@ -68,10 +68,24 @@
             <i class="bi bi-geo-alt"></i>
             {{ site.city }}, {{ site.province }}
           </p>
-          <p class="text-muted">
-            <i class="bi bi-star-fill text-warning"></i>
-            {{ site.avg_rating ?? 'Sin calificación' }}
-          </p>
+          <div class="d-flex align-items-center text-muted">
+            <!-- Mostrar estrellas basadas en el promedio de calificaciones -->
+            <div v-if="promedioEstrellasCalificaciones !== null" class="d-flex align-items-center">
+              <div class="me-2">
+                <i 
+                  v-for="star in 5" 
+                  :key="star"
+                  class="bi me-1"
+                  :class="star <= Math.round(promedioEstrellasCalificaciones) ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+                ></i>
+              </div>
+              <span>{{ promedioEstrellasCalificaciones.toFixed(1) }} ({{ totalReviewsCount }} reseñas)</span>
+            </div>
+            <span v-else>
+              <i class="bi bi-star text-muted me-1"></i>
+              Sin calificaciones
+            </span>
+          </div>
         </div>
 
         <div class="mb-3">
@@ -82,9 +96,15 @@
         <div v-if="site.tags && site.tags.length > 0" class="mb-3">
           <h5>Etiquetas</h5>
           <div class="d-flex flex-wrap gap-2">
-            <span v-for="tag in site.tags" :key="tag" class="badge bg-secondary">
+            <button 
+              v-for="tag in site.tags" 
+              :key="tag" 
+              @click="filterByTag(tag)"
+              class="badge bg-secondary text-decoration-none border-0 clickable-tag"
+              :title="`Ver todos los sitios con etiqueta: ${tag}`"
+            >
               {{ tag }}
-            </span>
+            </button>
           </div>
         </div>
 
@@ -190,6 +210,31 @@ const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
 const es_favorito = ref(false)
+
+// Cálculo del promedio de calificaciones basado en las reseñas aprobadas
+const promedioEstrellasCalificaciones = computed(() => {
+  const allReviews = []
+  
+  if (myReview.value) {
+    allReviews.push(myReview.value)
+  }
+  if (reviews.value) {
+    allReviews.push(...reviews.value)
+  }
+  
+  if (allReviews.length === 0) return null
+  
+  // Calcular promedio de calificaciones
+  const totalPromedio = allReviews.reduce((sum, review) => sum + (review.rating || 0), 0)
+  return totalPromedio / allReviews.length
+})
+
+const totalReviewsCount = computed(() => {
+  let count = 0
+  if (myReview.value) count++
+  if (reviews.value) count += reviews.value.length
+  return count
+})
 
 async function fetchSite() {
   loading.value = true
@@ -332,8 +377,13 @@ async function handleUpdateReview(reviewId: number, rating: number, comment: str
   try {
     logger.log('📝 Actualizando reseña:', { reviewId, rating, comment })
     
-    // TODO: Implementar método PUT en la API del backend
-    // Por ahora, actualizar localmente la reseña
+    // Llamar a la API para actualizar la reseña
+    await api.getSiteReviewsApi(site.value.id).update(reviewId, { 
+      rating, 
+      comment 
+    }, '')
+
+    // Actualizar la reseña localmente si es la del usuario actual
     if (myReview.value && myReview.value.id === reviewId) {
       myReview.value = {
         ...myReview.value,
@@ -343,8 +393,8 @@ async function handleUpdateReview(reviewId: number, rating: number, comment: str
       }
     }
 
-    alert('Reseña actualizada (pendiente implementar en backend)')
-    // await fetchSite() // Actualizar el rating promedio del sitio
+    alert('Reseña actualizada exitosamente')
+    await fetchSite() // Actualizar el rating promedio del sitio
   } catch (e: unknown) {
     const err = e instanceof Error ? e : new Error(String(e))
     logger.error('❌ Error al actualizar reseña:', err)
@@ -372,6 +422,33 @@ async function handleDeleteReview(reviewId: number) {
   }
 }
 
+// Función para filtrar sitios por tag al clickearlo
+function filterByTag(tag: string) {
+  logger.log('🏷️ Filtering by tag:', tag)
+  router.push({ 
+    
+    name: 'sites-list', 
+    query: { 
+      tags: tag.toLowerCase()  
+    } 
+  })
+}
+
 </script>
 
-<style scoped></style>
+<style scoped>
+.clickable-tag {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clickable-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #495057 !important;
+}
+
+.clickable-tag:active {
+  transform: translateY(0);
+}
+</style>

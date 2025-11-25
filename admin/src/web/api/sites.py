@@ -20,10 +20,36 @@ from src.core.reseñas import (
     get_review_by_id,
     delete_review,
     get_reviews_by_user_paginated,
+    update_review,
 )
+from src.core.reseñas.estadoReseña import estadoReseña
 from src.web import helpers
 from src.core.historicalSites import tags as tags_service
 from flask_jwt_extended import get_jwt_identity, jwt_required
+
+
+def get_site_average_rating(site_id):
+    """
+    Calcula el promedio de calificaciones de un sitio basado en reseñas aprobadas.
+    Returns:
+        float or None: Promedio de calificaciones o None si no hay reseñas
+    """
+    try:
+        approved_reviews = (
+            db.session.query(Reseña)
+            .filter(Reseña.site_id == site_id)
+            .filter(Reseña.estado == estadoReseña.APROBADA.code)
+            .all()
+        )
+
+        if not approved_reviews:
+            return None
+
+        total_rating = sum(review.calificacion for review in approved_reviews)
+        return round(total_rating / len(approved_reviews), 1)
+    except Exception as e:
+        print(f"Error calculando promedio de rating para sitio {site_id}: {e}")
+        return None
 
 
 @api_bp.route("/sites/", methods=["GET"])
@@ -36,7 +62,14 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
         "per_page": {"type": int, "min": 1, "max": 100},
         "order_by": {
             "type": str,
-            "choices": ["latest", "oldest", "rating-5-1", "rating-1-5"],
+            "choices": [
+                "latest",
+                "oldest",
+                "rating-5-1",
+                "rating-1-5",
+                "name-a-z",
+                "name-z-a",
+            ],
         },
     }
 )
@@ -119,15 +152,55 @@ def list_sites():
                 message="Geographic filter failed", details={"geo": [str(e)]}
             )
 
-    # Orden
-    if order_by == "oldest":
-        q = q.order_by(asc(Site.registration_date))
-    else:
-        q = q.order_by(desc(Site.registration_date))
+    # Para ordenamiento por rating, necesitamos obtener todos los sitios primero
+    if order_by in ["rating-5-1", "rating-1-5"]:
+        # No aplicar ORDER BY aquí, lo haremos después
+        all_sites = q.all()
+        total = len(all_sites)
 
-    # Paginación
-    total = q.count()
-    sites = q.offset((page - 1) * per_page).limit(per_page).all()
+        # Calcular rating para cada sitio y crear lista con tuplas (sitio, rating)
+        sites_with_ratings = []
+        for site in all_sites:
+            # Calcular promedio de reseñas aprobadas
+            approved_reviews = (
+                db.session.query(Reseña)
+                .filter(Reseña.site_id == site.id)
+                .filter(Reseña.estado == estadoReseña.APROBADA.code)
+                .all()
+            )
+
+            if approved_reviews:
+                avg_rating = sum(r.calificacion for r in approved_reviews) / len(
+                    approved_reviews
+                )
+            else:
+                avg_rating = 0  # Sitios sin reseñas van al final
+
+            sites_with_ratings.append((site, avg_rating))
+
+        # Ordenar por rating
+        reverse_order = order_by == "rating-5-1"  # True para mejores primero
+        sites_with_ratings.sort(key=lambda x: x[1], reverse=reverse_order)
+
+        # Aplicar paginación después del ordenamiento
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        sites = [site for site, rating in sites_with_ratings[start_idx:end_idx]]
+
+    else:
+        # Orden normal para otros casos
+        if order_by == "oldest":
+            q = q.order_by(asc(Site.registration_date))
+        elif order_by == "name-a-z":
+            q = q.order_by(asc(Site.name))
+        elif order_by == "name-z-a":
+            q = q.order_by(desc(Site.name))
+        else:  # latest
+            q = q.order_by(desc(Site.registration_date))
+
+        # Paginación normal
+        total = q.count()
+        sites = q.offset((page - 1) * per_page).limit(per_page).all()
 
     # ----- respuesta
 
@@ -160,7 +233,7 @@ def list_sites():
                 "years_declared": s.year_declared,
                 "category": s.category,
                 "registration_date": s.registration_date,
-                "avg_rating": None,
+                "avg_rating": get_site_average_rating(s.id),
                 "cover_image": cover_url,
             }
         )
@@ -437,6 +510,170 @@ def create_site_review(site_id):
         )
 
 
+@api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["PUT"])
+@jwt_required()
+def update_site_review(site_id, review_id):
+    """
+    PUT /api/sites/:site_id/reviews/:review_id
+    Actualiza una reseña existente (solo si pertenece al usuario autenticado y está en estado pendiente).
+    """
+
+    try:
+        user_id = get_jwt_identity()
+
+        # Verificación adicional de usuario (por seguridad)
+        if user_id is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "unauthorized",
+                            "message": "Authentication required to update reviews",
+                        }
+                    }
+                ),
+                401,
+            )
+
+        data = request.get_json()
+        if not data:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "JSON data required",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Buscar la reseña
+        review_to_update = get_review_by_id(review_id)
+        if review_to_update is None:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Verificar que la URL sea canónica
+        if review_to_update.site_id != site_id:
+            return (
+                jsonify(
+                    {"error": {"code": "not_found", "message": "Review not found"}}
+                ),
+                404,
+            )
+
+        # Verificar que el usuario sea el dueño de la reseña
+        if review_to_update.user_id != int(user_id):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "forbidden",
+                            "message": "You do not have permission to update this review",
+                        }
+                    }
+                ),
+                403,
+            )
+
+        # Validar los datos de entrada
+        calificacion = data.get("rating")
+        comentario = data.get("comment", "").strip()
+
+        if calificacion is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Rating is required",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        if not isinstance(calificacion, int) or not (1 <= calificacion <= 5):
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Rating must be between 1 and 5",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        if comentario and len(comentario) > 500:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "invalid_data",
+                            "message": "Comment cannot exceed 500 characters",
+                        }
+                    }
+                ),
+                400,
+            )
+
+        # Actualizar la reseña
+        updated_review = update_review(review_id, calificacion, comentario)
+
+        if updated_review is None:
+            return (
+                jsonify(
+                    {
+                        "error": {
+                            "code": "forbidden",
+                            "message": "Review can only be updated when in pending state",
+                        }
+                    }
+                ),
+                403,
+            )
+
+        # Respuesta exitosa
+        return (
+            jsonify(
+                {
+                    "message": "Review updated successfully",
+                    "data": {
+                        "id": updated_review.id,
+                        "site_id": updated_review.site_id,
+                        "rating": updated_review.calificacion,
+                        "comment": updated_review.contenido,
+                        "state": updated_review.estado,
+                        "inserted_at": updated_review.fecha_creacion,
+                        "updated_at": updated_review.fecha_creacion,
+                    },
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "error": {
+                        "code": "server_error",
+                        "message": "An unexpected error occurred",
+                    }
+                }
+            ),
+            500,
+        )
+
+
 @api_bp.route("/sites/<int:site_id>/reviews/<int:review_id>", methods=["DELETE"])
 @jwt_required()
 def delete_site_review(site_id, review_id):
@@ -446,7 +683,7 @@ def delete_site_review(site_id, review_id):
     """
 
     try:
-        user_id = session.get("user")
+        user_id = get_jwt_identity()
 
         # Verificación adicional de usuario (por seguridad)
         if user_id is None:
@@ -482,7 +719,7 @@ def delete_site_review(site_id, review_id):
             )
 
         # Manejo del Error 403 (No tiene permiso), asumo que solo el dueño de la reseña puede eliminarla
-        if review_to_delete.user_id != user_id:
+        if review_to_delete.user_id != int(user_id):
             return (
                 jsonify(
                     {
