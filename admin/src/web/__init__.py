@@ -10,9 +10,11 @@ from flask import (
     url_for,
     flash,
     g,
+    jsonify,
 )
 import json
 from web.controllers.auth import authenticate
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 # config local (usamos alias config_map para claridad)
 from .config import config as config_map
