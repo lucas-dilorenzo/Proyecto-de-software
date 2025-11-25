@@ -319,6 +319,41 @@ def delete_review(review_id):
         return False
 
 
+def update_review(review_id, calificacion, comentario):
+    """
+    Actualiza una reseña existente con nuevos valores de calificación y comentario.
+    Solo se pueden editar reseñas en estado 'pendiente'.
+    Args:
+        review_id (int): ID de la reseña a actualizar
+        calificacion (int): Nueva calificación (1-5)
+        comentario (str): Nuevo comentario
+    Returns:
+        Reseña: El objeto Reseña actualizado si fue exitoso
+        None: Si no se encontró la reseña o no está en estado pendiente
+    """
+    from src.core.reseñas.estadoReseña import estadoReseña
+    
+    try:
+        review = get_review_by_id(review_id)
+        if not review:
+            return None
+            
+        # Solo permitir editar reseñas en estado pendiente
+        if review.estado != estadoReseña.PENDIENTE.code:
+            return None
+            
+        # Actualizar los campos
+        review.calificacion = calificacion
+        review.contenido = comentario
+        
+        db.session.commit()
+        return review
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error al actualizar reseña: {e}")
+        return None
+
+
 def get_reviews_by_user_paginated(user_id: int, page: int = 1, per_page: int = 10):
     """
     Devuelve las reseñas creadas por un usuario específico con paginación.

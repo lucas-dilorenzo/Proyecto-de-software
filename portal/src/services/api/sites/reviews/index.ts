@@ -21,4 +21,8 @@ export class ReviewsApi extends BaseApi {
   delete(id: number, token: string) {
     return this.request<void>(`/${id}`, { method: 'DELETE', token })
   }
+
+  update(id: number, data: { rating: number; comment: string }, token: string) {
+    return this.request<Review>(`/${id}`, { method: 'PUT', body: data, token })
+  }
 }

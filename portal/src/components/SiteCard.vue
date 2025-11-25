@@ -12,9 +12,23 @@
     <div class="card-body p-3">
       <h3 class="card-title h6 fw-semibold mb-2">{{ site.name }}</h3>
       <p class="text-muted small mb-1">{{ site.city }}, {{ site.province }}</p>
-      <p v-if="rating !== null" class="mb-0 small">
-        <span class="text-warning">★</span> {{ rating.toFixed(1) }}
-      </p>
+      <div v-if="rating !== null" class="mb-0 small d-flex align-items-center">
+        <!-- Mostrar estrellas basadas en el promedio de calificaciones -->
+        <div class="me-2">
+          <i 
+            v-for="star in 5" 
+            :key="star"
+            class="bi me-1"
+            :class="star <= Math.round(rating) ? 'bi-star-fill text-warning' : 'bi-star text-muted'"
+            style="font-size: 0.8rem;"
+          ></i>
+        </div>
+        <span class="text-muted">{{ rating.toFixed(1) }}</span>
+      </div>
+      <div v-else class="mb-0 small text-muted">
+        <i class="bi bi-star text-muted me-1" style="font-size: 0.8rem;"></i>
+        Sin calificaciones
+      </div>
     </div>
   </article>
 </template>

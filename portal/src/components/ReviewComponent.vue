@@ -88,14 +88,16 @@
 
 <script setup lang="ts">
 import { Review } from '@/services/api'
-import { ref, computed } from 'vue'
+import { ref, computed, withDefaults } from 'vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   review: Review
   isEditable: boolean
   // allowEdit: controls whether the Edit button is shown (defaults to true)
   allowEdit?: boolean
-}>()
+}>(), {
+  allowEdit: true
+})
 
 const emit = defineEmits<{
   update: [reviewId: number, rating: number, comment: string]
