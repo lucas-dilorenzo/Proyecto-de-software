@@ -55,7 +55,16 @@ def user_jwt():
     """Retrieves the authenticated user via JWT.
     Returns:
         200 with user data on success."""
-    current_user = get_jwt_identity()
-    user = users.get_jwt_user_by_id(current_user)
-    response = jsonify(user)
-    return response, 200
+    try:
+        current_user = get_jwt_identity()
+        user = users.get_jwt_user_by_id(current_user)
+        response = jsonify(user)
+        return response, 200
+    except Exception as e:
+        response = {
+            "error": {
+                "code": "invalid_credentials",
+                "message": "Credenciales inválidas.",
+            }
+        }
+        return jsonify(response), 500
