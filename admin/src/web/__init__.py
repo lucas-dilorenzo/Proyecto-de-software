@@ -174,7 +174,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
             # 3. Verificar si el bucket existe
             try:
-                exists = client.bucket_exists(bucket_name)
+                exists = client.bucket_exists(bucket_name=bucket_name)
                 results["bucket_exists"] = "YES" if exists else "NO"
             except Exception as e:
                 results["bucket_exists"] = f"ERROR: {str(e)}"
@@ -182,7 +182,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
             # 4. Intentar listar objetos
             try:
                 objects = list(
-                    client.list_objects(bucket_name, prefix="sites/", max_keys=1)
+                    client.list_objects(bucket_name=bucket_name, prefix="sites/")
                 )
                 results["can_list"] = f"OK ({len(objects)} objetos encontrados)"
             except Exception as e:
@@ -211,7 +211,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
                 # 6. Intentar leer el archivo de prueba
                 try:
-                    response = client.get_object(bucket_name, test_object)
+                    response = client.get_object(
+                        bucket_name=bucket_name, object_name=test_object
+                    )
                     data = response.read()
                     results["can_read"] = f"OK (leyó {len(data)} bytes)"
                     response.close()
@@ -219,7 +221,9 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
                     # Limpiar archivo de prueba
                     try:
-                        client.remove_object(bucket_name, test_object)
+                        client.remove_object(
+                            bucket_name=bucket_name, object_name=test_object
+                        )
                         results["cleanup"] = "OK"
                     except:
                         results["cleanup"] = "FAILED (archivo de prueba no eliminado)"
@@ -229,6 +233,13 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
 
             except Exception as e:
                 results["can_write"] = f"ERROR: {str(e)}"
+
+            # 7. Intentar obtener la política del bucket
+            try:
+                policy = client.get_bucket_policy(bucket_name=bucket_name)
+                results["bucket_policy"] = "EXISTS" if policy else "NONE"
+            except Exception as e:
+                results["bucket_policy"] = f"ERROR: {str(e)}"
 
         except Exception as e:
             results["error"] = f"Error general: {str(e)}"
