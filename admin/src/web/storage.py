@@ -10,7 +10,7 @@ class Storage:
 
     def init_app(self, app):
         self._client = Minio(
-            app.config["MINIO_ENDPOINT"],
+            endpoint=app.config["MINIO_ENDPOINT"],
             access_key=app.config["MINIO_ACCESS_KEY"],
             secret_key=app.config["MINIO_SECRET_KEY"],
             secure=app.config.get("MINIO_SECURE", False),
