@@ -108,6 +108,9 @@ def api_google_callback():
 
         email = userinfo["email"]
         user = users.get_user_by_email(email)
+        profile_picture = userinfo.get(
+            "picture"
+        )  # Google devuelve la URL de la imagen en 'picture'
 
         # Si el usuario NO existe, lo creamos automáticamente
         if not user:
@@ -118,7 +121,14 @@ def api_google_callback():
                 password_hash=generate_password_hash(email),  # Password temporal
                 rol="PUBLIC",
                 activo=True,
+                profile_picture=profile_picture,  # Guardar la imagen de perfil
             )
+        else:
+            # Actualizar la imagen de perfil cada vez que el usuario inicia sesión con Google
+            # Esto asegura que siempre tengamos la imagen más reciente
+            if profile_picture and user.profile_picture != profile_picture:
+                user.profile_picture = profile_picture
+                users.edit_user(user)
 
         # Verificar que el usuario esté activo
         if not user.activo:

@@ -75,7 +75,20 @@ const logout = async () => {
 
 const displayName = computed(() => authStore.user?.usuario || authStore.user?.email || 'Usuario')
 const email = computed(() => authStore.user?.email || '')
-const avatarSrc = computed(() => 'https://api.iconify.design/bi/person-fill.svg')
+const avatarSrc = computed(() => {
+  console.log('🔍 Debug avatarSrc:', {
+    hasProfilePicture: !!authStore.user?.profile_picture,
+    profilePictureUrl: authStore.user?.profile_picture,
+    fullUser: authStore.user
+  })
+  
+  // Si el usuario tiene imagen de perfil de Google, usarla
+  if (authStore.user?.profile_picture) {
+    return authStore.user.profile_picture
+  }
+  // Caso contrario, usar el avatar por defecto
+  return 'https://api.iconify.design/bi/person-fill.svg'
+})
 </script>
 
 <style scoped>

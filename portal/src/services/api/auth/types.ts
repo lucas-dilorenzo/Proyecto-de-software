@@ -4,4 +4,5 @@ export interface UserResponse {
   usuario: string
   email: string
   token: string
+  profile_picture?: string
 }

@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
       email: '',
       id: '',
       token: '',
+      profile_picture: '',
     },
     isLoggedIn: false,
   }),
@@ -34,6 +35,7 @@ export const useAuthStore = defineStore('auth', {
         email: '',
         id: '',
         token: '',
+        profile_picture: '',
       }
       this.isLoggedIn = false
     },
@@ -45,6 +47,7 @@ export const useAuthStore = defineStore('auth', {
           email: userData.email,
           id: userData.id,
           token: userData.token || '',
+          profile_picture: userData.profile_picture || '',
         }
         this.isLoggedIn = true
       } catch (error) {
@@ -54,6 +57,7 @@ export const useAuthStore = defineStore('auth', {
           email: '',
           id: '',
           token: '',
+          profile_picture: '',
         }
         this.isLoggedIn = false
         throw error

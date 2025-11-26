@@ -22,7 +22,13 @@ def user_exists(email):
 
 
 def create_user(
-    email, nombre, apellido, password_hash, rol=UserRole.PUBLIC, activo=True
+    email,
+    nombre,
+    apellido,
+    password_hash,
+    rol=UserRole.PUBLIC,
+    activo=True,
+    profile_picture=None,
 ):
     """Create a new user with the provided details.
     Args:
@@ -32,6 +38,7 @@ def create_user(
         password_hash (str): The hashed password for the user.
         rol (UserRole): The role assigned to the user (default is UserRole.PUBLIC).
         activo (bool): Whether the user is active (default is True).
+        profile_picture (str): URL of the user's profile picture (optional, for OAuth).
         Returns:
             User: The newly created user object."""
     user = User(
@@ -41,6 +48,7 @@ def create_user(
         password_hash=password_hash,
         rol=rol,
         activo=activo,
+        profile_picture=profile_picture,
     )
     db.session.add(user)
     db.session.commit()
@@ -241,5 +249,6 @@ def get_jwt_user_by_id(user_id):
             "nombre": nombre_completo,
             "email": user.email,
             "id": user.id,
+            "profile_picture": user.profile_picture,
         }
     return user
