@@ -35,8 +35,10 @@ class ProductionConfig(Config):
         "PUBLIC_FRONTEND_URL", "https://grupo37.proyecto2025.linti.unlp.edu.ar/"
     )
 
-    GOOGLE_CLIENT_ID = "tu-client-id"
-    GOOGLE_CLIENT_SECRET = "tu-client-secret"
+    GOOGLE_CLIENT_ID = (
+        "GOOGLE_CLIENT_ID_REMOVED"
+    )
+    GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET_REMOVED"
 
 
 class DevelopmentConfig(Config):
