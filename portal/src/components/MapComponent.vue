@@ -9,7 +9,13 @@
         layer-type="base"
         name="OpenStreetMap"
       ></l-tile-layer>
-      <l-marker :lat-lng="coordinates"> </l-marker>
+      <l-marker id="center-marker" :lat-lng="coordinates">
+        <l-tooltip>
+          {{ site.name || 'Ubicación seleccionada' }}
+          <br>
+          {{ site.description_short || '' }}
+        </l-tooltip>
+      </l-marker>
     </l-map>
   </div>
 </template>
@@ -26,6 +32,7 @@ const props = defineProps({
   zoom: { type: Number, default: 6 },
   closeSites: { type: Array as PropType<Site[]>, default: () => [] },
   radius: { type: Number, default: 50 },
+  site: { type: Object as PropType<Site>, default: () => ({} as Site) },
 });
 
 const map = ref<InstanceType<typeof LMap> | null>(null);
@@ -37,7 +44,7 @@ const lat = computed(() => props.lat);
 const lng = computed(() => props.lng);
 const zoom = computed(() => props.zoom);
 
-import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker, LTooltip } from "@vue-leaflet/vue-leaflet";
 import L from 'leaflet';
 
 import icon from 'leaflet/dist/images/marker-icon.png';
@@ -65,6 +72,7 @@ onMounted(() => {
         props.closeSites.forEach((site: Site) => {
           const marker = L.marker([site.latitude, site.longitude]).addTo(mapInstance);
           marker.bindPopup(`<b>${site.name}</b><br>${site.description_short || ''}<br><a class='btn btn-primary btn-sm text-white' href='/sitios/${site.id}'>Ver más</a>`);
+          marker.bindTooltip(`<b>${site.name}</b><br>${site.description_short || ''}<br>`);
         });
         
         // Agregar círculo de radio
