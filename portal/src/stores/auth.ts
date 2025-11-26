@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
       email: '',
       id: '',
       token: '',
+      profile_picture: '',
     },
     isLoggedIn: false,
   }),
@@ -25,11 +26,16 @@ export const useAuthStore = defineStore('auth', {
     },
     async logoutUser() {
       await api.getAuthApi().logout()
+      // Limpiar localStorage
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('user_id')
+      // Limpiar state
       this.user = {
         usuario: '',
         email: '',
         id: '',
         token: '',
+        profile_picture: '',
       }
       this.isLoggedIn = false
     },
@@ -41,6 +47,7 @@ export const useAuthStore = defineStore('auth', {
           email: userData.email,
           id: userData.id,
           token: userData.token || '',
+          profile_picture: userData.profile_picture || '',
         }
         this.isLoggedIn = true
       } catch (error) {
@@ -50,6 +57,7 @@ export const useAuthStore = defineStore('auth', {
           email: '',
           id: '',
           token: '',
+          profile_picture: '',
         }
         this.isLoggedIn = false
         throw error

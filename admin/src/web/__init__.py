@@ -10,9 +10,11 @@ from flask import (
     url_for,
     flash,
     g,
+    jsonify,
 )
 import json
 from web.controllers.auth import authenticate
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 # config local (usamos alias config_map para claridad)
 from .config import config as config_map
@@ -32,6 +34,7 @@ from src.core import historicalSites
 # Utilidades
 from sqlalchemy import select
 from flask_session import Session
+from authlib.integrations.flask_client import OAuth
 from flask_wtf.csrf import CSRFProtect
 
 from src.web.controllers.users import users_bp
@@ -68,13 +71,29 @@ from flask_jwt_extended import JWTManager
 """
 
 
+# Variable global para OAuth (se inicializa en create_app)
+oauth = None
+
+
 def create_app(env: str = "development", static_folder: str = "../../static") -> Flask:
+    global oauth
+
     app = Flask(__name__, static_folder=static_folder)
 
     # Cargar configuración según el entorno
     app.config.from_object(config_map.get(env, config_map["development"]))
 
-    # Inicializar base de datos (flask_sqlalchemy_lite)
+    # Configurar Authlib OAuth
+    oauth = OAuth(app)
+    oauth.register(
+        name="google",
+        client_id=app.config.get("GOOGLE_CLIENT_ID"),
+        client_secret=app.config.get("GOOGLE_CLIENT_SECRET"),
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+        client_kwargs={"scope": "openid email profile"},
+    )
+
+    # Inicializar base de datos (flask_sqlalchemy)
     database.init_app(app)
 
     # Inicializar almacenamiento (MinIO)
@@ -89,18 +108,37 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.config["SESSION_TYPE"] = "filesystem"
     Session(app)
 
+    # Configurar orígenes permitidos según el entorno
+    if env == "production":
+        allowed_origins = [
+            "https://grupo37.proyecto2025.linti.unlp.edu.ar",
+            # Agregar más orígenes de producción aquí si es necesario
+        ]
+    else:  # development
+        allowed_origins = [
+            "http://localhost:5173",  # Vite default port
+            "http://localhost:3000",  # React/Vue alternatives
+            "http://localhost:8080",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+        ]
+
     # Habilitar CORS para la API y rutas de autenticación
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*"}, r"/auth/*": {"origins": "*"}},
+        resources={
+            r"/api/*": {"origins": allowed_origins},
+            r"/auth/*": {"origins": allowed_origins},
+        },
         supports_credentials=True,
     )
 
     @app.after_request
     def add_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = (
-            "https://grupo37.proyecto2025.linti.unlp.edu.ar"
-        )
+        origin = request.headers.get("Origin")
+        # Solo establecer el origen si está en la lista permitida
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         response.headers["Access-Control-Allow-Credentials"] = "true"

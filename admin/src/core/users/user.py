@@ -40,6 +40,9 @@ class User(db.Model):
     password_hash = db.Column(String(255), nullable=False)
     activo = db.Column(Boolean, default=True, nullable=False)
     rol = db.Column(String(10), db.ForeignKey("roles.name"), nullable=False)
+    profile_picture = db.Column(
+        String(500), nullable=True
+    )  # URL de la imagen de perfil (Google OAuth)
     favs = db.relationship(
         "Site", secondary="sites_users_favorites", backref="usuario_elector"
     )
