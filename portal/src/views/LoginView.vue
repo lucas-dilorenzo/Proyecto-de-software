@@ -27,6 +27,11 @@
                 <button class="btn btn-primary" type="submit">Login</button>
             </div>
         </form>
+        <div class="mt-3 text-center">
+            <router-link :to="{ name: 'google-redirect' }" class="btn btn-danger">
+                <i class="bi bi-google"></i> Iniciar sesión con Google
+            </router-link>
+        </div>            
     </div>    
 </template>
 

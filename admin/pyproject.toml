@@ -22,6 +22,7 @@ dependencies = [
     "flask-jwt-extended (>=4.7.1,<5.0.0) ; python_version < \"4.0\"",
     "flask-cors (>=6.0.1,<7.0.0)",
     "authlib (>=1.6.5,<2.0.0)",
+    "requests (>=2.32.5,<3.0.0)",
 ]
 
 [tool.poetry]

@@ -1,4 +1,3 @@
-from core.users.user import UserRole
 from flask import (
     request,
     make_response,
@@ -7,6 +6,7 @@ from flask import (
     redirect,
     session,
     flash,
+    current_app,
 )
 from werkzeug.security import check_password_hash
 from src.core import users
@@ -19,7 +19,6 @@ from flask_jwt_extended import (
 )
 from flask import jsonify
 from . import api_bp
-from src.web import oauth
 from werkzeug.security import generate_password_hash
 
 
@@ -69,16 +68,21 @@ def user_jwt():
     return response, 200
 
 
-@api_bp.route("/api/auth/google/login")
+@api_bp.route("/auth/google/login")
 def api_google_login():
     """Inicia el flujo de autenticación con Google OAuth para la API pública.
     Redirige al usuario a Google para autenticarse.
     """
+    oauth = current_app.extensions.get("authlib.integrations.flask_client")
+
+    if not oauth:
+        return jsonify(message="OAuth no configurado correctamente"), 500
+
     redirect_uri = url_for("api.api_google_callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
-@api_bp.route("/api/auth/google/callback")
+@api_bp.route("/auth/google/callback")
 def api_google_callback():
     """Callback de Google OAuth para la API pública.
 
@@ -89,9 +93,17 @@ def api_google_callback():
     Returns:
         JSON con access_token y user_id, o error 401
     """
+    oauth = current_app.extensions.get("authlib.integrations.flask_client")
+
+    if not oauth:
+        return jsonify(message="OAuth no configurado correctamente"), 500
+
     try:
         token = oauth.google.authorize_access_token()
-        userinfo = oauth.google.parse_id_token(token)
+        # Obtener información del usuario directamente del endpoint de userinfo
+        # en lugar de parsear el id_token (que requiere nonce)
+        resp = oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo")
+        userinfo = resp.json()
 
         if not userinfo or "email" not in userinfo:
             return jsonify(message="No se pudo obtener información de Google"), 401
@@ -106,7 +118,7 @@ def api_google_callback():
                 nombre=userinfo.get("given_name", "Usuario"),
                 apellido=userinfo.get("family_name", "Google"),
                 password_hash=generate_password_hash(email),  # Password temporal
-                rol=UserRole.PUBLIC,
+                rol="PUBLIC",
                 activo=True,
             )
 

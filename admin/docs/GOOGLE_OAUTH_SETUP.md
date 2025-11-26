@@ -5,7 +5,6 @@
 ### 1. Dependencias
 
 - Se ha configurado **Authlib** para OAuth 2.0
-- Asegúrate de instalarlo: `pip install Authlib`
 
 ### 2. Configuración en Google Cloud Console
 
@@ -20,7 +19,7 @@
    - **Producción**: `https://tu-dominio.com/api/auth/google/callback`
 
 7. Copia el **Client ID** y **Client Secret**
-8. Agrégalos a tu configuración:
+8. Agregar a la configuración:
 
 ```python
 # En config.py (ProductionConfig o DevelopmentConfig)

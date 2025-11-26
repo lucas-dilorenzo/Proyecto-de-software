@@ -87,12 +87,7 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
         name="google",
         client_id=app.config.get("GOOGLE_CLIENT_ID"),
         client_secret=app.config.get("GOOGLE_CLIENT_SECRET"),
-        access_token_url="https://oauth2.googleapis.com/token",
-        access_token_params=None,
-        authorize_url="https://accounts.google.com/o/oauth2/auth",
-        authorize_params=None,
-        api_base_url="https://www.googleapis.com/oauth2/v1/",
-        userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
+        server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
         client_kwargs={"scope": "openid email profile"},
     )
 
@@ -111,18 +106,37 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     app.config["SESSION_TYPE"] = "filesystem"
     Session(app)
 
+    # Configurar orígenes permitidos según el entorno
+    if env == "production":
+        allowed_origins = [
+            "https://grupo37.proyecto2025.linti.unlp.edu.ar",
+            # Agregar más orígenes de producción aquí si es necesario
+        ]
+    else:  # development
+        allowed_origins = [
+            "http://localhost:5173",  # Vite default port
+            "http://localhost:3000",  # React/Vue alternatives
+            "http://localhost:8080",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:3000",
+        ]
+
     # Habilitar CORS para la API y rutas de autenticación
     CORS(
         app,
-        resources={r"/api/*": {"origins": "*"}, r"/auth/*": {"origins": "*"}},
+        resources={
+            r"/api/*": {"origins": allowed_origins},
+            r"/auth/*": {"origins": allowed_origins},
+        },
         supports_credentials=True,
     )
 
     @app.after_request
     def add_cors_headers(response):
-        response.headers["Access-Control-Allow-Origin"] = (
-            "https://grupo37.proyecto2025.linti.unlp.edu.ar"
-        )
+        origin = request.headers.get("Origin")
+        # Solo establecer el origen si está en la lista permitida
+        if origin in allowed_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization"
         response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
         response.headers["Access-Control-Allow-Credentials"] = "true"

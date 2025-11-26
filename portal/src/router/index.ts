@@ -20,6 +20,12 @@ export const router = createRouter({
     { path: '/me/favorites', name: 'my-favorites', component: SitesList,
       meta: { requiresAuth: true }
     },
+    //login con google, redigirir a la api
+    {
+      path: '/auth/google',
+      name: 'google-redirect',
+      component: () => import('@/views/GoogleRedirect.vue')
+    },
   ],
 })
 

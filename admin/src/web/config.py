@@ -61,8 +61,10 @@ class DevelopmentConfig(Config):
     MINIO_SECURE = False
     MINIO_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "grupo37")
 
-    GOOGLE_CLIENT_ID = "tu-client-id"
-    GOOGLE_CLIENT_SECRET = "tu-client-secret"
+    GOOGLE_CLIENT_ID = (
+        "GOOGLE_CLIENT_ID_REMOVED"
+    )
+    GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET_REMOVED"
 
     # Determinamos la URI final: si hay DATABASE_URL la usamos; si no, construimos desde las partes;
     # si ninguna de las dos está (caso equipo que quiere sqlite), caemos a SQLite local.
