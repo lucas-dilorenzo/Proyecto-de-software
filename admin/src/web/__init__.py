@@ -69,7 +69,13 @@ from flask_jwt_extended import JWTManager
 """
 
 
+# Variable global para OAuth (se inicializa en create_app)
+oauth = None
+
+
 def create_app(env: str = "development", static_folder: str = "../../static") -> Flask:
+    global oauth
+
     app = Flask(__name__, static_folder=static_folder)
 
     # Cargar configuración según el entorno
@@ -89,8 +95,6 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
         userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
         client_kwargs={"scope": "openid email profile"},
     )
-    # --- Google OAuth routes ---
-    from flask import jsonify
 
     # Inicializar base de datos (flask_sqlalchemy)
     database.init_app(app)

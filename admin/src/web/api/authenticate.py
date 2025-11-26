@@ -69,55 +69,65 @@ def user_jwt():
     return response, 200
 
 
-@api_bp.route("/login/google")
-def login_google():
-    redirect_uri = url_for("google_auth_callback", _external=True)
+@api_bp.route("/api/auth/google/login")
+def api_google_login():
+    """Inicia el flujo de autenticación con Google OAuth para la API pública.
+    Redirige al usuario a Google para autenticarse.
+    """
+    redirect_uri = url_for("api.api_google_callback", _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
 
-@api_bp.route("/auth/google/callback")
-def google_auth_callback():
-    token = oauth.google.authorize_access_token()
-    userinfo = oauth.google.parse_id_token(token)
-    user = users.get_user_by_email(userinfo["email"])
-    if userinfo:
-        session["user"] = userinfo["email"]
-        session["role"] = user.role if user else UserRole.PUBLIC
-        flash(f"Bienvenido, {userinfo['given_name']}!", "success")
-        return redirect(url_for("home"))
-    flash("No se pudo autenticar con Google.", "danger")
-    return redirect(url_for("auth.login"))
+@api_bp.route("/api/auth/google/callback")
+def api_google_callback():
+    """Callback de Google OAuth para la API pública.
 
+    Flujo:
+    - Si el usuario existe: genera JWT y lo devuelve
+    - Si no existe: crea el usuario automáticamente con rol PUBLIC y genera JWT
 
-@api_bp.route("/logout/google")
-def logout_google():
-    session.clear()
-    flash("Sesión cerrada correctamente.")
-    return redirect(url_for("home"))
+    Returns:
+        JSON con access_token y user_id, o error 401
+    """
+    try:
+        token = oauth.google.authorize_access_token()
+        userinfo = oauth.google.parse_id_token(token)
 
+        if not userinfo or "email" not in userinfo:
+            return jsonify(message="No se pudo obtener información de Google"), 401
 
-@api_bp.route("/auth/google/register")
-def google_register():
-    token = oauth.google.authorize_access_token()
-    userinfo = oauth.google.parse_id_token(token)
-    if userinfo:
-        # Verifica que el email no esté registrado
-        exists = users.user_exists(userinfo["email"])
+        email = userinfo["email"]
+        user = users.get_user_by_email(email)
 
-        if exists:
-            flash("El email ya está registrado.", "warning")
-            return redirect(url_for("auth.login"))
+        # Si el usuario NO existe, lo creamos automáticamente
+        if not user:
+            user = users.create_user(
+                email=email,
+                nombre=userinfo.get("given_name", "Usuario"),
+                apellido=userinfo.get("family_name", "Google"),
+                password_hash=generate_password_hash(email),  # Password temporal
+                rol=UserRole.PUBLIC,
+                activo=True,
+            )
 
-        users.create_user(
-            email=userinfo["email"],
-            nombre=userinfo["given_name"],
-            apellido=userinfo["family_name"],
-            password_hash=generate_password_hash(token),
-            rol=UserRole.PUBLIC,
-            activo=True,
+        # Verificar que el usuario esté activo
+        if not user.activo:
+            return jsonify(message="Usuario bloqueado"), 401
+
+        # Generar JWT token (compatible con login nativo)
+        access_token = create_access_token(identity=str(user.id))
+        response = make_response(
+            jsonify(
+                {
+                    "access_token": access_token,
+                    "user_id": user.id,
+                    "message": "Login exitoso con Google",
+                }
+            ),
+            201,
         )
-        flash("Usuario creado.", "success")
-        flash(f"Registro exitoso, {userinfo['name']}!", "success")
-        return redirect(url_for("home"))
-    flash("No se pudo registrar con Google.", "danger")
-    return redirect(url_for("auth.register"))
+        set_access_cookies(response, access_token)
+        return response
+
+    except Exception as e:
+        return jsonify(message=f"Error en autenticación: {str(e)}"), 401
