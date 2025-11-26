@@ -7,7 +7,6 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 onMounted(async () => {
-  // Leer parámetros de la URL
   const params = new URLSearchParams(window.location.search);
   const accessToken = params.get('access_token');
   const userId = params.get('user_id');
@@ -31,7 +30,6 @@ onMounted(async () => {
       router.replace({ name: 'login' });
     }
   } else {
-    // Si faltan parámetros, puedes mostrar un error o redirigir
     router.replace({ name: 'login' });
   }
 });
