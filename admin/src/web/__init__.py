@@ -32,6 +32,7 @@ from src.core import historicalSites
 # Utilidades
 from sqlalchemy import select
 from flask_session import Session
+from authlib.integrations.flask_client import OAuth
 from flask_wtf.csrf import CSRFProtect
 
 from src.web.controllers.users import users_bp
@@ -74,7 +75,24 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     # Cargar configuración según el entorno
     app.config.from_object(config_map.get(env, config_map["development"]))
 
-    # Inicializar base de datos (flask_sqlalchemy_lite)
+    # Configurar Authlib OAuth
+    oauth = OAuth(app)
+    oauth.register(
+        name="google",
+        client_id=app.config.get("GOOGLE_CLIENT_ID"),
+        client_secret=app.config.get("GOOGLE_CLIENT_SECRET"),
+        access_token_url="https://oauth2.googleapis.com/token",
+        access_token_params=None,
+        authorize_url="https://accounts.google.com/o/oauth2/auth",
+        authorize_params=None,
+        api_base_url="https://www.googleapis.com/oauth2/v1/",
+        userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo",
+        client_kwargs={"scope": "openid email profile"},
+    )
+    # --- Google OAuth routes ---
+    from flask import jsonify
+
+    # Inicializar base de datos (flask_sqlalchemy)
     database.init_app(app)
 
     # Inicializar almacenamiento (MinIO)
