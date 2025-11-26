@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from flask import render_template
+from flask import jsonify
 
 
 @dataclass
@@ -34,3 +35,17 @@ def generic(e):
         description="Algo salió mal. Inténtelo de nuevo más tarde.",
     )
     return render_template("error.html", error=error), 500
+
+
+def handle_no_auth_error(e):
+    return (
+        jsonify(
+            {
+                "error": {
+                    "code": "missing_token",
+                    "message": "Falta el token de autenticación.",
+                }
+            }
+        ),
+        401,
+    )

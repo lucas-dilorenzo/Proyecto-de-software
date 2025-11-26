@@ -1,8 +1,25 @@
 from flask import Blueprint, jsonify
 from werkzeug.exceptions import HTTPException, NotFound
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from .exceptions import APIException, ServerError, NotFoundError
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
+
+
+@api_bp.errorhandler(NoAuthorizationError)
+def handle_no_auth_error(error):
+    """Maneja cuando falta el token JWT"""
+    return (
+        jsonify(
+            {
+                "error": {
+                    "code": "missing_token",
+                    "message": "Falta el token de autenticacion / Credenciales invalidas.",
+                }
+            }
+        ),
+        401,
+    )
 
 
 @api_bp.errorhandler(APIException)
