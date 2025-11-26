@@ -23,14 +23,18 @@ export class BaseApi {
       )
     }
     const headers: HeadersInit = {}
-    if (token) headers['Authorization'] = `Bearer ${token}`
+    
+    // Usar el token proporcionado o intentar obtenerlo de localStorage como fallback
+    const authToken = token || localStorage.getItem('access_token')
+    if (authToken) headers['Authorization'] = `Bearer ${authToken}`
+    
     if (body) headers['Content-Type'] = 'application/json'
     const url = `${this.baseUrl}${path}` + (queryParams.size ? `?${queryParams.toString()}` : '')
     const response = await fetch(url, {
       method,
       body: body && JSON.stringify(body),
       headers,
-      credentials: 'include',
+      credentials: 'include', // Envía cookies HTTP-only si existen
     })
     if (response.ok) {
       if (response.status != 204) return await response.json()

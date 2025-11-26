@@ -25,6 +25,10 @@ export const useAuthStore = defineStore('auth', {
     },
     async logoutUser() {
       await api.getAuthApi().logout()
+      // Limpiar localStorage
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('user_id')
+      // Limpiar state
       this.user = {
         usuario: '',
         email: '',

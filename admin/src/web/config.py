@@ -31,6 +31,10 @@ class ProductionConfig(Config):
     MINIO_SECURE = False
     MINIO_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "grupo37")
 
+    PUBLIC_FRONTEND_URL = environ.get(
+        "PUBLIC_FRONTEND_URL", "https://grupo37.proyecto2025.linti.unlp.edu.ar/"
+    )
+
     GOOGLE_CLIENT_ID = "tu-client-id"
     GOOGLE_CLIENT_SECRET = "tu-client-secret"
 

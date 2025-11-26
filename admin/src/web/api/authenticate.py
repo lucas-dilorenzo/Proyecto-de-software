@@ -100,8 +100,6 @@ def api_google_callback():
 
     try:
         token = oauth.google.authorize_access_token()
-        # Obtener información del usuario directamente del endpoint de userinfo
-        # en lugar de parsear el id_token (que requiere nonce)
         resp = oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo")
         userinfo = resp.json()
 
@@ -128,17 +126,17 @@ def api_google_callback():
 
         # Generar JWT token (compatible con login nativo)
         access_token = create_access_token(identity=str(user.id))
-        response = make_response(
-            jsonify(
-                {
-                    "access_token": access_token,
-                    "user_id": user.id,
-                    "message": "Login exitoso con Google",
-                }
-            ),
-            201,
+
+        # Redirigir al frontend Vue con el token y user_id como parámetros
+        frontend_url = current_app.config.get(
+            "PUBLIC_FRONTEND_URL", "http://localhost:5173/auth/callback"
         )
+        redirect_url = f"{frontend_url}?access_token={access_token}&user_id={user.id}"
+
+        # Crear respuesta de redirect y setear cookies HTTP-only
+        response = make_response(redirect(redirect_url))
         set_access_cookies(response, access_token)
+
         return response
 
     except Exception as e:
