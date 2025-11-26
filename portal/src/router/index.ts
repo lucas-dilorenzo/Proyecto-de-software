@@ -20,6 +20,18 @@ export const router = createRouter({
     { path: '/me/favorites', name: 'my-favorites', component: SitesList,
       meta: { requiresAuth: true }
     },
+    // login con google, redirigir a la api
+    {
+      path: '/auth/google',
+      name: 'google-redirect',
+      component: () => import('@/views/GoogleRedirect.vue')
+    },
+    // callback de autenticación de Google
+    {
+      path: '/auth/callback',
+      name: 'auth-callback',
+      component: () => import('@/views/AuthCallback.vue')
+    },
   ],
 })
 

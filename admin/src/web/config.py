@@ -31,6 +31,15 @@ class ProductionConfig(Config):
     MINIO_SECURE = False
     MINIO_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "grupo37")
 
+    PUBLIC_FRONTEND_URL = environ.get(
+        "PUBLIC_FRONTEND_URL", "https://grupo37.proyecto2025.linti.unlp.edu.ar/"
+    )
+
+    GOOGLE_CLIENT_ID = (
+        "GOOGLE_CLIENT_ID_REMOVED"
+    )
+    GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET_REMOVED"
+
 
 class DevelopmentConfig(Config):
     """Development configuration."""
@@ -57,6 +66,11 @@ class DevelopmentConfig(Config):
     MINIO_SECRET_KEY = environ.get("MINIO_SECRET_KEY", "adminpassword")
     MINIO_SECURE = False
     MINIO_BUCKET_NAME = environ.get("MINIO_BUCKET_NAME", "grupo37")
+
+    GOOGLE_CLIENT_ID = (
+        "GOOGLE_CLIENT_ID_REMOVED"
+    )
+    GOOGLE_CLIENT_SECRET = "GOOGLE_CLIENT_SECRET_REMOVED"
 
     # Determinamos la URI final: si hay DATABASE_URL la usamos; si no, construimos desde las partes;
     # si ninguna de las dos está (caso equipo que quiere sqlite), caemos a SQLite local.

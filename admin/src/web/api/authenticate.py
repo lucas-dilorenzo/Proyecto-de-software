@@ -1,6 +1,12 @@
 from flask import (
     request,
     make_response,
+    jsonify,
+    url_for,
+    redirect,
+    session,
+    flash,
+    current_app,
 )
 from werkzeug.security import check_password_hash
 from src.core import users
@@ -13,6 +19,7 @@ from flask_jwt_extended import (
 )
 from flask import jsonify
 from . import api_bp
+from werkzeug.security import generate_password_hash
 
 
 @api_bp.post("/auth/login_jwt")
@@ -56,16 +63,91 @@ def user_jwt():
     Returns:
         200 with user data on success."""
     current_user = get_jwt_identity()
-    print("Current user ID from JWT:", current_user)
-    if current_user:
-        user = users.get_jwt_user_by_id(current_user)
-        response = jsonify(user)
-        return response, 200
-    else:
-        response = {
-            "error": {
-                "code": "invalid_credentials",
-                "message": "Credenciales inválidas.",
-            }
-        }
-        return jsonify(response), 401
+    user = users.get_jwt_user_by_id(current_user)
+    response = jsonify(user)
+    return response, 200
+
+
+@api_bp.route("/auth/google/login")
+def api_google_login():
+    """Inicia el flujo de autenticación con Google OAuth para la API pública.
+    Redirige al usuario a Google para autenticarse.
+    """
+    oauth = current_app.extensions.get("authlib.integrations.flask_client")
+
+    if not oauth:
+        return jsonify(message="OAuth no configurado correctamente"), 500
+
+    redirect_uri = url_for("api.api_google_callback", _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@api_bp.route("/auth/google/callback")
+def api_google_callback():
+    """Callback de Google OAuth para la API pública.
+
+    Flujo:
+    - Si el usuario existe: genera JWT y lo devuelve
+    - Si no existe: crea el usuario automáticamente con rol PUBLIC y genera JWT
+
+    Returns:
+        JSON con access_token y user_id, o error 401
+    """
+    oauth = current_app.extensions.get("authlib.integrations.flask_client")
+
+    if not oauth:
+        return jsonify(message="OAuth no configurado correctamente"), 500
+
+    try:
+        token = oauth.google.authorize_access_token()
+        resp = oauth.google.get("https://openidconnect.googleapis.com/v1/userinfo")
+        userinfo = resp.json()
+
+        if not userinfo or "email" not in userinfo:
+            return jsonify(message="No se pudo obtener información de Google"), 401
+
+        email = userinfo["email"]
+        user = users.get_user_by_email(email)
+        profile_picture = userinfo.get(
+            "picture"
+        )  # Google devuelve la URL de la imagen en 'picture'
+
+        # Si el usuario NO existe, lo creamos automáticamente
+        if not user:
+            user = users.create_user(
+                email=email,
+                nombre=userinfo.get("given_name", "Usuario"),
+                apellido=userinfo.get("family_name", "Google"),
+                password_hash=generate_password_hash(email),  # Password temporal
+                rol="PUBLIC",
+                activo=True,
+                profile_picture=profile_picture,  # Guardar la imagen de perfil
+            )
+        else:
+            # Actualizar la imagen de perfil cada vez que el usuario inicia sesión con Google
+            # Esto asegura que siempre tengamos la imagen más reciente
+            if profile_picture and user.profile_picture != profile_picture:
+                user.profile_picture = profile_picture
+                users.edit_user(user)
+
+        # Verificar que el usuario esté activo
+        if not user.activo:
+            return jsonify(message="Usuario bloqueado"), 401
+
+        # Generar JWT token (compatible con login nativo)
+        access_token = create_access_token(identity=str(user.id))
+
+        # Redirigir al frontend Vue con el token y user_id como parámetros
+        frontend_url = current_app.config.get(
+            "PUBLIC_FRONTEND_URL", "http://localhost:5173/auth/callback"
+        )
+        redirect_url = f"{frontend_url}?access_token={access_token}&user_id={user.id}"
+
+        # Crear respuesta de redirect y setear cookies HTTP-only
+        response = make_response(redirect(redirect_url))
+        set_access_cookies(response, access_token)
+
+        return response
+
+    except Exception as e:
+        return jsonify(message=f"Error en autenticación: {str(e)}"), 401
