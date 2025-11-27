@@ -7,7 +7,7 @@
                 <p class="text-muted mb-4">Descubrí lugares destacados y experiencias cerca tuyo.</p>
                 <div class="d-flex gap-2 justify-content-center">
                     <button class="btn btn-primary btn-lg" @click="goFavs()">Tus sitios favoritos</button>
-                    <button class="btn btn-primary btn-lg" @click="goReviews()">Tus reseñas</button>
+                    <button v-if="reviewsEnabled" class="btn btn-primary btn-lg" @click="goReviews()">Tus reseñas</button>
                 </div>
             </div>
         </div>
@@ -18,6 +18,13 @@
             <UserSection
                 :si_favs="si_favs"
             /> 
+        </div>
+
+        <div v-if="!reviewsEnabled">
+          <div class="alert alert-warning my-4 text-center">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Las reseñas están deshabilitadas momentáneamente.
+          </div>
         </div>
 
         <footer class="border-top text-center mt-5 pt-4 pb-3">
@@ -36,14 +43,35 @@ import { onMounted, ref, computed } from 'vue';
 import UserSection from '@/components/UserSection.vue';
 import { logger } from '@/utils/logger';
 import { useAuthStore } from '@/stores/auth'
+import api, { Flag } from '@/services/api'
 
 const authStore = useAuthStore();
 
 const displayName = computed(() => authStore.user?.usuario || authStore.user?.email || 'Usuario')
 const si_favs = ref(true);
 
+const reviewsEnabled = ref(true) // Por defecto, habilitar reseñas
+
+async function fetchFlags() {
+  try {
+    const response = await api.getFlagsApi().getStatus()
+    const flags: Flag = response.data
+    reviewsEnabled.value = flags.reviews_enabled
+    return reviewsEnabled.value
+  } catch (e: unknown) {
+    logger.error('❌ Error al obtener flags:', e)
+    reviewsEnabled.value = true // Por defecto, habilitar reseñas en caso de error
+    return true
+  }
+}
+
 onMounted(() => {
   logger.log('✅✅✅ UserDashboard mounted') 
+  fetchFlags().then((enabled) => {
+    if (!enabled) {
+      si_favs.value = true; // Si las reseñas están deshabilitadas, mostrar favoritos
+    }
+  })
 })
 
 function goFavs() {
