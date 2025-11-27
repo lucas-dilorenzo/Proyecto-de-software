@@ -68,6 +68,10 @@
               </a>
             </div>
           </l-popup>
+          <l-tooltip>
+            <strong>{{ site.name }}</strong><br>
+            {{ site.description_short || '' }}
+          </l-tooltip>
         </l-marker>
       </l-map>
     </div>
@@ -106,7 +110,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted, type PropType } from 'vue';
 import { useRouter } from 'vue-router';
-import { LMap, LTileLayer, LMarker, LPopup, LCircle } from "@vue-leaflet/vue-leaflet";
+import { LMap, LTileLayer, LMarker, LPopup, LCircle, LTooltip } from "@vue-leaflet/vue-leaflet";
 import L from 'leaflet';
 import type { Site } from '@/services/api';
 import api from '@/services/api';

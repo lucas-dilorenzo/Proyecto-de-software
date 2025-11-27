@@ -285,6 +285,7 @@ def get_site(site_id):
             "id": site.id,
             "name": site.name,
             "description": site.description,
+            "description_short": site.description_short,
             "city": site.city,
             "province": site.province,
             "latitude": float(site.latitude) if site.latitude else None,

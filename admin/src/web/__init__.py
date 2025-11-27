@@ -169,6 +169,121 @@ def create_app(env: str = "development", static_folder: str = "../../static") ->
     def trigger_error():
         abort(500)
 
+    # Endpoint temporal de diagnóstico MinIO (ELIMINAR EN PRODUCCIÓN)
+    @app.get("/debug/minio")
+    @login_required
+    def debug_minio():
+        """Endpoint temporal para diagnosticar problemas de MinIO en producción"""
+        import io
+        from datetime import datetime
+
+        results = {
+            "config": {},
+            "connection": None,
+            "bucket_exists": None,
+            "can_list": None,
+            "can_write": None,
+            "can_read": None,
+            "error": None,
+        }
+
+        try:
+            # 1. Verificar configuración
+            results["config"] = {
+                "endpoint": app.config.get("MINIO_ENDPOINT", "NO CONFIGURADO"),
+                "access_key": app.config.get("MINIO_ACCESS_KEY", "NO CONFIGURADO")[:4]
+                + "***",
+                "secret_key": (
+                    "***" if app.config.get("MINIO_SECRET_KEY") else "NO CONFIGURADO"
+                ),
+                "secure": app.config.get("MINIO_SECURE", False),
+                "bucket_name": app.config.get("MINIO_BUCKET_NAME", "NO CONFIGURADO"),
+            }
+
+            # 2. Verificar conexión al cliente
+            client = app.storage
+            results["connection"] = "OK" if client else "FAILED"
+
+            if not client:
+                results["error"] = "Cliente MinIO no inicializado"
+                return results, 200
+
+            bucket_name = app.config.get("MINIO_BUCKET_NAME", "grupo37")
+
+            # 3. Verificar si el bucket existe
+            try:
+                exists = client.bucket_exists(bucket_name=bucket_name)
+                results["bucket_exists"] = "YES" if exists else "NO"
+            except Exception as e:
+                results["bucket_exists"] = f"ERROR: {str(e)}"
+
+            # 4. Intentar listar objetos
+            try:
+                objects = list(
+                    client.list_objects(bucket_name=bucket_name, prefix="sites/")
+                )
+                results["can_list"] = f"OK ({len(objects)} objetos encontrados)"
+            except Exception as e:
+                results["can_list"] = f"ERROR: {str(e)}"
+
+            # 5. Intentar escribir un archivo de prueba
+            try:
+                test_data = (
+                    f"Test file created at {datetime.utcnow().isoformat()}".encode(
+                        "utf-8"
+                    )
+                )
+                test_stream = io.BytesIO(test_data)
+                test_object = (
+                    f"debug/test_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}.txt"
+                )
+
+                client.put_object(
+                    bucket_name=bucket_name,
+                    object_name=test_object,
+                    data=test_stream,
+                    length=len(test_data),
+                    content_type="text/plain",
+                )
+                results["can_write"] = f"OK (escribió {test_object})"
+
+                # 6. Intentar leer el archivo de prueba
+                try:
+                    response = client.get_object(
+                        bucket_name=bucket_name, object_name=test_object
+                    )
+                    data = response.read()
+                    results["can_read"] = f"OK (leyó {len(data)} bytes)"
+                    response.close()
+                    response.release_conn()
+
+                    # Limpiar archivo de prueba
+                    try:
+                        client.remove_object(
+                            bucket_name=bucket_name, object_name=test_object
+                        )
+                        results["cleanup"] = "OK"
+                    except:
+                        results["cleanup"] = "FAILED (archivo de prueba no eliminado)"
+
+                except Exception as e:
+                    results["can_read"] = f"ERROR: {str(e)}"
+
+            except Exception as e:
+                results["can_write"] = f"ERROR: {str(e)}"
+
+            # 7. Intentar obtener la política del bucket
+            try:
+                policy = client.get_bucket_policy(bucket_name=bucket_name)
+                results["bucket_policy"] = "EXISTS" if policy else "NONE"
+            except Exception as e:
+                results["bucket_policy"] = f"ERROR: {str(e)}"
+
+        except Exception as e:
+            results["error"] = f"Error general: {str(e)}"
+
+        return results, 200
+
     # register blueprints
     app.register_blueprint(users_bp)
     app.register_blueprint(tags_bp)
