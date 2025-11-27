@@ -147,7 +147,7 @@
           </div>
         </div>
       </section>
-      <section class="col-12 reviews-section">
+      <section v-if="reviewsEnabled" class="col-12 reviews-section">
         <div class="card">
           <div class="card-body">
             <h5 class="card-title mb-4">Reseñas</h5>
@@ -180,6 +180,11 @@
           </div>
         </div>
       </section>
+      <section v-else class="col-12">
+        <div class="alert alert-warning" role="alert">
+          Las reseñas están deshabilitadas en este momento.
+        </div>
+      </section>
     </article>
   </main>
 </template>
@@ -187,12 +192,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import api, { type Site, Review } from '@/services/api'
+import api, { type Site, Review, Flag } from '@/services/api'
 import { logger } from '@/utils/logger'
 import MapComponent from '@/components/MapComponent.vue'
 import { useAuthStore } from '@/stores/auth'
 import ListReviews from '@/components/ListReviews.vue'
 import NewReview from '@/components/NewReview.vue'
+
 
 const route = useRoute()
 const router = useRouter()
@@ -210,7 +216,20 @@ const esta_logeado = computed(() => {
   return useAuthStore().isLoggedIn
 });
 const es_favorito = ref(false)
+const reviewsEnabled = ref(true) // Por defecto, habilitar reseñas
 
+async function fetchFlags() {
+  try {
+    const response = await api.getFlagsApi().getStatus()
+    const flags: Flag = response.data
+    reviewsEnabled.value = flags.reviews_enabled
+    return reviewsEnabled.value
+  } catch (e: unknown) {
+    logger.error('❌ Error al obtener flags:', e)
+    reviewsEnabled.value = true // Por defecto, habilitar reseñas en caso de error
+    return true
+  }
+}
 // Cálculo del promedio de calificaciones basado en las reseñas aprobadas
 const promedioEstrellasCalificaciones = computed(() => {
   const allReviews = []
@@ -279,7 +298,8 @@ async function fetchCloseSites() {
 
 onMounted(async() => {
   logger.log('✅ SiteDetail mounted, id:', id)
-  await await fetchSite()
+  await fetchFlags()
+  await fetchSite()
   await fetchCloseSites()
   await comprobar_fav()
   await fetchReviews()
@@ -433,6 +453,8 @@ function filterByTag(tag: string) {
     } 
   })
 }
+
+
 
 </script>
 

@@ -5,6 +5,7 @@ import { SitesApi } from './sites'
 import { ReviewsApi } from './sites/reviews'
 import { TagsApi } from './tags'
 import { UserApi } from './user'
+import { FlagsApi } from './flags'
 
 interface ApiStore {
   sites?: SitesApi
@@ -12,6 +13,7 @@ interface ApiStore {
   user?: UserApi
   tags?: TagsApi
   auth?: AuthApi
+  flags?: FlagsApi
 }
 const store: ApiStore = {}
 
@@ -34,6 +36,9 @@ export default {
   getAuthApi() {
     return store.auth || (store.auth = new AuthApi())
   },
+  getFlagsApi() {
+    return store.flags || (store.flags = new FlagsApi())
+  }
 }
 
 export type * from './types'
