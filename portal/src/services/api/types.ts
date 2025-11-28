@@ -25,3 +25,4 @@ export interface RequestOptions {
 export type * from './sites/types'
 export type * from './sites/reviews/types'
 export type * from './user/types'
+export type * from './flags/types'
