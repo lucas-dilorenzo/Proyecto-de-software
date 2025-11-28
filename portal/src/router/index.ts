@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import authGuard from '@/guards/authGuard'
+import maintenanceGuard from '@/guards/maintenanceGuard'
 
 const SitesList = () => import('@/views/SitesList.vue') // TODO: crear
 const SiteDetail = () => import('@/views/SiteDetail.vue') // TODO: crear
@@ -32,7 +33,20 @@ export const router = createRouter({
       name: 'auth-callback',
       component: () => import('@/views/AuthCallback.vue')
     },
+    {
+      path: '/maintenance',
+      name: 'maintenance',
+      component: () => import('@/views/MaintenanceView.vue')
+    }
   ],
 })
 
+router.beforeEach(async (to, from, next) => {
+  // Permitir acceso libre a la vista de mantenimiento
+  if (to.name === 'maintenance') {
+    return next();
+  }
+  // Ejecutar el maintenanceGuard para el resto
+  await maintenanceGuard(to, from, next);
+});
 router.beforeEach(authGuard);
