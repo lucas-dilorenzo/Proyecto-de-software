@@ -1,5 +1,16 @@
 # Proyecto Grupo37
 
+> [!WARNING]
+> Las credenciales de Google OAuth originales fueron removidas del historial de este repositorio por razones de seguridad. Para ejecutar la aplicación con autenticación via Google, es necesario generar nuevas credenciales:
+> 1. Ir a [Google Cloud Console](https://console.cloud.google.com/)
+> 2. Crear un nuevo proyecto o usar uno existente
+> 3. En **APIs & Services > Credentials**, crear un **OAuth 2.0 Client ID**
+> 4. Configurar los valores en `admin/src/web/config.py`:
+>    ```python
+>    GOOGLE_CLIENT_ID = "tu-client-id"
+>    GOOGLE_CLIENT_SECRET = "tu-client-secret"
+>    ```
+
 Este proyecto contiene dos aplicaciones independientes:
 - **Admin**: Una aplicación web desarrollada con Flask + SQLAlchemy, gestionada con Poetry.
 - **Calculadora**: Una aplicación de consola para operaciones matemáticas básicas.
